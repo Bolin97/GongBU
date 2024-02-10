@@ -1,0 +1,74 @@
+version: '3.5'
+
+networks:
+ app-network: 
+  driver: bridge
+
+services:
+  db:
+    container_name: db
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - app-network
+  
+  api:
+    container_name: api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/models
+      - ./finetune_output:/finetune_output
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /backend
+    networks:
+      - app-network
+  web:
+    container_name: web
+    networks:
+      - app-network
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - /frontend/node_modules
+    depends_on:
+      - api
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /frontend
+        - action: rebuild
+          path: ./frontend/package.json
+
+volumes:
+  postgres:

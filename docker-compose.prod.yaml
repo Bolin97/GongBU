@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /micromamba
+      - ./LLMApp:/backend/backend/ext
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:pwd@localhost/GONGBU
+      - NVIDIA_VISIBLE_DEVICES=all
+  db:
+    image: mysql:8.3
+    volumes:
+      - ./util/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=pwd
+      - MYSQL_DATABASE=GONGBU
+    ports:
+      - "3306:3306"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - node_modules
+      - ./frontend:/frontend
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /frontend
+        - action: rebuild
+          path: ./frontend/package.json
