@@ -32,7 +32,7 @@
 		training_params,
 		training_advanced,
 		type ParamEntry
-	} from "../../../components/params/Params";
+	} from "../../components/params/Params"
 	import FinetuneProgess from "../FinetuneProgess.svelte";
 	import { goto } from "$app/navigation";
 	import type EvalRecord from "../../../class/EvalRecord";
@@ -40,9 +40,8 @@
 	import type FinetuneEntryReduced from "../../../class/FinetuneEntryReduced";
 	import { REALTIME_FINETUNE_DETAIL } from "../../store";
 	import type CudaDeviceEntry from "../../../class/CudaDeviceEntry";
-	import { PlusSolid, CheckCircleSolid } from "flowbite-svelte-icons";
 	let devices: Array<CudaDeviceEntry> = [];
-	let devices_updater: string | number | NodeJS.Timeout;
+	let devices_updater: number;
 	onMount(async () => {
 		async function update() {
 			devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
@@ -67,7 +66,7 @@
 	let finetune_entry: FinetuneEntry;
 	let model_entry: OpenllmEntry;
 
-	let finetune_entry_updater: string | number | NodeJS.Timeout;
+	let finetune_entry_updater: number;
 	onMount(async () => {
 		async function update() {
 			if (finetune_entry.state == 0) {

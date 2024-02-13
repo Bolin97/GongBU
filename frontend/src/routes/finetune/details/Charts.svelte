@@ -5,7 +5,7 @@
 	import { onDestroy, onMount } from "svelte";
 	import type LoggingRecord from "../../../class/LoggingRecord";
 	import type EvalRecord from "../../../class/EvalRecord";
-	import Chart from "../../../components/Chart.svelte";
+	import Chart from "../../components/Chart.svelte";
 	import type EvalIndex from "../../../class/EvalIndex";
 	import { each } from "svelte/internal";
 	import EvalIndexChart from "./EvalIndexChart.svelte";
@@ -28,7 +28,7 @@
 		},
 	};
 
-	let logging_records_updater: string | number | NodeJS.Timeout;
+	let logging_records_updater: number;
 	let logging_records = [] as Array<LoggingRecord>;
 	onMount(async () => {
 		async function update() {
@@ -57,7 +57,7 @@
 		clearInterval(logging_records_updater);
 	});
 
-	let eval_records_updater: string | number | NodeJS.Timeout;
+	let eval_records_updater: number;
 	let eval_records = [] as Array<EvalRecord>;
 	onMount(async () => {
 		async function update() {

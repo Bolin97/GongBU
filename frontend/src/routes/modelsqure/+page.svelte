@@ -4,7 +4,6 @@
 	import { goto } from "$app/navigation";
 	import axios from "axios";
 	import { BACKEND } from "../store";
-
 	let models = [] as Array<OpenllmEntry>;
 	onMount(async () => {
 		models = (await axios.get(`${$BACKEND}/openllm/`)).data;
@@ -63,7 +62,6 @@
 						</div>
 					</div>
 					<p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-						<!-- {model.model_description.length < 50 ? model.model_description : model.model_description.slice(0, 50) + "......"} -->
 						{model.model_description}
 					</p>
 				</div>

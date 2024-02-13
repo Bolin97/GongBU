@@ -3,7 +3,7 @@
 	import { Timeline, TimelineItem } from "flowbite-svelte";
 	import {
 		CalendarWeekSolid,
-		CheckCircleSolid,
+		CheckCircleOutline,
 		AdjustmentsHorizontalSolid
 	} from "flowbite-svelte-icons";
 	import Model from "./Model.svelte";
@@ -132,7 +132,7 @@
 									class="text-primary-500 dark:text-primary-400"
 								/>
 							{:else if i + 1 < current_step}
-								<CheckCircleSolid
+								<CheckCircleOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>

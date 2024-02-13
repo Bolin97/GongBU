@@ -1,42 +1,59 @@
+version: '3.9'
+
 services:
-  backend:
+  db:
+    container_name: db
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      PGDATA: /data/postgres
+      POSTGRES_DB: GONGBU
+    volumes:
+      - postgres:/data/postgres
+      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
+    expose:
+      - 5432
+    ports:
+      - "54320:5432"
+    restart: unless-stopped
+  api:
+    container_name: api
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - /micromamba
-      - ./LLMApp:/backend/backend/ext
+      - ./models:/models
+      - ./finetune_output:/finetune_output
+      - ./
     depends_on:
       - db
     environment:
-      - DATABASE_URL=mysql+pymysql://root:pwd@localhost/GONGBU
-      - NVIDIA_VISIBLE_DEVICES=all
-  db:
-    image: mysql:8.3
-    volumes:
-      - ./util/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
-    environment:
-      - MYSQL_ROOT_PASSWORD=pwd
-      - MYSQL_DATABASE=GONGBU
-    ports:
-      - "3306:3306"
-  frontend:
+      - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
+      - MODEL_PATH=/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  web:
+    container_name: web
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
     volumes:
-      - node_modules
-      - ./frontend:/frontend
+      - /frontend/node_modules
     depends_on:
-      - backend
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
-          target: /frontend
-        - action: rebuild
-          path: ./frontend/package.json
+      - api
+    environment:
+      - VITE_BACKEND=http://localhost:8000
+      - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
+
+volumes:
+  postgres:

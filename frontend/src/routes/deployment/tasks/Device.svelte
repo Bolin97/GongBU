@@ -5,12 +5,12 @@
 	import axios from "axios";
 	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../../store";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
-	import { PlusSolid, CheckCircleSolid } from "flowbite-svelte-icons";
+	import { PlusSolid, CheckCircleOutline } from "flowbite-svelte-icons";
 	let devices: Array<CudaDeviceEntry> = [];
 	export let updaterOn = true;
 	export let allowMulti = true;
 	
-	let devices_updater: string | number | NodeJS.Timeout;
+	let devices_updater: number;
 	onMount(async () => {
 		async function update() {
 			if (updaterOn) {
@@ -82,7 +82,7 @@
 				>
 					<div class="m-2">
 						{#if useDevices == "auto" || useDevices.includes(device.device_id)}
-							<CheckCircleSolid size="sm" class="text-blue-600"/>
+							<CheckCircleOutline size="sm" class="text-blue-600"/>
 						{:else}
 							<PlusSolid size="sm" class="text-gray-400"/>
 						{/if}

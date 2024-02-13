@@ -3,7 +3,7 @@
 	import { Input, Timeline, TimelineItem } from "flowbite-svelte";
 	import {
 		CalendarWeekSolid,
-		CheckCircleSolid,
+		CheckCircleOutline,
 		AdjustmentsHorizontalSolid
 	} from "flowbite-svelte-icons";
 	import axios from "axios";
@@ -92,7 +92,7 @@
 									class="text-primary-500 dark:text-primary-400"
 								/>
 							{:else if i + 1 < currentStep}
-								<CheckCircleSolid
+								<CheckCircleOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>

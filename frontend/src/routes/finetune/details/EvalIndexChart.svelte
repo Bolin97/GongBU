@@ -2,7 +2,7 @@
 	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";
 	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../../store";
-	import Chart from "../../../components/Chart.svelte";
+	import Chart from "../../components/Chart.svelte";
 
     export let name: string;
     export let displayName: string

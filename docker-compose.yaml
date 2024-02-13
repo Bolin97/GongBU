@@ -1,8 +1,4 @@
-version: '3.5'
-
-networks:
- app-network: 
-  driver: bridge
+version: '3.9'
 
 services:
   db:
@@ -15,26 +11,30 @@ services:
     volumes:
       - postgres:/data/postgres
       - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
+    expose:
+      - 5432
     ports:
-      - "5432:5432"
+      - "54320:5432"
     restart: unless-stopped
-    networks:
-      - app-network
-  
   api:
     container_name: api
     build:
       context: ./backend
       dockerfile: Dockerfile
+    expose:
+      - 8000
     ports:
       - "8000:8000"
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
+      - ./bert:/backend/bert
+      - ./ext:/backend/ext
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
+      - DATABASE_URL=postgresql://postgres:pwd@db:5432/postgres
+      - MODEL_PATH=/models
     deploy:
       resources:
         reservations:
@@ -47,12 +47,8 @@ services:
         - action: sync
           path: ./backend
           target: /backend
-    networks:
-      - app-network
   web:
     container_name: web
-    networks:
-      - app-network
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -62,6 +58,9 @@ services:
       - /frontend/node_modules
     depends_on:
       - api
+    environment:
+      - VITE_BACKEND=http://localhost:8000
+      - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
     develop:
       watch:
         - action: sync
@@ -69,6 +68,5 @@ services:
           target: /frontend
         - action: rebuild
           path: ./frontend/package.json
-
 volumes:
   postgres:

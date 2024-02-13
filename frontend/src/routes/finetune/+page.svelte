@@ -14,7 +14,7 @@
 
 	let entries = [] as Array<FinetuneEntryReduced>;
 
-	let entries_updater: string | number | NodeJS.Timeout;
+	let entries_updater: number;
 	onMount(async () => {
 		async function update() {
 			entries = (await axios.get(`${$BACKEND}/finetune_entry/reduced`))

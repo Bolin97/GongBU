@@ -1,5 +1,5 @@
 <script>
-	// import '../app.css';
+	import '../app.css';
 </script>
 
 <div class="header w-full h-14 justify-between bg-gray-000">

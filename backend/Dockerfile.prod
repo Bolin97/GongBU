@@ -26,4 +26,4 @@ COPY . /backend
 WORKDIR /backend
 RUN /micromamba/bin/micromamba run -n backend pip install -e .
 
-CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 --reload
+CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0

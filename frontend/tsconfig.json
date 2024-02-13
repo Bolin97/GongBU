@@ -1,4 +1,3 @@
-// @ts-ignore
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
@@ -10,7 +9,7 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": false,
-		"ignoreDeprecations": "5.0"
+		"moduleResolution": "bundler"
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//

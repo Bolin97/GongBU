@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { ParamType, type ParamEntry } from "../../../components/params/Params";
-    import ParamGroup from "../../../components/params/ParamGroup.svelte";
+    import { ParamType, type ParamEntry } from "../../components/params/Params";
+    import ParamGroup from "../../components/params/ParamGroup.svelte";
     import axios from "axios";
 	import { BACKEND } from "../../store";
     const naming_is_hard: Array<ParamEntry> = [{

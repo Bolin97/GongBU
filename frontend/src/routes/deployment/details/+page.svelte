@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Hr, Label, Tooltip, A, Progressbar, Modal } from "flowbite-svelte";
 	import { AngleLeftSolid } from "flowbite-svelte-icons";
-	import Chart from "../../../components/Chart.svelte";
+	import Chart from "../../components/Chart.svelte";
 	import { page } from "$app/stores";
 	import { onMount, onDestroy } from "svelte"
 	import axios from "axios";
@@ -54,7 +54,7 @@
 	$: running = entry.state == 2;
 	let openllm_entry: OpenllmEntry;
 	let devices: Array<CudaDeviceEntry> = [];
-	let devices_updater: string | number | NodeJS.Timeout;
+	let devices_updater: number;
 	onMount(async () => {
 		async function update() {
 			devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
@@ -65,7 +65,7 @@
 	onDestroy(async() => {
 		clearInterval(devices_updater);
 	})
-	let state_update: string | number | NodeJS.Timeout;
+	let state_update: number;
 	onMount(async () => {
 		async function update() {
 			entry.state = (await axios.get(`${$BACKEND}/deploy_entry/state/${id}`)).data as number;

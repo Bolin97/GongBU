@@ -1,60 +1,38 @@
-# Flowbite-Svelte-Starter
+# create-svelte
 
-## Demo
+Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
 
-[Demo site](https://flowbite-svelte-starter.vercel.app/)
+## Creating a project
 
-## Stack details
+If you're seeing this, you've probably already done this step. Congrats!
 
-```
-"devDependencies": {
-  "@playwright/test": "^1.30.0",
-  "@sveltejs/adapter-auto": "2.0.0",
-  "@sveltejs/kit": "1.7.2",
-  "@typescript-eslint/eslint-plugin": "^5.52.0",
-  "@typescript-eslint/parser": "^5.52.0",
-  "autoprefixer": "^10.4.13",
-  "eslint": "^8.34.0",
-  "eslint-config-prettier": "^8.6.0",
-  "eslint-plugin-svelte3": "^4.0.0",
-  "flowbite": "^1.6.3",
-  "flowbite-svelte": "^0.29.13",
-  "flowbite-svelte-blocks": "^0.1.6",
-  "postcss": "^8.4.21",
-  "prettier": "^2.8.4",
-  "prettier-plugin-svelte": "^2.9.0",
-  "svelte": "^3.55.1",
-  "svelte-check": "^2.10.3",
-  "svelte-heros": "^2.6.0",
-  "tailwindcss": "^3.2.7",
-  "tslib": "^2.5.0",
-  "typescript": "~4.7.4",
-  "vite": "^4.1.2",
-  "vitest": "^0.28.5"
-},
+```bash
+# create a new project in the current directory
+npm create svelte@latest
+
+# create a new project in my-app
+npm create svelte@latest my-app
 ```
 
-## Installation
+## Developing
 
-```sh
-npx degit shinokada/flowbite-svelte-starter my-demo
-cd my-demo
-pnpm i // or npm i
-pnpm run dev // or npm run dev
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+
+```bash
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
 
-Then update dependencies:
+## Building
 
+To create a production version of your app:
+
+```bash
+npm run build
 ```
-pnpm update
-// you may need to run this:
-pnpm i -D flowbite-svelte@latest
-```
 
-## Other examples/themes
+You can preview the production build with `npm run preview`.
 
-### Jaco example
-
-```sh
-git checkout jaco
-```
+> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.

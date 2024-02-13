@@ -1,6 +1,7 @@
-import { writable } from "svelte/store";
+import { writable, type Writable } from "svelte/store";
 
-export const BACKEND = writable(import.meta.env.VITE_BACKEND);
+export const BACKEND: Writable<string> = writable(import.meta.env.VITE_BACKEND);
+
 
 export const LIST_SPLITTER = "|";
 // milliseconds

@@ -5,7 +5,7 @@
 	import Dataset from "../DatasetTable.svelte";
 	import {
 		CalendarWeekSolid,
-		CheckCircleSolid,
+		CheckCircleOutline,
 		AdjustmentsHorizontalSolid,
 		AngleLeftSolid
 	} from "flowbite-svelte-icons";
@@ -21,7 +21,10 @@
 	let description = "";
 
 	let loading = false;
-	let pool_id: number | null = null;
+	let pool_id: number = -1;
+	if (pool_id == null) {
+		loading = true;
+	}
 
 	async function create_pool_handle() {
 		loading = true;
@@ -123,7 +126,7 @@
 										class="text-primary-500 dark:text-primary-400"
 									/>
 								{:else if i + 1 < current_step}
-									<CheckCircleSolid
+									<CheckCircleOutline
 										size="sm"
 										class="text-primary-500 dark:text-primary-400"
 									/>
