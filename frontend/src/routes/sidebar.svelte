@@ -10,12 +10,12 @@
 		ArrowRightToBracketSolid,
 	} from "flowbite-svelte-icons";
 	$: activeUrl = $page.url.pathname;
-	let sidebar = ["模型广场", "应用广场", "微调管理", "数据管理", "部署管理"];
-	let route = ["/modelsqure", "/application", "/finetune", "/data", "/deployment"];
+	let sidebar = ["模型广场", "应用广场", "微调管理", "数据管理", "部署管理", "模型下载", "设置"];
+	let route = ["/modelsqure", "/application", "/finetune", "/data", "/deployment", "/download", "/config"];
 	// let darkmodebtn =
 	// 	'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-lg p-2.5 fixed right-4 top-2 z-50';
 
-	const icons = [GridSolid, ArrowRightToBracketSolid, UserSolid, MailBoxSolid, MailBoxSolid];
+	const icons = [GridSolid, ArrowRightToBracketSolid, UserSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid];
 </script>
 
 <!-- <DarkMode btnClass={darkmodebtn} /> -->

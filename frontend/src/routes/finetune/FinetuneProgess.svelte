@@ -8,7 +8,7 @@
 	export let noUpdate = false;
 	let percentage = "0";
 	let entry: FinetuneProgessEntry = undefined;
-	let percentage_updater: string | number | NodeJS.Timeout;
+	let percentage_updater: number;
 	onMount(async () => {
 		async function update() {
 			entry = (await axios.get(`${$BACKEND}/finetune_progress/${id}`))

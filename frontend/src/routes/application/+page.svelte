@@ -26,7 +26,7 @@
 		const res = await axios.get(`${$BACKEND}/application/running`);
 		instances = res.data;
 	}
-	let updater: string | number | NodeJS.Timeout;
+	let updater: number;
 	onMount(async () => {
 		updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});

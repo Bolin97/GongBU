@@ -21,7 +21,7 @@
 		deployments = (await axios.get(`${$BACKEND}/deploy_entry/`)).data as Array<DeploymentEntry>;
 	})
 
-	let deployments_updater: string | number | NodeJS.Timeout;
+	let deployments_updater: number;
 	onMount(async () => {
 		async function update() {
 			const reduced = ((await axios.get(`${$BACKEND}/deploy_entry/reduced`)).data as Array<{entry_id: number, state: number}>);

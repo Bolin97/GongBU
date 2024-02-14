@@ -1,7 +1,7 @@
 import { writable, type Writable } from "svelte/store";
 
-export const BACKEND: Writable<string> = writable(import.meta.env.VITE_BACKEND);
-
+export let BACKEND: Writable<string> = writable(import.meta.env.VITE_BACKEND);
+export let MODEL_LIST: Writable<string> = writable(import.meta.env.VITE_BACMODEL_LIST);
 
 export const LIST_SPLITTER = "|";
 // milliseconds
