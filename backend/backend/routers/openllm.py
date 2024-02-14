@@ -30,7 +30,7 @@ async def read_openllms_pic(model_id: int, db: Session = Depends(gen_db)):
     llm_entry = db.query(OpenLLM).filter(OpenLLM.model_id == model_id).first()
     path = os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", llm_entry.view_pic)
     if not os.path.exists(path):
-        return FileResponse("./logo.jpg")
+        return FileResponse("./logo.webp")
     return FileResponse(path)
 
 
@@ -86,18 +86,14 @@ def write_info(info: ModelListItem):
     
     db = get_db()
     # avatar
-    view_pic = f"{info.model_name}.png"
+    view_pic = f"{info.model_name}.webp"
     try:
-        response = rq.get(info.avatar_url, timeout=5)
+        response = rq.get(info.avatar_url, timeout=5, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299"
+        })
         img = Image.open(BytesIO(response.content))
-        img.thumbnail((100, 100))
-        byte_io = BytesIO()
-        img.save(byte_io, format='PNG', compress_level=9)
-        byte_io.seek(0)
-        # Save the image to a file with a .png extension
-        filename = os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", f"{info.model_name}.png")
-        with open(filename, 'wb') as f:
-            f.write(byte_io.getbuffer())
+        ratio = min(128 / img.size[0], 128 / img.size[1])
+        img.resize((int(ratio * img.size[0]), int(ratio * img.size[1]))).save(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", view_pic), format='WEBP')
     except:
         view_pic = "ERR"
     
