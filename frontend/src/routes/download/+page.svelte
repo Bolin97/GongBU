@@ -5,7 +5,7 @@
     import { Alert, Button, Input, Modal, Toast } from "flowbite-svelte";
     import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
     import axios from "axios";
-  import { CloseSolid } from "flowbite-svelte-icons";
+    import { CloseSolid } from "flowbite-svelte-icons";
 
     let error_parsing = false;
 

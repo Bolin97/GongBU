@@ -2,12 +2,7 @@
     import { stringify } from "postcss";
     import { BACKEND, MODEL_LIST } from "../store";
     import { Input, Textarea } from "flowbite-svelte";
-    let backend_input = $BACKEND;
-    let model_list_input = $MODEL_LIST;
-    $: {
-        console.log(backend_input);
-        console.log(model_list_input);
-    }
+
 </script>
 
 <div class="pt-2 w-full">
@@ -23,13 +18,14 @@
     <div class="m-2 p-2">
         <span class="my-2">后端地址</span>
         <Input
-            bind:value={backend_input}
+            bind:value={$BACKEND}
         />
     </div>
     <div class="m-2 p-2">
         <span class="my-2">模型列表</span>
         <Textarea
-            bind:value={model_list_input}
+            rows="16"
+            bind:value={$MODEL_LIST}
         />
     </div>
 </div>
