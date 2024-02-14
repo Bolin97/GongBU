@@ -21,13 +21,13 @@ services:
     container_name: api
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     ports:
       - "8000:8000"
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
-      - ./
+      - ./ext:/backend/backend/ext
     depends_on:
       - db
     environment:

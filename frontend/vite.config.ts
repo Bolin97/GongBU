@@ -3,7 +3,10 @@ import { defineConfig } from 'vite';
 import compression from 'vite-plugin-compression'
 
 export default defineConfig({
-	plugins: [sveltekit(), compression()],
+	plugins: [sveltekit(), compression({
+		algorithm: 'gzip',
+		threshold: 10240,
+	})],
 	build: {
 		minify: 'terser', // enable minification
 		chunkSizeWarningLimit: 512, // set warning limit to 512kb
