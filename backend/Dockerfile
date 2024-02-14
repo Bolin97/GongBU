@@ -3,7 +3,8 @@ FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
 RUN apt-get update
 RUN apt-get install -y apt-utils
 # Install wget
-RUN apt-get install -y wget curl postgresql-client net-tools iputils-ping vim
+RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim
+
 
 # micromamba
 COPY ./dep/linux_mb.tar.bz2 /conf/linux_mb.tar.bz2
