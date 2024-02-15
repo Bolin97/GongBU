@@ -13,6 +13,8 @@ def scan() -> list[any]:
     # iterate over the folders in the folder
     for folder in os.listdir("backend/ext"):
         # check if the folder has an entry.py
+        if folder.startswith("_"):
+            continue
         if os.path.isfile(os.path.join("backend/ext", folder, "entry.py")):
             # import the module
             module = importlib.import_module(f"backend.ext.{folder}.entry")
