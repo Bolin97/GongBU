@@ -134,6 +134,7 @@ class DeploymentManager:
     
     def __init__(self):
         self.deploy_id_to_pid = SafeDict()
+        self.deployments = SafeDict()
      
     def deploy(self, deploy_id: int):
         #TODO: params not implemented
@@ -157,7 +158,7 @@ class DeploymentManager:
         app = LLMWrapper(model_path, adapter_path, devcies, port, deploy_id)
         self.deployments[deploy_id] = app
         app.load_model()
-        proc = ctx.Process(target=app.start_gradio_app, args=(model_path, adapter_path, devcies, port, deploy_id))
+        proc = ctx.Process(target=app.start_gradio_app)
         if datetime.utcnow() >= deploy_entry.start_time:
             proc.start()
         else:

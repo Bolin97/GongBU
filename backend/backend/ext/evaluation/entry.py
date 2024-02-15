@@ -9,6 +9,7 @@ from nltk.util import ngrams
 from collections import Counter
 from backend.tuner.generate_prompt import generate_prompt
 import numpy as np
+from backend.deployment.deployment_manager import LLMWrapper
 
 """from gradio_client import Client
 
@@ -26,14 +27,14 @@ print(result)"""
 
 class Main:
     
-    gr_url: str
+    llm: LLMWrapper
     port: int
     
-    def __init__(self, gr_url: str, port: int):
-        self.gr_url = gr_url
+    def __init__(self, llm: LLMWrapper, port: int):
+        self.llm = llm
         self.port = port
     
-    def get_front_page_url(self) -> str:
+    def get_startup_info(self) -> str:
         return f"http://127.0.0.1:{self.port}"
 
     @staticmethod
@@ -49,12 +50,11 @@ class Main:
         return "Evaluation for llm"
     
     def get_generated_output(self, data_point):
-        client = grc.Client(self.gr_url)
-        result = client.predict(
-            generate_prompt(data_point, for_infer=True),	
-            0,
-            len(generate_prompt(data_point)),	
-            api_name="/chat"
+        prompt = generate_prompt(data_point, for_infer=True)
+        result = self.llm.text_generate(
+            prompt,
+            len(generate_prompt(data_point)),
+            temperature=0.2
         )
         return result
 

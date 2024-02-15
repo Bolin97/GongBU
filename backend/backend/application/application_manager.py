@@ -60,7 +60,7 @@ class ApplicationManager:
                 break
         if app_cls is None:
             return
-        app = app_cls(deployment_manager.deployments[deploy_id], port)
+        app = app_cls(deployment_manager.deployments[int(deploy_id)], port)
         app_entry = ApplicationInstanceEntry(name, description, app.get_name(), deploy_id, app.get_startup_info())
         proc = ctx.Process(target=app.run)
         proc.start()

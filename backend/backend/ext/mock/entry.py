@@ -10,13 +10,13 @@ class Main:
         return f"{self.port} is the port"
     
     @staticmethod
-    def get_name(cls) -> str:
+    def get_name() -> str:
         return "Mocking App"
     @staticmethod
-    def get_description(cls) -> str:
+    def get_description() -> str:
         return "Mocking App Description"
     @staticmethod
-    def get_id(self) -> str:
+    def get_id() -> str:
         return "Mocking"
 
     def run(self):
