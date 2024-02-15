@@ -59,7 +59,7 @@
 	}
 
 	async function submit_handle() {
-		await axios.post(`${$BACKEND}/deploy/`, deploy_params, {
+		axios.post(`${$BACKEND}/deploy/`, deploy_params, {
 			params: {
 				name: name,
 				description: description,

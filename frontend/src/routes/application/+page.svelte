@@ -10,17 +10,17 @@
 		"应用实例名",
 		"应用实例描述",
 		"应用名",
-		"大模型接口",
-		"应用入口",
+		"部署id",
+		"应用消息",
 		"操作"
 	];
 	let instances: Array<{
-		pid: number;
-		name: string;
-		description: string;
-		app_name: string;
-		injected_url: string;
-		page_url: string;
+		pid: number,
+		name: string,
+		description: string,
+		app_name: string,
+		deploy_id: string,
+		info: string
 	}> = [];
 	async function update() {
 		const res = await axios.get(`${$BACKEND}/application/running`);
@@ -92,14 +92,10 @@
 					<td class="px-4 py-4">{running_app.description}</td>
 					<td class="px-4 py-4">{running_app.app_name}</td>
 					<td class="px-4 py-4">
-						<a href={running_app.injected_url} class="mx-1 text-blue-600 hover:underline">
-							{running_app.injected_url}
-						</a>
+						{running_app.deploy_id}
 					</td>
 					<td class="px-4 py-4">
-						<a href={running_app.page_url} class="mx-1 text-blue-600 hover:underline">
-							{running_app.page_url}
-						</a>
+						{running_app.info}
 					</td>
 					<td class="px-4 py-4">
 						<button class="mx-1 text-blue-600 hover:underline" on:click={(_) => {
