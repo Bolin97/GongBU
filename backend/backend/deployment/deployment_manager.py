@@ -19,13 +19,31 @@ from accelerate import infer_auto_device_map, Accelerator
 # 2 on
 # 3 finished
 
-def gradio_app(model_path: str, adapter_path: str, devices: str, port: int, entry_id: int):
-    try:
-        device_arr = devices.split(LIST_SEPERATER)
+class LLMWrapper:
+    
+    model_path: str
+    adapter_path: str
+    devices: str
+    port: int
+    entry_id: int
+    model: any
+    tokenizer: any
+    device_arr: list[str]
+    
+    def __init__(self, model_path: str, adapter_path: str, devices: str, port: int, entry_id: int):
+        self.model_path = model_path
+        self.adapter_path = adapter_path
+        self.devices = devices
+        self.port = port
+        self.entry_id = entry_id
+    
+    def load_model(self):
+        device_arr = self.devices.split(LIST_SEPERATER)
         if device_arr[0] == "auto":
             device_arr = [str(i) for i in range(torch.cuda.device_count())]
+        self.device_arr = device_arr
         model_on_cpu = AutoModelForCausalLM.from_pretrained(
-            model_path, trust_remote_code=True, device_map={"": "cpu"}
+            self.model_path, trust_remote_code=True, device_map={"": "cpu"}
         )
         distribution = {
             int(each): torch.cuda.get_device_properties(int(each)).total_memory
@@ -38,11 +56,13 @@ def gradio_app(model_path: str, adapter_path: str, devices: str, port: int, entr
             no_split_module_classes=type(model_on_cpu)._no_split_modules
         )
         del model_on_cpu
-        model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=device_map)
-        if adapter_path != "":
-            model = peft.PeftModelForCausalLM.from_pretrained(model, adapter_path)
-        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-        stop_token_ids = [tokenizer.eos_token_id]
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_path, trust_remote_code=True, device_map=device_map)
+        if self.adapter_path != "":
+            self.model = peft.PeftModelForCausalLM.from_pretrained(self.model, self.adapter_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, trust_remote_code=True)
+    
+    def text_generate(self, input_str: str, max_length: int, temperature: float):
+        stop_token_ids = [self.tokenizer.eos_token_id]
         class StopOnTokens(StoppingCriteria):
             def __call__(
                 self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
@@ -51,53 +71,58 @@ def gradio_app(model_path: str, adapter_path: str, devices: str, port: int, entr
                     if input_ids[0][-1] == stop_id:
                         return True
                 return False
-        
-        current_cnt = 0
-        last_update = datetime.now()
-        
-        def count_access():
-            nonlocal current_cnt, last_update
-            if last_update.day != datetime.now().day:
-                access_counter = DeployAccessCounter(entry_id=entry_id, count=current_cnt, date=last_update.date())
-                current_cnt = 0
-                last_update = datetime.now()
-                db_for_counter = get_db()
-                db_for_counter.add(access_counter)
-                db_for_counter.commit()
-                db_for_counter.close()
-            current_cnt += 1
-        
-        def chat(message: str, history: list[list[str]], temperature: float, max_length: int):
-            count_access()
-            input_ids = tokenizer.encode(message, return_tensors="pt").to(f"cuda:{devices[0]}")
-            output = model.generate(inputs=input_ids, max_length=max_length, temperature=temperature, stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
-            return tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(message)
-        db = get_db()
-        deploy_entry = db.query(DeployEntry).filter(DeployEntry.entry_id == entry_id).first()
-        deploy_entry.state = 2
-        db.commit()
-        db.close()
-        gr.ChatInterface(
-            fn=chat,
-            additional_inputs=[
-                gr.Slider(minimum=0, maximum=3.0, step=0.1, value=1.0, label="Temperature"),
-                gr.Slider(minimum=10, maximum=1024, step=1, value=64, label="Max Length")
-            ],
-        ).launch(server_port=port)
-    except Exception as e:
-        print(e)
-        db = get_db()
-        deploy_entry = db.query(DeployEntry).filter(DeployEntry.entry_id == entry_id).first()
-        deploy_entry.state = -1
-        db.commit()
-        db.close()
+        input_ids = self.tokenizer.encode(input_str, return_tensors="pt").to(f"cuda:{self.devices[0]}")
+        output = self.model.generate(inputs=input_ids, max_length=max_length, temperature=temperature, stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
+        return self.tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(input_str)
+    
+    def start_gradio_app(self):
+        try:
+            current_cnt = 0
+            last_update = datetime.now()
+            def count_access():
+                nonlocal current_cnt, last_update
+                if last_update.day != datetime.now().day:
+                    access_counter = DeployAccessCounter(entry_id=self.entry_id, count=current_cnt, date=last_update.date())
+                    current_cnt = 0
+                    last_update = datetime.now()
+                    db_for_counter = get_db()
+                    db_for_counter.add(access_counter)
+                    db_for_counter.commit()
+                    db_for_counter.close()
+                current_cnt += 1
+            
+            def chat(message: str, history: list[list[str]], temperature: float, max_length: int):
+                count_access()
+                return self.text_generate(message, max_length, temperature)
+                
+            db = get_db()
+            deploy_entry = db.query(DeployEntry).filter(DeployEntry.entry_id == self.entry_id).first()
+            deploy_entry.state = 2
+            db.commit()
+            db.close()
+            gr.ChatInterface(
+                fn=chat,
+                additional_inputs=[
+                    gr.Slider(minimum=0, maximum=3.0, step=0.1, value=1.0, label="Temperature"),
+                    gr.Slider(minimum=10, maximum=1024, step=1, value=64, label="Max Length")
+                ],
+            ).launch(server_port=self.port)
+        except Exception as e:
+            print(e)
+            db = get_db()
+            deploy_entry = db.query(DeployEntry).filter(DeployEntry.entry_id == self.entry_id).first()
+            deploy_entry.state = -1
+            db.commit()
+            db.close()
     
 def terminate_proc(pid: int):
     os.kill(pid, signal.SIGKILL)
 
 class DeploymentManager:
 
-    deployments: SafeDict[int, int]
+    deploy_id_to_pid: SafeDict[int, int]
+    # deploy_id to LLMWrapper
+    deployments: SafeDict[int, LLMWrapper]
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -108,12 +133,11 @@ class DeploymentManager:
         return cls.instance
     
     def __init__(self):
-        self.deployments = SafeDict()
+        self.deploy_id_to_pid = SafeDict()
      
     def deploy(self, deploy_id: int):
         #TODO: params not implemented
-        #TODO: devices not implemented
-        if deploy_id in self.deployments:
+        if deploy_id in self.deploy_id_to_pid:
             return
         adapter_path = ""
         model_path = ""
@@ -130,7 +154,10 @@ class DeploymentManager:
         devcies = deploy_entry.devices
         port = deploy_entry.port
         db.close()
-        proc = ctx.Process(target=gradio_app, args=(model_path, adapter_path, devcies, port, deploy_id))
+        app = LLMWrapper(model_path, adapter_path, devcies, port, deploy_id)
+        self.deployments[deploy_id] = app
+        app.load_model()
+        proc = ctx.Process(target=app.start_gradio_app, args=(model_path, adapter_path, devcies, port, deploy_id))
         if datetime.utcnow() >= deploy_entry.start_time:
             proc.start()
         else:
@@ -139,19 +166,19 @@ class DeploymentManager:
             start_timer.start()
         end_timer = Timer((deploy_entry.end_time - datetime.utcnow()).total_seconds(), self.stop, args=(deploy_id,))
         end_timer.start()
-        self.deployments[deploy_id] = proc.pid
+        self.deploy_id_to_pid[deploy_id] = proc.pid
   
     def restart(self, entry_id: int):
-        if entry_id in self.deployments:
+        if entry_id in self.deploy_id_to_pid:
             self.stop(entry_id)
         self.deploy(entry_id)
 
     def stop(self, entry_id: int):
-        if entry_id not in self.deployments:
+        if entry_id not in self.deploy_id_to_pid:
             # which means it was manually stopped
             return
-        terminate_proc(self.deployments[entry_id])
-        del self.deployments[entry_id]
+        terminate_proc(self.deploy_id_to_pid[entry_id])
+        del self.deploy_id_to_pid[entry_id]
         db = get_db()
         deploy_entry = db.query(DeployEntry).filter(DeployEntry.entry_id == entry_id).first()
         deploy_entry.state = 3

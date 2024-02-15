@@ -14,8 +14,8 @@ async def get_applications():
     }, scan()))
 
 @application_router.post("/")
-async def start_application(app_id: str, injected_url: str, name: str, description: str, port: int):
-    manager.start_app(app_id, injected_url, name, description, port)
+async def start_application(app_id: str, deploy_id: str, name: str, description: str, port: int):
+    manager.start_app(app_id, deploy_id, name, description, port)
     
 @application_router.get("/running")
 async def get_running_applications():

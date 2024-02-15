@@ -1,9 +1,11 @@
+from backend.deployment.deployment_manager import LLMWrapper
+
 class LLMApp:
     
-    def __init__(self, gr_url: str, port: int):
+    def __init__(self, llm: LLMWrapper, port: int):
         pass
     
-    def get_front_page_url(cls) -> str:
+    def get_startup_info(self) -> str:
         pass
     @staticmethod
     def get_name(cls) -> str:
