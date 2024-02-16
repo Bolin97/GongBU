@@ -9,13 +9,14 @@ package
 .vscode
 .env
 .env.*
+bert
 backend/dep
-!.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 __pycache__
 *.pyc
-backend/bert-base-chinese
+backend/bert
 backend/flagged
 backend/tests
 makefile
+ext
