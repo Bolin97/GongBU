@@ -83,7 +83,8 @@
 					params: {
 						name: entry.name,
 						description: entry.description,
-						pool_id: poolId
+						pool_id: poolId,
+						kind: data_type,
 					}
 				});
 			})
@@ -105,21 +106,17 @@
 		await fetch_dataset_entries();
 	});
 
-	async function remove_from_stage_hande(i: number) {
+	async function remove_from_stage_handle(i: number) {
 		submissions = submissions.filter((_, index) => {
 			return index != i;
 		});
 	}
+	const dataset_types = ["instruct-input(optional)-output", "input-output"]
+	let data_type: number = 0;
 </script>
 
 {#if !loading}
 	<div class="w-full">
-		<!-- <div class="flex flex-row gap-2 m-4 my-8">
-		<Label>数据集类型选择：</Label>
-		{#each dataset_types as type, index}
-			<Radio bind:group={data_type} name="method" value={index}><p class="text-lg">{type}</p></Radio>
-		{/each}
-	</div> -->
 		<div class="m-2">
 			<Accordion>
 				<AccordionItem open={true}>
@@ -138,11 +135,18 @@
 				<Accordion>
 					<AccordionItem open={true}>
 						<span slot="header">暂存区</span>
-						<div class="flex flex-row justify-end">
+						<div class="flex flex-row justify-end items-center text-black">
 							<div>
-								<Button class="m-2" on:click={(_) => submit_handle()}
-									>提交暂存区的所有文件</Button
-								>
+								以
+							</div>
+							<div class="flex flex-row gap-2 m-4 my-8">
+								{#each dataset_types as type, index}
+								<Radio bind:group={data_type} name="method" value={index}><p class="text-lg">{type}</p></Radio>
+								{/each}
+							</div>
+							<span>格式</span>
+							<div>
+								<Button class="m-2 text-center" on:click={(_) => submit_handle()}>提交暂存区的所有文件</Button>
 							</div>
 						</div>
 						<div class="border border-gray-200 text-gray-800 rounded p-2 m-2">
@@ -176,7 +180,7 @@
 											</TableBodyCell>
 											<TableBodyCell>
 												<button
-													on:click={(_) => remove_from_stage_hande(index)}
+													on:click={(_) => remove_from_stage_handle(index)}
 													class="text-blue-500 hover:text-blue-800 hover:underline"
 													>移出暂存区</button
 												>
@@ -219,7 +223,7 @@
 						>以上传文件至暂存区
 					</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						SVG, PNG, JPG or GIF (MAX. 800x400px)
+						JSON
 					</p>
 				</Dropzone>
 			</div>
