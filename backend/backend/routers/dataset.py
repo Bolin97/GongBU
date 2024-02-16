@@ -10,8 +10,8 @@ dataset_router = APIRouter()
 
 
 @dataset_router.post("/")
-async def upload_finetune(name: str, description: str, pool_id: str, file: UploadFile):
-    submit_finetune_dataset(pool_id, name, description, file.file)
+async def upload_finetune(name: str, description: str, pool_id: str, kind: int, file: UploadFile):
+    submit_finetune_dataset(pool_id, name, description, kind, file.file)
 
 
 @dataset_router.delete("/{id}")
