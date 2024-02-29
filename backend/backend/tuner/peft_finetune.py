@@ -194,7 +194,7 @@ def train(
         base_model, trust_remote_code=True, device_map={"": "cpu"}
     )
     distribution = {
-        each: torch.cuda.get_device_properties(each).total_memory
+        each: int(torch.cuda.get_device_properties(each).total_memory * 0.8)
         for each in devices
     }
     distribution.update({"cpu": psutil.virtual_memory().available})
@@ -439,7 +439,8 @@ def train(
             warmup_steps=100,
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
-            fp16=True,
+            fp16=False,
+            bf16=True,
             logging_steps=logging_step,
             optim="adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",

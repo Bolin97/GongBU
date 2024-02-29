@@ -21,10 +21,10 @@
 	import { Label } from "flowbite-svelte";
 	import { Dropzone } from "flowbite-svelte";
 	import { FileSolid } from "flowbite-svelte-icons";
-	import { BACKEND } from "../store";
+	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../store";
 	import DatasetTable from "./DatasetTable.svelte";
 	import type DatasetEntry from "../../class/DatasetEntry";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 
 	interface SubmissionEntry {
 		name: string;
@@ -33,6 +33,8 @@
 	}
 
 	let submissions: Array<SubmissionEntry> = [];
+	let loadingProgress = 1;
+	let loadingTotal = 0;
 	// $: stageEmpty = submissions.length != 0;
 
 	function file_to_default_entry(file: File): SubmissionEntry {
@@ -74,26 +76,62 @@
 	let loading = false;
 
 	async function submit_handle() {
+		loadingTotal = submissions.length;
+		loadingProgress = 0;
 		loading = true;
-		await Promise.all(
-			submissions.map((entry) => {
-				const form = new FormData();
-				form.append("file", entry.file);
-				return axios.post(`${$BACKEND}/dataset/`, form, {
-					params: {
-						name: entry.name,
-						description: entry.description,
-						pool_id: poolId,
-						kind: data_type,
-					}
-				});
-			})
-		);
+		for(var i = 0; i < submissions.length; i++) {
+			const form = new FormData();
+			const entry = submissions[i]
+			form.append("file", entry.file);
+			await axios.post(`${$BACKEND}/dataset/`, form, {
+				params: {
+					name: entry.name,
+					description: entry.description,
+					pool_id: poolId,
+					kind: data_type,
+				}
+			});
+			loadingProgress += 1;
+		}
+		// submissions.forEach(async (entry) => {
+		// 	const form = new FormData();
+		// 	form.append("file", entry.file);
+		// 	await axios.post(`${$BACKEND}/dataset/`, form, {
+		// 		params: {
+		// 			name: entry.name,
+		// 			description: entry.description,
+		// 			pool_id: poolId,
+		// 			kind: data_type,
+		// 		}
+		// 	});
+		// 	loadingProgress += 1;
+		// })
+
+		// await Promise.all(
+		// 	submissions.map((entry) => {
+		// 		const form = new FormData();
+		// 		form.append("file", entry.file);
+		// 		return axios.post(`${$BACKEND}/dataset/`, form, {
+		// 			params: {
+		// 				name: entry.name,
+		// 				description: entry.description,
+		// 				pool_id: poolId,
+		// 				kind: data_type,
+		// 			}
+		// 		});
+		// 	})
+		// );
 		await fetch_dataset_entries();
 		submissions = [];
 		loading = false;
 	}
-
+	let fetch_entries_updater : number;
+	onMount(async () => {
+		fetch_entries_updater = setInterval(fetch_dataset_entries, UPDATE_VIEW_INTERVAL)
+	})
+	onDestroy(async () => {
+		clearInterval(fetch_entries_updater)
+	})
 	let entries: Array<DatasetEntry> = [];
 	export let stageEmpty = submissions.length == 0;
 	$: stageEmpty = submissions.length == 0;
@@ -230,5 +268,7 @@
 		</div>
 	</div>
 {:else}
-	<div>loading</div>
+	<div>
+		{loadingProgress} out of {loadingTotal}
+	</div>
 {/if}

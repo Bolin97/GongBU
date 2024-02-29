@@ -28,7 +28,7 @@ services:
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
-      - ./bert:/backend/bert
+      - ./bert-base-chinese:/backend/bert-base-chinese
       - ./ext:/backend/ext
     depends_on:
       - db

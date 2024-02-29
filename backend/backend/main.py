@@ -7,7 +7,7 @@ import uvicorn
 import os
 import multiprocessing as mp
 
-os.environ["MKL_THREADING_LAYER"] = "GNU"
+# os.environ["MKL_THREADING_LAYER"] = "GNU"
 
 app = FastAPI()
 

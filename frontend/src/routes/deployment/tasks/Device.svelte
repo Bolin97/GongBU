@@ -66,7 +66,7 @@
 <div class="flex flex-col">
 	<div class="flex flex-row justify-between">
 		<span class="text-1xl m-2 mt-4">自动分配</span>
-		<Toggle class="inline" on:change={(_) => { toggle_auto() }}/>
+		<Toggle on:change={(_) => { toggle_auto() }}/>
 	</div>
 	<div class="text-1xl m-2 my-4 mt-2">本地设备：</div>
 	<div class={`flex flex-col ${auto_dist ? "opacity-50" : ""}`}>

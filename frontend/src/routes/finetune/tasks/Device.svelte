@@ -94,7 +94,7 @@
 	<span class="text-1xl m-2 mt-4">已选择的模型与微调方法<span class="mx-1 px-1"><span class="font-bold">{allow_multi ? "": "不"}</span>支持</span>多卡微调</span>
 	<div class="flex flex-row justify-between">
 		<span class="text-1xl m-2 mt-4">自动分配</span>
-		<Toggle class="inline" on:change={(_) => { toggle_auto() }}/>
+		<Toggle on:change={(_) => { toggle_auto() }}/>
 	</div>
 	<div class="text-1xl m-2 my-4 mt-2">本地设备：</div>
 	<div class={`flex flex-col ${auto_dist ? "opacity-50" : ""}`}>

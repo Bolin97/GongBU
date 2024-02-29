@@ -97,13 +97,17 @@
 		"输入项目名称与描述"
 	];
 
+	let uploading = false;
+
 	async function submit_handle() {
+		uploading = true;
 		await axios.post(`${$BACKEND}/finetune/`, finetune_params, {
 			params: {
 				name: name,
 				description: description
 			}
 		});
+		uploading = false;
 		goto("/finetune");
 	}
 
@@ -117,6 +121,7 @@
 	>
 </div>
 <hr class="pt-1" />
+{#if !uploading}
 <div class="w-full flex flex-row p-1 m-2 mt-4">
 	<div>
 		<Timeline order="vertical">
@@ -222,3 +227,6 @@
 		</div>
 	</div>
 </div>
+{:else}
+<div>Loading</div>
+{/if}

@@ -2,7 +2,6 @@
 	import "../app.css";
 	import Header from "./header.svelte";
 	import Sidebar from "./sidebar.svelte";
-	
 </script>
 
 <Header />

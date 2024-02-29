@@ -40,6 +40,7 @@
 	import type FinetuneEntryReduced from "../../../class/FinetuneEntryReduced";
 	import { REALTIME_FINETUNE_DETAIL } from "../../store";
 	import type CudaDeviceEntry from "../../../class/CudaDeviceEntry";
+    import type DatasetEntry from "../../../class/DatasetEntry";
 	let devices: Array<CudaDeviceEntry> = [];
 	let devices_updater: number;
 	onMount(async () => {
@@ -65,8 +66,10 @@
 
 	let finetune_entry: FinetuneEntry;
 	let model_entry: OpenllmEntry;
+	
 
 	let finetune_entry_updater: number;
+	let dataset_entry: DatasetEntry
 	onMount(async () => {
 		async function update() {
 			if (finetune_entry.state == 0) {
@@ -83,6 +86,7 @@
 		}
 		finetune_entry = (await axios.get(`${$BACKEND}/finetune_entry/${id}`)).data;
 		model_entry = (await axios.get(`${$BACKEND}/openllm/${finetune_entry.model_id}`)).data;
+		dataset_entry = (await axios.get(`${$BACKEND}/dataset_entry/${finetune_entry.dataset_id}`)).data;
 		finetune_entry_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -255,7 +259,7 @@
 	</svelte:fragment>
 </Modal>
 
-{#if finetune_entry == undefined}
+{#if finetune_entry == undefined || dataset_entry == undefined || model_entry == undefined}
 loading
 {:else}
 
@@ -348,7 +352,7 @@ loading
 				return !g.advanced;
 			}) as group}
 				<Hr />
-				<div class="m-2">
+				<div class="m-1">
 					<span class="text-1xl pt-1 text-black-400 font-bold">{group.title}</span>
 					<div class="grid gap-2 m-2 grid-cols-1 lg:grid-cols-2">
 						{#each group.params as param}
@@ -362,19 +366,19 @@ loading
 				</div>
 			{/each}
 			<Hr />
-			<div class="m-2">
+			<div class="m-1">
 				<span class="text-1xl pt-1 text-black-400 font-bold">训练设备当前状态:</span>
 				<div class="gap-2 m-1 grid grid-cols-1 lg:grid-cols-2">
 					{#each finetune_entry.devices == "auto" ? devices.map((each) => {return each.device_id}) : finetune_entry.devices.split(LIST_SPLITTER) as device}
 						<div class="inline-block border-gray-200 shadow p-2 m-2 w-40">
 							<div class="m-2 text-md">CUDA:{devices[device].device_id}</div>
 							<hr class="m-1"/>
-							<div class="m-2">
+							<div class="m-1">
 								GPU利用率：{devices[device].gpu_utilization.toFixed(1)}%
 								<Progressbar progress={devices[device].gpu_utilization.toFixed(1)} />
 							</div>
 							<hr class="m-1"/>
-							<div class="m-2">
+							<div class="m-1">
 								显存利用率：{devices[device].memory_utilization.toFixed(1)}%
 								<Progressbar progress={devices[device].memory_utilization.toFixed(1)} />
 							</div>
@@ -383,7 +387,15 @@ loading
 				</div>
 			</div>
 			<Hr />
-			<div class="m-2">
+			<div class="m-1">
+				<span class="text-1xl pt-1 text-black-400 font-bold">数据集</span>
+				<div class="m-1">
+					<div>{dataset_entry.name}</div>
+					<div class="mt-1 p-2 text-sm text-gray-800">{dataset_entry.description}</div>
+				</div>
+			</div>
+			<Hr />
+			<div class="m-1">
 				<span class="text-1xl pt-1 text-black-400 font-bold">保存路径:</span>
 				<div class="flex flex-row gap-2 m-1">
 					<Label class="mb-2">
@@ -397,7 +409,7 @@ loading
 					{#each groups.filter((g) => {
 						return g.advanced;
 					}) as group, index}
-						<div class="m-2">
+						<div class="m-1">
 							<span class="text-1xl pt-1 text-black-400 font-bold">{group.title}</span
 							>
 							<div class="grid grid-cols-1 gap-2 m-2">

@@ -2,7 +2,6 @@
     import { stringify } from "postcss";
     import { BACKEND, MODEL_LIST } from "../store";
     import { Input, Textarea } from "flowbite-svelte";
-
 </script>
 
 <div class="pt-2 w-full">

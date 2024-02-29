@@ -1,11 +1,11 @@
 <!-- src/routes/filesystem.svelte -->
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { FileSolid, FolderSolid, AngleLeftSolid } from "flowbite-svelte-icons";
 	import { Button, Input, Label, Modal } from "flowbite-svelte";
 	import axios from "axios";
-	import { BACKEND, DEFAULT_MODEL_OUTPUT } from "../../../store";
+	import { BACKEND, DEFAULT_MODEL_OUTPUT, UPDATE_VIEW_INTERVAL } from "../../../store";
 
 	type FileEntry = {
 		name: string;
@@ -63,8 +63,16 @@
 			}
 		);
 		new_folder_name = "";
-		load();
+		setTimeout(load, UPDATE_VIEW_INTERVAL);
 	}
+
+	// let new_folder_updater: number;
+	// onMount(() => {
+	// 	new_folder_updater = setInterval(load, UPDATE_VIEW_INTERVAL);
+	// });
+	// onDestroy(() => {
+	// 	clearInterval(new_folder_updater);
+	// });
 
 	let new_folder_modal = false;
 	let new_folder_name = "";

@@ -15,3 +15,7 @@ async def by_pool(pool_id: int, db: Session = Depends(gen_db)):
         return db.query(DatasetEntry).filter(DatasetEntry.pool_id == pool_id).all()
     except:
         return []
+
+@dataset_entry_router.get("/{dataset_entry_id}")
+async def by_id(dataset_entry_id: int, db: Session = Depends(gen_db)):
+    return db.query(DatasetEntry).filter(DatasetEntry.id == dataset_entry_id).first()

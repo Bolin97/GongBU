@@ -9,7 +9,7 @@
 		UserSolid,
 		ArrowRightToBracketSolid,
 	} from "flowbite-svelte-icons";
-	$: activeUrl = $page.url.pathname;
+	// $: activeUrl = $page.url.pathname;
 	let sidebar = ["模型广场", "应用广场", "微调管理", "数据管理", "部署管理", "模型下载", "设置"];
 	let route = ["/modelsqure", "/application", "/finetune", "/data", "/deployment", "/download", "/config"];
 	// let darkmodebtn =
@@ -21,7 +21,7 @@
 <!-- <DarkMode btnClass={darkmodebtn} /> -->
 <div class="flex flex-row">
 	<div>
-		<Sidebar {activeUrl}>
+		<Sidebar>
 			<SidebarWrapper>
 				<SidebarGroup>
 					{#each sidebar as side, index}
