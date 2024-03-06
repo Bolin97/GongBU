@@ -44,7 +44,7 @@
 			{percentage}%
 		</div>
 	{/if}
-	{#if entry != undefined}
+	{#if entry != undefined && entry.total > 1}
 	<div class="w-full text-center items-center text-sm">
 		<span>{entry.current}</span> <span class="mx-1">/</span><span> {entry.total}</span>
 	</div>

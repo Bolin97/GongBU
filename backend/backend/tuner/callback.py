@@ -154,103 +154,105 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
-        if self.eval_dataset is None or len(self.indexes) == 0:
-            return
-        model: PeftModelForCausalLM = kwargs["model"]
-        tokenizer: AutoTokenizer = kwargs["tokenizer"]
-        epoch = state.log_history[-1]["epoch"]
+        try:
+            if self.eval_dataset is None or len(self.indexes) == 0:
+                return
+            model: PeftModelForCausalLM = kwargs["model"]
+            tokenizer: AutoTokenizer = kwargs["tokenizer"]
+            epoch = state.log_history[-1]["epoch"]
 
-        stop_token_ids = [tokenizer.eos_token_id]
-        class StopOnTokens(StoppingCriteria):
-            def __call__(
-                self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
-            ) -> bool:
-                for stop_id in stop_token_ids:
-                    if input_ids[0][-1] == stop_id:
-                        return True
-                return False
-        
-        def get_generated_output(data_point):
-            prompt = generate_prompt(data_point, for_infer=True)
-            input_ids = tokenizer.encode(prompt, return_tensors="pt").to(f"cuda:{self.first_device}")
-            output = model.generate(inputs=input_ids, max_length=len(generate_prompt(data_point)), stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
-            out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(prompt)
-            return out_text
+            stop_token_ids = [tokenizer.eos_token_id]
+            class StopOnTokens(StoppingCriteria):
+                def __call__(
+                    self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+                ) -> bool:
+                    for stop_id in stop_token_ids:
+                        if input_ids[0][-1] == stop_id:
+                            return True
+                    return False
+            
+            def get_generated_output(data_point):
+                prompt = generate_prompt(data_point, for_infer=True)
+                input_ids = tokenizer.encode(prompt, return_tensors="pt").to("cuda")
+                output = model.generate(inputs=input_ids, max_length=len(generate_prompt(data_point)), stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
+                out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(prompt)
+                return out_text
 
-        db = get_db()
-        cands = []
-        for each in tqdm(self.eval_dataset):
-            cands.append(get_generated_output(each))  
-        # cands = list(map(get_generated_output, self.eval_dataset))
-        refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
-        # cands = list(np.vectorize(get_generated_output)(self.eval_dataset))
-        # refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
-        if any(ind in self.indexes for ind in ["P", "R", "F"]):
-            P, R, F = score(
-                cands, refs, model_type="bert-base-chinese", lang="zh", verbose=True
-            )
-            db.add(
-                EvalIndexRecord(
-                    name="P", value=P.mean().item(), epoch=epoch, entry_id=self.id
+            db = get_db()
+            cands = []
+            for each in tqdm(self.eval_dataset):
+                cands.append(get_generated_output(each))  
+            refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
+            if any(ind in self.indexes for ind in ["P", "R", "F"]):
+                P, R, F = score(
+                    cands, refs, model_type="bert-base-chinese", lang="zh", verbose=True
                 )
-            )
-            db.add(
-                EvalIndexRecord(
-                    name="R", value=R.mean().item(), epoch=epoch, entry_id=self.id
+                db.add(
+                    EvalIndexRecord(
+                        name="P", value=P.mean().item(), epoch=epoch, entry_id=self.id
+                    )
                 )
-            )
-            db.add(
-                EvalIndexRecord(
-                    name="F", value=F.mean().item(), epoch=epoch, entry_id=self.id
+                db.add(
+                    EvalIndexRecord(
+                        name="R", value=R.mean().item(), epoch=epoch, entry_id=self.id
+                    )
                 )
-            )
-        if "A" in self.indexes:
-            def remove_blank(s):
-                return s.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r", "").replace("　", "")
-            db.add(
-                EvalIndexRecord(
-                    name="A",
-                    value=sum([1 for c, r in zip(list(map(remove_blank, cands)), list(map(remove_blank, refs))) if c == r]) / len(cands),
-                    epoch=epoch,
-                    entry_id=self.id,
+                db.add(
+                    EvalIndexRecord(
+                        name="F", value=F.mean().item(), epoch=epoch, entry_id=self.id
+                    )
                 )
-            )
-        if "B" in self.indexes:
-            cands_b = [jieba.lcut(sent) for sent in cands]
-            refs_b = [jieba.lcut(sent) for sent in refs]
-            db.add(
-                EvalIndexRecord(
-                    name="B",
-                    value=corpus_bleu(refs_b, cands_b),
-                    epoch=epoch,
-                    entry_id=self.id,
+            if "A" in self.indexes:
+                def remove_blank(s):
+                    return s.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r", "").replace("　", "")
+                db.add(
+                    EvalIndexRecord(
+                        name="A",
+                        value=sum([1 for c, r in zip(list(map(remove_blank, cands)), list(map(remove_blank, refs))) if c == r]) / len(cands),
+                        epoch=epoch,
+                        entry_id=self.id,
+                    )
                 )
-            )
-        if "D" in self.indexes:
-
-            def calculate_distinct_n(text):
-                n = 2
-                # Split the text into words
-                words = jieba.lcut(text)
-
-                # Calculate n-grams
-                n_grams = list(ngrams(words, n))
-
-                # Count distinct n-grams
-                distinct_ngrams = len(Counter(n_grams))
-
-                # Calculate distinct-n
-                distinct_n = distinct_ngrams / len(n_grams) if len(n_grams) > 0 else 0
-
-                return distinct_n
-
-            db.add(
-                EvalIndexRecord(
-                    name="D",
-                    value=np.vectorize(calculate_distinct_n)(cands).mean(),
-                    epoch=epoch,
-                    entry_id=self.id,
+            if "B" in self.indexes:
+                cands_b = [jieba.lcut(sent) for sent in cands]
+                refs_b = [jieba.lcut(sent) for sent in refs]
+                db.add(
+                    EvalIndexRecord(
+                        name="B",
+                        value=corpus_bleu(refs_b, cands_b),
+                        epoch=epoch,
+                        entry_id=self.id,
+                    )
                 )
-            )
-        db.commit()
-        db.close()
+            if "D" in self.indexes:
+
+                def calculate_distinct_n(text):
+                    n = 2
+                    # Split the text into words
+                    words = jieba.lcut(text)
+
+                    # Calculate n-grams
+                    n_grams = list(ngrams(words, n))
+
+                    # Count distinct n-grams
+                    distinct_ngrams = len(Counter(n_grams))
+
+                    # Calculate distinct-n
+                    distinct_n = distinct_ngrams / len(n_grams) if len(n_grams) > 0 else 0
+
+                    return distinct_n
+
+                db.add(
+                    EvalIndexRecord(
+                        name="D",
+                        value=np.vectorize(calculate_distinct_n)(cands).mean(),
+                        epoch=epoch,
+                        entry_id=self.id,
+                    )
+                )
+            db.commit()
+        except Exception as e:
+            print(e)
+            print("error in on_evaluate")
+        finally:
+            db.close()
