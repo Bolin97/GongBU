@@ -12,7 +12,7 @@ package
 .env.*
 bert
 bert-base-chinese
-backend/dep
+backend/dep/*
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 __pycache__
@@ -26,3 +26,4 @@ __.*
 __bert-base-chinese
 roberta-large
 output.log
+logs
