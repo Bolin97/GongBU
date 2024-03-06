@@ -20,6 +20,8 @@ from collections import Counter
 from time import time
 from backend.sync import ctx
 from tqdm import tqdm
+import os
+import pickle
 
 class ReportCallback(TrainerCallback):
     id: int
@@ -95,6 +97,14 @@ class ReportCallback(TrainerCallback):
         db.add(FinetuneProgress(id=self.id, current=0, total=1))
         db.commit()
         db.close()
+        # save validation set
+        if self.eval_dataset is not None:
+            # write to file
+            # write to output/eval_dataset.json
+            # os.path.join(args.output_dir, "eval_dataset.pkl")
+            # pickle.dump(self.eval_dataset, f)
+            with open(os.path.join(args.output_dir, "eval_dataset.pkl"), 'wb') as f:
+                pickle.dump(self.eval_dataset, f)
 
     def on_step_end(
         self,
