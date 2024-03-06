@@ -244,12 +244,14 @@
 								<div class="m-2 text-md">CUDA:{device.device_id}</div>
 								<hr class="m-1"/>
 								<div class="m-2">
-									GPU利用率：{device.gpu_utilization.toFixed(1)}%
+									<div>GPU利用率：</div>
+									<div>{device.gpu_utilization.toFixed(1)}%</div>
 									<Progressbar progress={device.gpu_utilization.toFixed(1)} />
 								</div>
 								<hr class="m-1"/>
 								<div class="m-2">
-									显存利用率：{device.memory_utilization.toFixed(1)}%
+									<div>显存利用率：</div>
+									<div>{device.memory_utilization.toFixed(1)}%</div>
 									<Progressbar progress={device.memory_utilization.toFixed(1)} />
 								</div>
 							</div>
