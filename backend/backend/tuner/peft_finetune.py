@@ -57,6 +57,7 @@ TRANSFORMERS_MODELS_TO_IA3_TARGET_MODULES_MAPPING = {
     "skywork": ["q_proj", "v_proj", "down_proj"],
     "internlm": ["q_proj", "v_proj", "down_proj"],
     "xverse": ["q_proj", "v_proj", "down_proj"],
+    "mistral": ["k_proj", "v_proj", "down_proj"],
 }
 TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING = {
     "t5": ["wo"],
@@ -80,6 +81,7 @@ TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING = {
     "skywork": ["down_proj"],
     "internlm": ["down_proj"],
     "xverse": ["down_proj"],
+    "mistral": ["down_proj"],
 }
 from transformers import (
     AutoModelForCausalLM,
