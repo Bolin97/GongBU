@@ -28,7 +28,8 @@ services:
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
-      - ./bert-base-chinese:/backend/bert-base-chinese
+      # - ./bert-base-chinese:/backend/bert-base-chinese
+      - ./roberta-large:/backend/roberta-large
       - ./ext:/backend/ext
     depends_on:
       - db

@@ -19,6 +19,7 @@ from nltk.util import ngrams
 from collections import Counter
 from time import time
 from backend.sync import ctx
+from tqdm import tqdm
 
 class ReportCallback(TrainerCallback):
     id: int
@@ -167,7 +168,10 @@ class ReportCallback(TrainerCallback):
             return out_text
 
         db = get_db()
-        cands = list(map(get_generated_output, self.eval_dataset))
+        cands = []
+        for each in tqdm(self.eval_dataset):
+            cands.append(get_generated_output(each))  
+        # cands = list(map(get_generated_output, self.eval_dataset))
         refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
         # cands = list(np.vectorize(get_generated_output)(self.eval_dataset))
         # refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))

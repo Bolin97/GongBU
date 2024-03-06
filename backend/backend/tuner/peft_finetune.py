@@ -188,22 +188,25 @@ def train(
     torch.cuda.empty_cache()
     # 梯度累积步数
     gradient_accumulation_steps = batch_size // micro_batch_size
+    device_map = {}
     if devices == "auto":
-        devices = [i for i in range(torch.cuda.device_count())]
-    model_on_cpu = AutoModelForCausalLM.from_pretrained(
-        base_model, trust_remote_code=True, device_map={"": "cpu"}
-    )
-    distribution = {
-        each: int(torch.cuda.get_device_properties(each).total_memory * 0.8)
-        for each in devices
-    }
-    distribution.update({"cpu": psutil.virtual_memory().available})
-    device_map = infer_auto_device_map(
-        model_on_cpu,
-        distribution,
-        no_split_module_classes=type(model_on_cpu)._no_split_modules
-    )
-    del model_on_cpu
+        device_map = "auto"
+    else:
+        model_on_cpu = AutoModelForCausalLM.from_pretrained(
+            base_model, trust_remote_code=True, device_map={"": "cpu"}
+        )
+        distribution = {
+            each: int(torch.cuda.get_device_properties(each).total_memory - torch.cuda.memory_allocated(each) - torch.cuda.memory_reserved(each)) * 0.8 - 5 * (10 ** 9)
+            for each in devices
+        }
+        distribution.update({"cpu": psutil.virtual_memory().available})
+        device_map = infer_auto_device_map(
+            model_on_cpu,
+            distribution,
+            no_split_module_classes=type(model_on_cpu)._no_split_modules
+        )
+        del model_on_cpu
+        # device_map = "auto"
     use_wandb = len(wandb_project) > 0 or (
         "WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0
     )
@@ -435,6 +438,7 @@ def train(
         callbacks=[report_callback],
         args=transformers.TrainingArguments(
             per_device_train_batch_size=micro_batch_size,
+            per_device_eval_batch_size=micro_batch_size,
             gradient_accumulation_steps=gradient_accumulation_steps,
             warmup_steps=100,
             num_train_epochs=num_epochs,
@@ -448,7 +452,7 @@ def train(
             eval_steps=eval_step if val_set_size > 0 else None,
             save_steps=save_step,
             output_dir=output_dir,
-            save_total_limit=3,
+            save_total_limit=15,
             load_best_model_at_end=True if val_set_size > 0 else False,
             # ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
