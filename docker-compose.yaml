@@ -3,20 +3,19 @@ version: '3.9'
 services:
   db:
     container_name: db
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+    image: postgres:15-alpine
     environment:
-      MYSQL_ROOT_PASSWORD: pwd
-      MYSQL_DATABASE: db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pwd
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      PGDATA: /data/postgres
+      POSTGRES_DB: GONGBU
     volumes:
-      - mysql:/var/lib/mysql
-      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
+      - postgres:/data/postgres
+      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
     expose:
-      - 3306
+      - 5432
     ports:
-      - "33060:3306"
+      - "54320:5432"
     restart: unless-stopped
   api:
     container_name: api
@@ -37,7 +36,7 @@ services:
     depends_on:
       - db
     environment:
-      - DATABASE_URL=mysql+pymysql://user:pwd@db:3306/db
+      - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
       - MODEL_PATH=/models
     deploy:
       resources:
@@ -73,4 +72,4 @@ services:
         - action: rebuild
           path: ./frontend/package.json
 volumes:
-  mysql:
+  postgres:

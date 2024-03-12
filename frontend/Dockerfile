@@ -6,6 +6,9 @@ WORKDIR /frontend
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
+# Use ali source
+RUN npm config set registry http://registry.npm.taobao.org
+
 # Install dependencies
 RUN npm install
 

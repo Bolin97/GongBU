@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
+FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-devel
 
 RUN apt-get update
 RUN apt-get install -y apt-utils
@@ -17,13 +17,14 @@ RUN rm /conf/linux_mb.tar.bz2
 
 # Create the env for the backend
 COPY ./requirements.txt /conf/requirements.txt
-RUN /micromamba/bin/micromamba create -y -n backend -c conda-forge python=3.10
+
+RUN /micromamba/bin/micromamba create -y -n backend -c https://mirrors.aliyun.com/anaconda/cloud/conda-forge/ python=3.10
 # Install packaging
 RUN /micromamba/bin/micromamba run -n backend pip install packaging -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 # Cache some very large packages
+RUN /micromamba/bin/micromamba run -n backend pip install bert-score -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cublas-cu12==12.1.3.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install torch==2.2.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-cupti-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-nvrtc-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-runtime-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
@@ -33,9 +34,12 @@ RUN /micromamba/bin/micromamba run -n backend pip install mkl-service==2.4.0 -i 
 RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 # Use the transformers from huggingface
-RUN /micromamba/bin/micromamba run -n backend pip install git+https://github.com/huggingface/transformers
+RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]" -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install accelerate==0.27.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install deepspeed==0.13.4 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install torch==2.2.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+RUN apt-get -y install libopenmpi-dev
+RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 # Copy the files
 COPY . /backend
@@ -44,4 +48,4 @@ COPY . /backend
 WORKDIR /backend
 RUN /micromamba/bin/micromamba run -n backend pip install -e .
 
-CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 > ./logs/output.log 2>&1
+CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 --reload > ./logs/output.log 2>&1
