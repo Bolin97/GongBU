@@ -3,7 +3,7 @@ FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-devel
 RUN apt-get update
 RUN apt-get install -y apt-utils
 # Install wget
-RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim
+RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim tmux
 
 
 # micromamba

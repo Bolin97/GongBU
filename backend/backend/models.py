@@ -1,89 +1,38 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, JSON, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Date, Float, Boolean, ForeignKey, JSON, TIMESTAMP
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.sqltypes import DateTime, Float, NullType
-from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.ext.declarative import declarative_base
+
+LIST_SPLITTER = "|"
 
 Base = declarative_base()
 
-LIST_SEPERATER = "|"
-
-
-class OpenLLM(Base):
-    __tablename__ = "OPENLLMS"
-
-    model_id = Column(Integer, primary_key=True, autoincrement=True)
-    model_name = Column(String(100), nullable=False)
-    model_description = Column(String(100), nullable=False)
-    view_pic = Column(String(100), nullable=False)
-    remote_path = Column(String(100), nullable=False)
-    local_path = Column(String(100))
-    local_store = Column(Boolean, nullable=False)
-    lora_support = Column(Boolean, nullable=False)
-    lora_multi_device = Column(Boolean, nullable=False)
-    prefix_tuning_support = Column(Boolean, nullable=False)
-    prefix_tuning_multi_device = Column(Boolean, nullable=False)
-    ptuning_support = Column(Boolean, nullable=False)
-    ptuning_multi_device = Column(Boolean, nullable=False)
-    prompt_tuning_support = Column(Boolean, nullable=False)
-    prompt_tuning_multi_device = Column(Boolean, nullable=False)
-    IA3_support = Column(Boolean, nullable=False)
-    IA3_multi_device = Column(Boolean, nullable=False)
-    storage_state = Column(String(100))
-    storage_date = Column(Date)
-    finetune = Column(Boolean, nullable=False)
-    deployment = Column(Boolean, nullable=False)
-
-
 class Pool(Base):
-    __tablename__ = "POOLS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), nullable=False)
-    creation_date = Column(Date, nullable=False)
+    __tablename__ = 'pools'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    created_on = Column(Date, nullable=False)
     size = Column(Integer, nullable=False)
-    description = Column(String(100), nullable=False)
-
-    entries = relationship("DatasetEntry", backref="pool", cascade="all,delete-orphan")
-
+    description = Column(String, nullable=False)
 
 class DatasetEntry(Base):
-    __tablename__ = "DATASETENTRIES"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    pool_id = Column(Integer, ForeignKey("POOLS.id"), nullable=False)
-    name = Column(String(100), nullable=False)
-    description = Column(String(100), nullable=False)
+    __tablename__ = 'dataset_entries'
+    id = Column(Integer, primary_key=True)
+    pool_id = Column(Integer, ForeignKey('pools.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
     type = Column(Integer, nullable=False)
-    creation_date = Column(Date, nullable=False)
+    created_on = Column(Date, nullable=False)
     size = Column(Integer, nullable=False)
 
-    finetune_datasets = relationship(
-        "FinetuneDataset",
-        backref="dataset_entry",
-        cascade="all,delete-orphan",
-        single_parent=True,
-    )
-
-
-class FinetuneDataset(Base):
-    __tablename__ = "FINETUNEDATASETS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    entry_id = Column(Integer, ForeignKey("DATASETENTRIES.id"), nullable=False)
-    content = Column(JSON, nullable=False)
-
-
 class FinetuneEntry(Base):
-    __tablename__ = "FINETUNEENTRIES"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    __tablename__ = 'finetune_entries'
+    id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     model_id = Column(String, nullable=False)
     dataset_id = Column(String, nullable=False)
-    devices = Column(Text, nullable=False)
-    eval_indexes = Column(Text, nullable=False)
+    devices = Column(String, nullable=False)
+    eval_indexes = Column(String, nullable=False)
     output_dir = Column(String, nullable=False)
     adapter_name = Column(String, nullable=False)
     batch_size = Column(Integer, nullable=False)
@@ -96,7 +45,7 @@ class FinetuneEntry(Base):
     eval_step = Column(Integer, nullable=False)
     save_step = Column(Integer, nullable=False)
     logging_step = Column(Integer, nullable=False)
-    lora_r = Column(Float, nullable=False)
+    lora_r = Column(Integer, nullable=False)
     lora_alpha = Column(Float, nullable=False)
     lora_dropout = Column(Float, nullable=False)
     num_virtual_tokens = Column(Integer, nullable=False)
@@ -111,103 +60,64 @@ class FinetuneEntry(Base):
     bnb_4bit_compute_dtype = Column(String, nullable=False)
     bnb_4bit_quant_type = Column(String, nullable=False)
     bnb_4bit_use_double_quant = Column(Boolean, nullable=False)
-    # 0 running 1 done -1 err
     state = Column(Integer, nullable=False)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=True)
+    start_time = Column(TIMESTAMP, nullable=False)
+    end_time = Column(TIMESTAMP)
+    zero_optimization = Column(Boolean, nullable=False)
+    zero_stage = Column(Integer, nullable=False)
+    zero_offload = Column(Boolean, nullable=False)
 
-    finetune_datasets = relationship(
-        "FinetuneProgress",
-        backref="finetune_entry",
-        cascade="all,delete-orphan",
-        single_parent=True,
-    )
-    logging_records = relationship(
-        "LoggingRecord",
-        backref="finetune_entry",
-        cascade="all,delete-orphan",
-        single_parent=True,
-    )
-    rating_index_records = relationship(
-        "EvalRecord",
-        backref="finetune_entry",
-        cascade="all,delete-orphan",
-        single_parent=True,
-    )
-    signals = relationship(
-        "Signal",
-        backref="finetune_entry",
-        cascade="all,delete-orphan",
-        single_parent=True,
-    )
+class EvalIndexRecord(Base):
+    __tablename__ = 'eval_index_records'
+    id = Column(Integer, primary_key=True)
+    entry_id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    name = Column(String, nullable=False)
+    epoch = Column(Float, nullable=False)
+    value = Column(Float, nullable=False)
 
+class EvalRecord(Base):
+    __tablename__ = 'eval_records'
+    id = Column(Integer, primary_key=True)
+    loss = Column(Float, nullable=False)
+    epoch = Column(Float, nullable=False)
+    entry_id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+
+class FinetuneDataset(Base):
+    __tablename__ = 'finetune_datasets'
+    id = Column(Integer, primary_key=True)
+    entry_id = Column(Integer, ForeignKey('dataset_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    content = Column(JSON, nullable=False)
 
 class FinetuneProgress(Base):
-    __tablename__ = "FINETUNEPROGRESSES"
-
-    id = Column(Integer, ForeignKey("FINETUNEENTRIES.id"), primary_key=True)
+    __tablename__ = 'finetune_progresses'
+    id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
     current = Column(Integer, nullable=False)
     total = Column(Integer, nullable=False)
 
-
 class LoggingRecord(Base):
-    __tablename__ = "LOGGINGRECORDS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    __tablename__ = 'logging_records'
+    id = Column(Integer, primary_key=True)
     loss = Column(Float, nullable=False)
     learning_rate = Column(Float, nullable=False)
     epoch = Column(Float, nullable=False)
     step = Column(Integer, nullable=False)
-    entry_id = Column(Integer, ForeignKey("FINETUNEENTRIES.id"), primary_key=True)
+    entry_id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
 
-
-class EvalIndexRecord(Base):
-    __tablename__ = "EVALINDEXRECORDS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    value = Column(Float, nullable=False)
-    epoch = Column(Float, nullable=False)
-    entry_id = Column(Integer, ForeignKey("FINETUNEENTRIES.id"), primary_key=True)
-
-
-class EvalRecord(Base):
-    __tablename__ = "EVALRECORDS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    loss = Column(Float, nullable=False)
-    epoch = Column(Float, nullable=False)
-    entry_id = Column(Integer, ForeignKey("FINETUNEENTRIES.id"), primary_key=True)
-
+class OpenLLM(Base):
+    __tablename__ = 'open_llms'
+    model_id = Column(Integer, primary_key=True)
+    model_name = Column(String, nullable=False)
+    model_description = Column(String, nullable=False)
+    view_pic = Column(String, nullable=False)
+    remote_path = Column(String, nullable=False)
+    local_path = Column(String)
+    local_store = Column(Boolean, nullable=False)
+    storage_state = Column(String)
+    storage_date = Column(Date)
 
 class Signal(Base):
-    __tablename__ = "SIGNALS"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    entry_id = Column(Integer, ForeignKey("FINETUNEENTRIES.id"), primary_key=True)
+    __tablename__ = 'signals'
+    id = Column(Integer, primary_key=True)
+    receiver = Column(String, nullable=False)
     signal = Column(Integer, nullable=False)
-
-class DeployEntry(Base):
-    __tablename__ = "DEPLOYENTRIES"
-
-    entry_id = Column(Integer, primary_key=True, autoincrement=True)
-    model_or_finetune_id = Column(Integer, nullable=False)
-    deploy_finetuned = Column(Boolean, nullable=False)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
-    name = Column(String(100), nullable=False)
-    description = Column(String(100), nullable=False)
-    port = Column(Integer, nullable=False)
-    params = Column(JSON, nullable=False)
-    devices = Column(String(100), nullable=False)
-    state = Column(Integer, nullable=False)
-    
-    deploy_access_counter = relationship("DeployAccessCounter", backref="deploy_entry", cascade="all,delete-orphan", single_parent=True)
-    
-class DeployAccessCounter(Base):
-    __tablename__ = "DEPLOYACCESSCOUNTER"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date, nullable=False)
-    entry_id = Column(Integer, ForeignKey("DEPLOYENTRIES.entry_id"), nullable=False)
-    count = Column(Integer, nullable=False)
+    entry_id = Column(Integer, nullable=False)

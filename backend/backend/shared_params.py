@@ -34,3 +34,6 @@ class FinetuneParams(BaseModel):
     bnb_4bit_compute_dtype: str
     bnb_4bit_quant_type: str
     bnb_4bit_use_double_quant: bool
+    zero_optimization: bool
+    zero_stage: int
+    zero_offload: bool

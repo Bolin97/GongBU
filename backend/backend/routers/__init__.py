@@ -8,8 +8,4 @@ from .finetune_entry import finetune_entry_router
 from .finetune_progress import finetune_progress_router
 from .logging import logging_router
 from .eval_index import eval_index_router
-from .deploy import deploy_router
-from .deploy_entry import deploy_entry_router
-from .access_counter import access_counter_router
-from .application import application_router
 from .file import file_router

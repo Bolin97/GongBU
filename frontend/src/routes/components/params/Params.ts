@@ -220,6 +220,27 @@ export const training_params: Array<ParamEntry> = [
 		description: "高级训练参数",
 		constrains: []
 	},
+	{
+		var_name: "zero_optimization",
+		name: "是否使用zero优化",
+		param_type: ParamType.bool,
+		description: "高级训练参数",
+		constrains: []
+	},
+	{
+		var_name: "zero_optimization_stage",
+		name: "zero优化阶段",
+		param_type: ParamType.number_box,
+		description: "高级训练参数",
+		constrains: [{ min: 1 }, { max: 3}, { step: 1 }]
+	},
+	{
+		var_name: "zero_offload",
+		name: "是否使用zero卸载",
+		param_type: ParamType.bool,
+		description: "高级训练参数",
+		constrains: []
+	}
 ];
 
 export const training_advanced: Array<ParamEntry> = [
@@ -230,13 +251,13 @@ export const training_advanced: Array<ParamEntry> = [
 		description: "训练超参数",
 		constrains: [{ min: 0.0 }, { max: 0.01 }, { step: 0.00001 }]
 	},
-	// {
-	// 	var_name: "save_step",
-	// 	name: "保存步数间隔",
-	// 	param_type: ParamType.number_box,
-	// 	description: "高级训练参数",
-	// 	constrains: [{ min: 0 }]
-	// }
+	{
+		var_name: "save_step",
+		name: "保存步数间隔",
+		param_type: ParamType.number_box,
+		description: "高级训练参数",
+		constrains: [{ min: 0 }]
+	}
 ];
 
 export function default_finetune_params() {
@@ -261,6 +282,9 @@ export function default_finetune_params() {
 		llm_int8_has_fp16_weight: false,
 		bnb_4bit_compute_dtype: "None",
 		bnb_4bit_quant_type: "fp4",
-		bnb_4bit_use_double_quant: false
+		bnb_4bit_use_double_quant: false,
+		zero_optimization: false,
+		zero_optimization_stage: 2,
+		zero_offload: false
 	};
 }

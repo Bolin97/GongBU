@@ -41,7 +41,7 @@
 					<tr class="hover:bg-gray-100 rounded-lg">
 						<td class="px-4 py-4">{pool.id}</td>
 						<td class="px-4 py-4">{pool.name}</td>
-						<td class="px-4 py-4">{pool.creation_date}</td>
+						<td class="px-4 py-4">{pool.created_on}</td>
 						<td class="px-4 py-4">{pool.size}</td>
 						<td class="px-4 py-4">{pool.description}</td>
 						<td class="px-4 py-4">

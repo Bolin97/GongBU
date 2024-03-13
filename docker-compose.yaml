@@ -11,12 +11,11 @@ services:
       POSTGRES_DB: GONGBU
     volumes:
       - postgres:/data/postgres
-      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
+      - ./db_init/GONGBU_ps.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
     expose:
       - 5432
     ports:
       - "54320:5432"
-    restart: unless-stopped
   api:
     container_name: api
     build:

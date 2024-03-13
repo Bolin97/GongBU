@@ -40,20 +40,8 @@
 		remote_path: "",
 		local_path: "",
 		local_store: 0,
-		lora_support: 0,
-		lora_multi_device: 0,
-		prefix_tuning_support: 0,
-		prefix_tuning_multi_device: 0,
-		ptuning_support: 0,
-		ptuning_multi_device: 0,
-		prompt_tuning_support: 0,
-		prompt_tuning_multi_device: 0,
-		IA3_support: 0,
-		IA3_multi_device: 0,
 		storage_state: "",
 		storage_date: "",
-		finetune: 0,
-		deployment: 0
 	}
 	$: {
 		if(current_step == 2) {
@@ -169,10 +157,10 @@
 				<Eval bind:indexes={evals} />
 			</div>
 			<div class={`${current_step == 4 ? "" : "hidden"}`}>
-				<Finetuning modelEntry={model_entry} bind:finetuneParam={finetune_params} />
+				<Finetuning bind:finetuneParam={finetune_params} />
 			</div>
 			<div class={`${current_step == 5 ? "" : "hidden"}`}>
-				<Device bind:useDevices={use_devices} bind:updaterOn={device_updater_on} adapter={finetune_params.adapter_name} modelEntry={model_entry}/>
+				<Device bind:useDevices={use_devices} bind:updaterOn={device_updater_on}/>
 			</div>
 			<div class={`${current_step == 6 ? "" : "hidden"}`}>
 				<Output bind:dirArr={dir_arr} />

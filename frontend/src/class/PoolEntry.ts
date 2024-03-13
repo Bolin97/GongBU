@@ -2,6 +2,6 @@ export default interface PoolEntry {
 	size: number;
 	id: number;
 	name: string;
-	creation_date: Date;
+	created_on: Date;
 	description: string;
 }

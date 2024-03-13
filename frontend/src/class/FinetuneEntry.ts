@@ -37,4 +37,7 @@ export default interface FinetuneEntry {
 	state: number;
 	start_time: string;
 	end_time?: string;
+	zero_optimization: boolean;
+	zero_optimization_stage: number;
+	zero_offload: boolean;
 }

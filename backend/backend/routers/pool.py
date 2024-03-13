@@ -14,7 +14,7 @@ async def new(name: str, description: str, db: Session = Depends(gen_db)):
     pool = Pool(
         name=name,
         description=description,
-        creation_date=date.today(),
+        created_on=date.today(),
         size=0,
     )
     db.add(pool)

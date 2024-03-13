@@ -46,18 +46,6 @@ class ModelListItem(BaseModel):
     model_display_name: str
     source: str
     model_description: str
-    lora_support: int
-    lora_multi_device: int
-    prefix_tuning_support: int
-    prefix_tuning_multi_device: int
-    ptuning_support: int
-    ptuning_multi_device: int
-    prompt_tuning_support: int
-    prompt_tuning_multi_device: int
-    IA3_support: int
-    IA3_multi_device: int
-    finetune: int
-    deployment: int
     download_url: str
     avatar_url: Optional[str] = None
 
@@ -105,20 +93,8 @@ def write_info(info: ModelListItem):
         remote_path = info.download_url,
         local_path = local_path,
         local_store = 0,
-        lora_support = info.lora_support,
-        lora_multi_device = info.lora_multi_device,
-        prefix_tuning_support = info.prefix_tuning_support,
-        prefix_tuning_multi_device = info.prefix_tuning_multi_device,
-        ptuning_support = info.ptuning_support,
-        ptuning_multi_device = info.ptuning_multi_device,
-        prompt_tuning_support = info.prompt_tuning_support,
-        prompt_tuning_multi_device = info.prompt_tuning_multi_device,
-        IA3_support = info.IA3_support,
-        IA3_multi_device = info.IA3_multi_device,
         storage_state = "InfoOnly",
         storage_date = datetime.datetime.utcnow(),
-        finetune = info.finetune,
-        deployment = info.deployment
     )
     db.add(entry)
     db.commit()

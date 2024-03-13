@@ -1,3 +1,5 @@
+from datetime import datetime
+from itertools import chain
 import os
 import sys
 from accelerate.utils.modeling import check_tied_parameters_in_config, find_tied_parameters
@@ -9,9 +11,8 @@ from typing import List, Optional
 from datasets import load_dataset
 from pandas import DataFrame
 from typing import List, Optional, Union, Any, Literal
-from .callback import ReportCallback
 import datasets
-import json
+from backend.db import get_db
 from .generate_prompt import generate_prompt
 from accelerate import infer_auto_device_map
 from peft import (  # noqa: E402
@@ -22,12 +23,16 @@ from peft import (  # noqa: E402
     PrefixTuningConfig,
     PromptTuningConfig,
     PromptEncoderConfig,
+    LoKrConfig,
+    LoHaConfig,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
     set_peft_model_state_dict,
 )
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
+from backend.tuner.callback import ReportCallback
+from backend.tuner.get_deepspeed_config import get_deepspeed_config
 
 # peft IA3的参数
 # from peft.utils import (
@@ -124,13 +129,212 @@ def get_target(bnb_config: Optional[BitsAndBytesConfig], named_modules) -> List[
     # Convert the set into a list and return it
     return list(lora_module_names)
 
+def get_device_map(devices: list[int] | str, model: AutoModelForCausalLM):
+    # if devices == "auto":
+    #     return "auto"
+    # else:
+    #     distribution = {
+    #         each: int(torch.cuda.get_device_properties(each).total_memory - torch.cuda.memory_allocated(each) - torch.cuda.memory_reserved(each)) * 0.8 - 5 * (10 ** 9)
+    #         for each in devices
+    #     }
+    #     distribution.update({"cpu": psutil.virtual_memory().available})
+    #     device_map = infer_auto_device_map(
+    #         model,
+    #         distribution,
+    #         no_split_module_classes=type(model)._no_split_modules
+    #     )
+    #     return device_map
+    
+    # Now we use CUDA_VISIBLE_DEVICES to control the device, so device_map is always auto
+    return "auto"
+
+def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig, adapter_name: str, lora_r: int, lora_alpha: int, lora_dropout: float, num_virtual_tokens: int):
+    target_modules = []
+    if (
+        model.config.model_type.lower()
+        in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
+    ):
+        target_modules = TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[
+            model.config.model_type.lower()
+        ]
+    elif any(n in adapter_name.lower() for n in ["lora", "lokr", "loha"]):
+        target_modules = get_target(bnb_config, model.named_modules())
+
+    if adapter_name == "adalora":
+        return AdaLoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "adaption-prompt":
+        return AdaptionPromptConfig(
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "IA3":
+        return IA3Config(
+            target_modules=TRANSFORMERS_MODELS_TO_IA3_TARGET_MODULES_MAPPING[
+                model.config.model_type.lower()
+            ],
+            feedforward_modules=TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING[
+                model.config.model_type.lower()
+            ],
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "lora":
+        return LoraConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            inference_mode=False,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "prefix-tuning":
+        return PrefixTuningConfig(
+            num_virtual_tokens=num_virtual_tokens,
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "prompt-tuning":
+        return PromptTuningConfig(
+            num_virtual_tokens=num_virtual_tokens,
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "p-tuning":
+        return PromptEncoderConfig(
+            num_virtual_tokens=num_virtual_tokens,
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "lokr":
+        return LoKrConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            inference_mode=False,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    elif adapter_name == "loha":
+        return LoHaConfig(
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            target_modules=target_modules,
+            inference_mode=False,
+            lora_dropout=lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+    else:
+        raise ValueError(f"Unknown adapter name: {adapter_name}")
+
+def get_model_and_tokenizer(base_model: str, device_map: Any, bnb_config: BitsAndBytesConfig, zero_optimization: bool, zero_stage: int, zero_offload: bool) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    model, tokenizer = None, None
+    if zero_optimization:
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+            trust_remote_code=True,
+            quantization_config=bnb_config,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            base_model, trust_remote_code=True, use_fast=True
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model,
+            trust_remote_code=True,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            base_model, trust_remote_code=True, use_fast=True
+        )
+    if tokenizer.__class__.__name__ == "QWenTokenizer":
+        tokenizer.pad_token_id = tokenizer.eod_id
+        tokenizer.bos_token_id = tokenizer.eod_id
+        tokenizer.eos_token_id = tokenizer.eod_id
+    elif tokenizer.__class__.__name__ != "ChatGLMTokenizer":
+        tokenizer.pad_token_id = (
+            tokenizer.eos_token_id
+            if tokenizer.pad_token_id is None
+            else tokenizer.pad_token_id
+        )
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = "<pad>"
+        tokenizer.pad_token_id = 0
+    return model, tokenizer
+
+def get_dataset(
+    dataset_type: int, 
+    dataset: list, 
+    val_size: int,
+    tokenizer: AutoTokenizer,
+    cutoff_len: int,
+    callback: ReportCallback
+):
+    def tokenize(prompt, add_eos_token=True):
+        result = tokenizer(
+            prompt,
+            truncation=True,
+            max_length=cutoff_len,
+            padding=False,
+            return_tensors=None,
+        )
+        if (
+            result["input_ids"][-1] != tokenizer.eos_token_id
+            and len(result["input_ids"]) < cutoff_len
+            and add_eos_token
+        ):
+            result["input_ids"].append(tokenizer.eos_token_id)
+            if "chatglm" not in tokenizer.__class__.__name__.lower():
+                result["attention_mask"].append(1)
+
+        result["labels"] = result["input_ids"].copy()
+
+        if "chatglm" in tokenizer.__class__.__name__.lower():
+            return {"input_ids": result["input_ids"], "labels": result["labels"]}
+        else:
+            return result
+
+    def generate_and_tokenize_prompt(data_point):
+        full_prompt = generate_prompt(data_point, dataset_type)
+        tokenized_full_prompt = tokenize(full_prompt)
+        user_prompt = generate_prompt({**data_point, "output": ""}, dataset_type)
+        tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
+        user_prompt_len = len(tokenized_user_prompt["input_ids"])
+        tokenized_full_prompt["labels"] = [
+            -100
+        ] * user_prompt_len + tokenized_full_prompt["labels"][
+            user_prompt_len:
+        ]  # could be sped up, probably
+        return tokenized_full_prompt
+
+    df = DataFrame(dataset)
+    data = datasets.DatasetDict(
+        {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
+    )
+    if val_size > 0:
+        train_val = data["train"].train_test_split(
+            test_size=val_size, shuffle=True, seed=42
+        )
+        callback.set_eval_dataset(train_val["test"])
+        train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
+        val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
+    else:
+        train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
+        val_data = None
+    return train_data, val_data
+
 
 def train(
     # model params 模型参数
     base_model: str = "/data/yimin/model/bloom-800m-zh",  # 模型(绝对)路径 # the only required argument
     dataset_type: int = 0,
     dataset: list = [],
-    devices: list[int] | str = [0],
+    devices: list[int] | str = "auto",
     report_callback: ReportCallback = None,
     output_dir: str = "./test",  # 输出文件夹
     adapter_name: str = "lora",  # 微调方法
@@ -172,48 +376,24 @@ def train(
     # 具体的最佳阈值设置取决于模型的具体架构、任务、精度要求以及硬件环境等因素。
     # llm_int8_skip_modules: Any | None = None,
     llm_int8_skip_modules: Any = None,  # 不转换为8位的模块，以确保稳定性。例如“llm_head”
-    llm_int8_enable_fp32_cpu_offload: bool = False,  # 允许使用CPU进行fp32的卸载，可是将模型分别装载在cpu和gpu上，例如如下代码：
-    # 将lm_head装入cpu
-    # device_map = {
-    # "transformer.word_embeddings": 0,
-    # "transformer.word_embeddings_layernorm": 0,
-    # "lm_head": "cpu",
-    # "transformer.h": 0,
-    # "transformer.ln_f": 0,
-    # }
+    llm_int8_enable_fp32_cpu_offload: bool = False,
     llm_int8_has_fp16_weight: bool = False,  # 使用fp16旬行LLM.int8()
     # bnb_4bit_compute_dtype: Any | None = None,
     bnb_4bit_compute_dtype: Any = None,  # 设置计算类型
     bnb_4bit_quant_type: str = "fp4",  # 设置量化类型：fp4或nf4，默认是fp4
     bnb_4bit_use_double_quant: bool = False,  # 是否开启二次量化
+    zero_optimization: bool = True,  # 是否使用zero优化
+    zero_stage: int = 2,  # zero优化的阶段
+    zero_offload: bool = False,  # 是否使用zero卸载
 ):
     torch.cuda.empty_cache()
-    # 梯度累积步数
-    gradient_accumulation_steps = batch_size // micro_batch_size
-    device_map = {}
-    if devices == "auto":
-        device_map = "auto"
-    else:
-        model_on_cpu = AutoModelForCausalLM.from_pretrained(
-            base_model, trust_remote_code=True, device_map={"": "cpu"}
-        )
-        distribution = {
-            each: int(torch.cuda.get_device_properties(each).total_memory - torch.cuda.memory_allocated(each) - torch.cuda.memory_reserved(each)) * 0.8 - 5 * (10 ** 9)
-            for each in devices
-        }
-        distribution.update({"cpu": psutil.virtual_memory().available})
-        device_map = infer_auto_device_map(
-            model_on_cpu,
-            distribution,
-            no_split_module_classes=type(model_on_cpu)._no_split_modules
-        )
-        del model_on_cpu
-        # device_map = "auto"
-    use_wandb = len(wandb_project) > 0 or (
-        "WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0
-    )
 
-    acc = Accelerator()
+    gradient_accumulation_steps = batch_size // micro_batch_size
+    device_map = None
+    
+    if not zero_optimization:
+        device_map = get_device_map(devices, model)
+
     bnb_config = None
     if bits_and_bytes:
         bnb_config = BitsAndBytesConfig(
@@ -227,210 +407,57 @@ def train(
             bnb_4bit_quant_type=bnb_4bit_quant_type,
             bnb_4bit_use_double_quant=bnb_4bit_use_double_quant,
         )
-        model = AutoModelForCausalLM.from_pretrained(
-            base_model,
-            torch_dtype=torch.float16,
-            device_map=device_map,
-            trust_remote_code=True,
-            quantization_config=bnb_config,
-        )
-    else:
-        model = AutoModelForCausalLM.from_pretrained(
-            base_model,
-            torch_dtype=torch.float16,
-            device_map=device_map,
-            trust_remote_code=True,
-        )
-    if (
-        model.config.model_type.lower()
-        in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-    ):
-        target_modules = TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[
-            model.config.model_type.lower()
-        ]
-    elif any(n in adapter_name.lower() for n in ["lora"]):
-        target_modules = get_target(bnb_config, model.named_modules())
-    #
 
-    # tokenizer
-    if model.config.model_type.lower() == "llama":
-        # Due to the name of transformers' LlamaTokenizer, we have to do this
-        tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(
-            base_model, trust_remote_code=True, use_fast=True
-        )
+    model, tokenizer = get_model_and_tokenizer(base_model, device_map, bnb_config, zero_optimization, zero_stage, zero_offload)
+    
 
-    model, tokenizer = acc.prepare(model, tokenizer)
+    model = get_peft_model(model, get_peft_config(
+        model, bnb_config, adapter_name, lora_r, lora_alpha, lora_dropout, num_virtual_tokens
+    ))
 
-    # QWenTokenizer比较特殊，pad_token_id、bos_token_id、eos_token_id均为None。eod_id对应的token为<|endoftext|>
-    if tokenizer.__class__.__name__ == "QWenTokenizer":
-        tokenizer.pad_token_id = tokenizer.eod_id
-        tokenizer.bos_token_id = tokenizer.eod_id
-        tokenizer.eos_token_id = tokenizer.eod_id
-    # ChatGLMTokenizer不需要设置，仅设置其他tokenizer
-    elif tokenizer.__class__.__name__ != "ChatGLMTokenizer":
-        # assert tokenizer.eos_token_id is not None
-        # assert tokenizer.bos_token_id is not None
-        tokenizer.pad_token_id = (
-            tokenizer.eos_token_id
-            if tokenizer.pad_token_id is None
-            else tokenizer.pad_token_id
-        )
-
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = "<pad>"
-        tokenizer.pad_token_id = 0
-    # tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
-    # if not any(n not in model.config.model_type.lower() for n in ["qwen", "chatglm"]):
-    #     tokenizer.pad_token_id = (
-    #         0  # unk. we want this to be different from the eos token
-    #     )
-    #     tokenizer.padding_side = "left"  # Allow batched inference
-
-    def tokenize(prompt, add_eos_token=True):
-        # there's probably a way to do this with the tokenizer settings
-        # but again, gotta move fast
-        result = tokenizer(
-            prompt,
-            truncation=True,
-            max_length=cutoff_len,
-            padding=False,
-            return_tensors=None,
-        )
-        if (
-            result["input_ids"][-1] != tokenizer.eos_token_id
-            and len(result["input_ids"]) < cutoff_len
-            and add_eos_token
-        ):
-            result["input_ids"].append(tokenizer.eos_token_id)
-            if "chatglm" not in base_model:
-                result["attention_mask"].append(1)
-
-        result["labels"] = result["input_ids"].copy()
-
-        if "chatglm" in base_model:
-            return {"input_ids": result["input_ids"], "labels": result["labels"]}
-        else:
-            return result
-
-    def generate_and_tokenize_prompt(data_point):
-        full_prompt = generate_prompt(data_point)
-        tokenized_full_prompt = tokenize(full_prompt)
-        if not train_on_inputs:
-            user_prompt = generate_prompt({**data_point, "output": ""})
-            tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
-            user_prompt_len = len(tokenized_user_prompt["input_ids"])
-
-            tokenized_full_prompt["labels"] = [
-                -100
-            ] * user_prompt_len + tokenized_full_prompt["labels"][
-                user_prompt_len:
-            ]  # could be sped up, probably
-        return tokenized_full_prompt
-
-    if adapter_name == "adalora":
-        config = AdaLoraConfig(
-            r=lora_r,
-            lora_alpha=lora_alpha,
-            target_modules=target_modules,
-            lora_dropout=lora_dropout,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-    # elif adapter_name == "adaption-prompt":
-    #     config = AdaptionPromptConfig(
-    #         task_type="CAUSAL_LM",
-    #     )
-    elif adapter_name == "IA3":
-        config = IA3Config(
-            target_modules=TRANSFORMERS_MODELS_TO_IA3_TARGET_MODULES_MAPPING[
-                model.config.model_type.lower()
-            ],
-            feedforward_modules=TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING[
-                model.config.model_type.lower()
-            ],
-            task_type="CAUSAL_LM",
-        )
-    elif adapter_name == "lora":
-        config = LoraConfig(
-            r=lora_r,
-            lora_alpha=lora_alpha,
-            target_modules=target_modules,
-            inference_mode=False,
-            lora_dropout=lora_dropout,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-    elif adapter_name == "prefix-tuning":
-        config = PrefixTuningConfig(
-            num_virtual_tokens=num_virtual_tokens,
-            task_type="CAUSAL_LM",
-        )
-    elif adapter_name == "prompt-tuning":
-        config = PromptTuningConfig(
-            num_virtual_tokens=num_virtual_tokens,
-            task_type="CAUSAL_LM",
-        )
-    elif adapter_name == "p-tuning":
-        config = PromptEncoderConfig(
-            num_virtual_tokens=num_virtual_tokens,
-            task_type="CAUSAL_LM",
-        )
-    else:
-        raise ValueError(f"Unknown adapter name: {adapter_name}")
     if bits_and_bytes:
         model = prepare_model_for_kbit_training(
             model, use_gradient_checkpointing=use_gradient_checkpointing
         )
-    model = get_peft_model(model, config)
-
-    df = DataFrame(dataset)
-    data = datasets.DatasetDict(
-        {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
-    )
-
-    if resume_from_checkpoint:
-        # Check the available weights and load them
-        checkpoint_name = os.path.join(
-            resume_from_checkpoint, "pytorch_model.bin"
-        )  # Full checkpoint
-        if not os.path.exists(checkpoint_name):
-            checkpoint_name = os.path.join(
-                resume_from_checkpoint, "adapter_model.bin"
-            )  # only LoRA model - LoRA config above has to fit
-            resume_from_checkpoint = False  # So the trainer won't try loading its state
-        # The two files above have a different name depending on how they were saved, but are actually the same.
-        if os.path.exists(checkpoint_name):
-            print(f"Restarting from {checkpoint_name}")
-            adapters_weights = torch.load(checkpoint_name)
-            model = set_peft_model_state_dict(model, adapters_weights)
-        else:
-            print(f"Checkpoint {checkpoint_name} not found")
 
     model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
-
-    if val_set_size > 0:
-        train_val = data["train"].train_test_split(
-            test_size=val_set_size, shuffle=True, seed=42
-        )
-        report_callback.set_eval_dataset(train_val["test"])
-        train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
-        val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
-    else:
-        train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
-        val_data = None
 
     if torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
         model.is_parallelizable = True
         model.model_parallel = True
 
+    train_data, val_data = get_dataset(
+        dataset_type, dataset, val_set_size, tokenizer, cutoff_len, report_callback
+    )
+
     data_collator = transformers.DataCollatorForSeq2Seq(
         tokenizer, model=model, return_tensors="pt", padding=True, pad_to_multiple_of=16
     )
 
-    train_data, val_data = acc.prepare(train_data, val_data)
+    training_args = transformers.TrainingArguments(
+        per_device_train_batch_size=micro_batch_size,
+        per_device_eval_batch_size=micro_batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        warmup_steps=100,
+        num_train_epochs=num_epochs,
+        learning_rate=learning_rate,
+        fp16=False,
+        bf16=True,
+        logging_steps=logging_step,
+        optim="adamw_torch",
+        evaluation_strategy="steps" if val_set_size > 0 else "no",
+        save_strategy="steps",
+        eval_steps=eval_step if val_set_size > 0 else None,
+        save_steps=save_step,
+        output_dir=output_dir,
+        save_total_limit=15,
+        load_best_model_at_end=False,
+        group_by_length=group_by_length,
+        report_to=None,
+        run_name=None,
+        deepspeed= None if not zero_optimization else get_deepspeed_config(zero_stage, zero_offload),
+    )
 
     trainer = transformers.Trainer(
         model=model,
@@ -438,33 +465,9 @@ def train(
         train_dataset=train_data,
         eval_dataset=val_data,
         callbacks=[report_callback],
-        args=transformers.TrainingArguments(
-            per_device_train_batch_size=micro_batch_size,
-            per_device_eval_batch_size=micro_batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            warmup_steps=100,
-            num_train_epochs=num_epochs,
-            learning_rate=learning_rate,
-            fp16=False,
-            bf16=True,
-            logging_steps=logging_step,
-            optim="adamw_torch",
-            evaluation_strategy="steps" if val_set_size > 0 else "no",
-            save_strategy="steps",
-            eval_steps=eval_step if val_set_size > 0 else None,
-            save_steps=save_step,
-            output_dir=output_dir,
-            save_total_limit=15,
-            load_best_model_at_end=True if val_set_size > 0 else False,
-            # ddp_find_unused_parameters=False if ddp else None,
-            group_by_length=group_by_length,
-            report_to="wandb" if use_wandb else None,
-            run_name=wandb_run_name if use_wandb else None,
-        ),
+        args=training_args,
         data_collator=data_collator,
     )
-    model.config.use_cache = False
-
     # Currently pytorch requires python <= 3.10
     if (
         torch.__version__ >= "2"
@@ -478,8 +481,83 @@ def train(
 
     model.save_pretrained(output_dir)
 
-    # print("\n If there's a warning about missing keys above, please disregard :)")
-
+from backend.models import *
+def wrapper(
+    finetune_id: int,
+):
+    try:
+        db = get_db()
+        entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        model_path = (
+            db.query(OpenLLM)
+            .filter(OpenLLM.model_id == entry.model_id)
+            .first()
+            .local_path
+        )
+        dataset_json_obj = list(
+            chain(
+                *[
+                    each.content
+                    for each in db.query(FinetuneDataset)
+                    .filter(FinetuneDataset.entry_id == entry.dataset_id)
+                    .all()
+                ]
+            )
+        )
+        dataset_type = db.query(DatasetEntry).filter(DatasetEntry.id == entry.dataset_id).first().type
+        train(
+            base_model=model_path,
+            dataset_type=dataset_type,
+            dataset=dataset_json_obj,
+            devices="auto",
+            report_callback=ReportCallback(finetune_id, 0 if entry.devices == "auto" else min(devices), entry.eval_indexes),
+            output_dir=entry.output_dir,
+            adapter_name=entry.adapter_name,
+            batch_size=entry.batch_size,
+            micro_batch_size=entry.micro_batch_size,
+            num_epochs=entry.num_epochs,
+            learning_rate=entry.learning_rate,
+            cutoff_len=entry.cutoff_len,
+            val_set_size=entry.val_set_size,
+            use_gradient_checkpointing=entry.use_gradient_checkpointing,
+            eval_step=entry.eval_step,
+            save_step=entry.save_step,
+            logging_step=entry.logging_step,
+            lora_r=entry.lora_r,
+            lora_alpha=entry.lora_alpha,
+            lora_dropout=entry.lora_dropout,
+            num_virtual_tokens=entry.num_virtual_tokens,
+            train_on_inputs=entry.train_on_inputs,
+            group_by_length=entry.group_by_length,
+            # wandb_project=entry.wandb_project,
+            # wandb_run_name=entry.wandb_run_name,
+            # wandb_watch=entry.wandb_watch,
+            # wandb_log_model=entry.wandb_log_model,
+            # resume_from_checkpoint=entry.resume_from_checkpoint,
+            bits_and_bytes=entry.bits_and_bytes,
+            load_8bit=entry.load_8bit,
+            load_4bit=entry.load_4bit,
+            llm_int8_threshold=entry.llm_int8_threshold,
+            # llm_int8_skip_modules=entry.llm_int8_skip_modules,
+            llm_int8_enable_fp32_cpu_offload=entry.llm_int8_enable_fp32_cpu_offload,
+            llm_int8_has_fp16_weight=entry.llm_int8_has_fp16_weight,
+            bnb_4bit_compute_dtype=entry.bnb_4bit_compute_dtype,
+            bnb_4bit_quant_type=entry.bnb_4bit_quant_type,
+            bnb_4bit_use_double_quant=entry.bnb_4bit_use_double_quant,
+            zero_optimization=entry.zero_optimization,
+            zero_stage=entry.zero_stage,
+            zero_offload=entry.zero_offload,
+        )
+    except Exception as e:
+        print(e)
+        db = get_db()
+        entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        entry.state = -1
+        entry.end_time = datetime.utcnow()
+        db.commit()
+        db.close()
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    fire.Fire(train)
+    fire.Fire(wrapper)

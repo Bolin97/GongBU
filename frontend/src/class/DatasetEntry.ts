@@ -4,6 +4,6 @@ export default interface DatasetEntry {
 	name: string;
 	description: string;
 	type: string;
-	creation_date: string;
+	created_on: string;
 	size: number;
 }

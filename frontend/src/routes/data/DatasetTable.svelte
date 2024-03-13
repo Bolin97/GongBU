@@ -55,7 +55,7 @@
 			<TableBodyRow>
 				<TableBodyCell>{row.id}</TableBodyCell>
 				<TableBodyCell>{row.name}</TableBodyCell>
-				<TableBodyCell>{row.creation_date}</TableBodyCell>
+				<TableBodyCell>{row.created_on}</TableBodyCell>
 				<TableBodyCell>{row.size}</TableBodyCell>
 				<TableBodyCell>{row.type}</TableBodyCell>
 				<TableBodyCell>{row.description}</TableBodyCell>

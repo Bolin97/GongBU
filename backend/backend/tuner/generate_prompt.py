@@ -1,4 +1,4 @@
-def generate_prompt(data_point, for_infer=False):
+def generate_prompt(data_point, dataset_type: int, for_infer=False):
     if "instruction" not in data_point:
         # use instruct instead
         data_point["instruction"] = data_point["instruct"]

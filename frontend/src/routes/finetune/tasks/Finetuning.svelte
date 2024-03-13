@@ -19,25 +19,6 @@
 	let adapter = "lora";
 	let params = default_finetune_params();
 	export let finetuneParam: FinetuneParams;
-	export let modelEntry: OpenllmEntry
-	$: adapters_support = adapters.reduce((acc, adapter) => {
-		if(adapter === "lora" || adapter === "qlora") {
-			acc[adapter] = modelEntry.lora_support == 1;
-		}
-		else if(adapter === "IA3") {
-			acc[adapter] = modelEntry.IA3_support == 1;
-		}
-		else if(adapter === "p-tuning") {
-			acc[adapter] = modelEntry.ptuning_support == 1;
-		}
-		else if(adapter === "prefix-tuning") {
-			acc[adapter] = modelEntry.prefix_tuning_support == 1;
-		}
-		else if(adapter === "prompt-tuning") {
-			acc[adapter] = modelEntry.prompt_tuning_support == 1;
-		}
-		return acc;
-	}, {});
 	$: {
 		Object.keys(params).forEach((k) => {
 			if (k in finetuneParam) {
@@ -48,7 +29,7 @@
 		finetuneParam.bits_and_bytes = adapter == "qlora";
 		finetuneParam.load_4bit = params.load_xbit == 4;
 		finetuneParam.load_8bit = params.load_xbit == 8;
-		finetuneParam.save_step = params.eval_step;
+		// finetuneParam.save_step = params.eval_step;
 	}
 </script>
 
@@ -56,11 +37,9 @@
 	<div class="flex flex-row gap-2 m-2 my-10">
 		<span>微调方法选择：</span>
 		{#each adapters as adapter_name}
-			{#if adapters_support[adapter_name]}
-				<Radio bind:group={adapter} name="method" value={adapter_name}
-					><p class="text-lg">{adapter_name}</p></Radio
-				>
-			{/if}
+			<Radio bind:group={adapter} name="method" value={adapter_name}
+				><p class="text-lg">{adapter_name}</p></Radio
+			>
 		{/each}
 	</div>
 	{#if adapter === "lora" || adapter === "qlora"}

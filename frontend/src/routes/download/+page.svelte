@@ -14,18 +14,6 @@
         model_name: string;
         source: string;
         model_description: string;
-        lora_support: number;
-        lora_multi_device: number;
-        prefix_tuning_support: number;
-        prefix_tuning_multi_device: number;
-        ptuning_support: number;
-        ptuning_multi_device: number;
-        prompt_tuning_support: number;
-        prompt_tuning_multi_device: number;
-        IA3_support: number;
-        IA3_multi_device: number;
-        finetune: number;
-        deployment: number;
         download_url: string;
         avatar_url: string | null | undefined;
     }

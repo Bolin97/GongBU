@@ -24,7 +24,7 @@ def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int
         name=name,
         description=description,
         type=kind,
-        creation_date=date.today(),
+        created_on=date.today(),
         size=len(content),
     )
     db.add(entry)

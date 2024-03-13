@@ -1,13 +1,11 @@
-import torch
-
-ctx = torch.multiprocessing.get_context("spawn")
+from threading import Lock
 
 class SafeDict(dict):
     lock: any
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.lock = ctx.Lock()
+        self.lock = Lock()
 
     def __setitem__(self, key, value):
         with self.lock:

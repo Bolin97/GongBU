@@ -23,8 +23,8 @@ async def add_ft_task(
         dataset_id=params.dataset_id,
         devices=params.devices
         if params.devices == "auto"
-        else LIST_SEPERATER.join(map(str, params.devices)),
-        eval_indexes=LIST_SEPERATER.join(params.eval_indexes),
+        else LIST_SPLITTER.join(map(str, params.devices)),
+        eval_indexes=LIST_SPLITTER.join(params.eval_indexes),
         output_dir=params.output_dir,
         adapter_name=params.adapter_name,
         batch_size=params.batch_size,
@@ -54,6 +54,9 @@ async def add_ft_task(
         bnb_4bit_use_double_quant=params.bnb_4bit_use_double_quant,
         state=0,
         start_time=datetime.datetime.now(),
+        zero_optimization=params.zero_optimization,
+        zero_stage=params.zero_stage,
+        zero_offload=params.zero_offload,
     )
     db.add(entry)
     db.commit()

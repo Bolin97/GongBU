@@ -1,37 +1,3 @@
-/**
- * class FinetuneParams(BaseModel):
-    model_id: str
-    dataset_id: str
-    devices: List[int]
-    eval_indexes: List[Literal["acc", "f1", "bleu", "rouge", "distinctn", "bert"]]
-    output_dir: str
-    adapter_name: str
-    batch_size: int
-    micro_batch_size: int
-    num_epochs: int
-    learning_rate: float
-    cutoff_len: int
-    val_set_size: int
-    use_gradient_checkpointing: bool
-    eval_step: int
-    save_step: int
-    lora_r: float
-    lora_alpha: float
-    lora_dropout: float
-    num_virtual_tokens: int
-    train_on_inputs: bool
-    group_by_length: bool
-    bits_and_bytes: bool
-    load_8bit: bool
-    load_4bit: bool
-    llm_int8_threshold: float
-    llm_int8_enable_fp32_cpu_offload: bool
-    llm_int8_has_fp16_weight: bool
-    bnb_4bit_compute_dtype: str
-    bnb_4bit_quant_type: str
-    bnb_4bit_use_double_quant: bool
- */
-
 export interface FinetuneParams {
 	model_id: string;
 	dataset_id: string;
@@ -64,6 +30,9 @@ export interface FinetuneParams {
 	bnb_4bit_compute_dtype: string;
 	bnb_4bit_quant_type: string;
 	bnb_4bit_use_double_quant: boolean;
+	zero_optimization: boolean;
+	zero_stage: number;
+	zero_offload: boolean;
 }
 
 export function default_finetune_params(): FinetuneParams {
@@ -98,6 +67,9 @@ export function default_finetune_params(): FinetuneParams {
 		llm_int8_has_fp16_weight: false,
 		bnb_4bit_compute_dtype: "",
 		bnb_4bit_quant_type: "",
-		bnb_4bit_use_double_quant: false
+		bnb_4bit_use_double_quant: false,
+		zero_optimization: false,
+		zero_stage: 1,
+		zero_offload: false,
 	};
 }

@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 from bert_score import score
 import numpy as np
 from transformers.utils.dummy_pt_objects import StoppingCriteria
-from .generate_prompt import generate_prompt
+from backend.tuner.generate_prompt import generate_prompt
 from nltk.translate.bleu_score import corpus_bleu
 import jieba
 from nltk.util import ngrams
@@ -27,16 +27,18 @@ class ReportCallback(TrainerCallback):
     id: int
     indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
     eval_dataset: Any
-    first_device: int
+    enabled: bool = True
 
     def __init__(
-        self, finetune_id: int, first_device: int, indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
+        self, finetune_id: int, indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
     ):
         super().__init__()
         self.id = finetune_id
         self.indexes = indexes
-        self.first_device = first_device
-
+        # if detected using deepspeed, only the first callback reports
+        if os.environ.get("LOCAL_RANK") is None or int(os.environ.get("LOCAL_RANK")) == 0:
+            self.enabled = True
+        
     def set_eval_dataset(self, ds: Any):
         self.eval_dataset = ds
 
@@ -47,6 +49,8 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
+        if not self.enabled:
+            return
         last_history = state.log_history[-1]
         db = get_db()
         try:
@@ -93,16 +97,14 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
+        if not self.enabled:
+            return
         db = get_db()
         db.add(FinetuneProgress(id=self.id, current=0, total=1))
         db.commit()
         db.close()
         # save validation set
         if self.eval_dataset is not None:
-            # write to file
-            # write to output/eval_dataset.json
-            # os.path.join(args.output_dir, "eval_dataset.pkl")
-            # pickle.dump(self.eval_dataset, f)
             with open(os.path.join(args.output_dir, "eval_dataset.pkl"), 'wb') as f:
                 pickle.dump(self.eval_dataset, f)
 
@@ -113,6 +115,8 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
+        if not self.enabled:
+            return
         db = get_db()
         progress = (
             db.query(FinetuneProgress).filter(FinetuneProgress.id == self.id).first()
@@ -138,6 +142,8 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
+        if not self.enabled:
+            return
         db = get_db()
         # 0 training 1 done -1 error
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == self.id).first()
@@ -154,6 +160,8 @@ class ReportCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs
     ):
+        if not self.enabled:
+            return
         try:
             if self.eval_dataset is None or len(self.indexes) == 0:
                 return
