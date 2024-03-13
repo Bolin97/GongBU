@@ -5,7 +5,6 @@ RUN apt-get install -y apt-utils
 # Install wget
 RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim tmux
 
-
 # micromamba
 COPY ./dep/linux_mb.tar.bz2 /conf/linux_mb.tar.bz2
 RUN mkdir /micromamba
@@ -23,13 +22,13 @@ RUN /micromamba/bin/micromamba create -y -n backend -c https://mirrors.aliyun.co
 RUN /micromamba/bin/micromamba run -n backend pip install packaging -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 # Cache some very large packages
-RUN /micromamba/bin/micromamba run -n backend pip install bert-score -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cublas-cu12==12.1.3.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-cupti-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-nvrtc-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-runtime-cu12==12.1.105 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install scipy==1.11.4 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install mkl-service==2.4.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install bert-score -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
@@ -37,6 +36,7 @@ RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.
 RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]" -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install accelerate==0.27.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install torch==2.2.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.37.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 RUN apt-get -y install libopenmpi-dev
 RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi.tuna.tsinghua.edu.cn/simple/
