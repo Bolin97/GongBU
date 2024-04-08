@@ -16,12 +16,12 @@
 
 
 	} from "flowbite-svelte";
-	import { AngleLeftSolid, FireOutline, PapperPlaneOutline } from "flowbite-svelte-icons";
+	import { AngleLeftOutline } from "flowbite-svelte-icons";
 	import { page } from "$app/stores";
 	import { onDestroy, onMount } from "svelte";
 	import axios from "axios";
 	import type LoggingRecord from "../../../class/LoggingRecord";
-	import { BACKEND, LIST_SPLITTER, UPDATE_VIEW_INTERVAL } from "../../store";
+	import { UPDATE_VIEW_INTERVAL } from "../../store";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
 	import type FinetuneEntry from "../../../class/FinetuneEntry";
 	import {
@@ -45,9 +45,9 @@
 	let devices_updater: number;
 	onMount(async () => {
 		async function update() {
-			devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
+			devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
 		}
-		devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
+		devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
 		devices_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -73,7 +73,7 @@
 	onMount(async () => {
 		async function update() {
 			if (finetune_entry.state == 0) {
-				const reduced_entry = (await axios.get(`${$BACKEND}/finetune_entry/reduced/${id}`)).data as FinetuneEntryReduced;
+				const reduced_entry = (await axios.get(`/api/finetune_entry/reduced/${id}`)).data as FinetuneEntryReduced;
 				if(reduced_entry.state == 1) {
 					setTimeout(() => {
 						finetune_entry.state = reduced_entry.state
@@ -84,9 +84,9 @@
 				}
 			}
 		}
-		finetune_entry = (await axios.get(`${$BACKEND}/finetune_entry/${id}`)).data;
-		model_entry = (await axios.get(`${$BACKEND}/openllm/${finetune_entry.model_id}`)).data;
-		dataset_entry = (await axios.get(`${$BACKEND}/dataset_entry/${finetune_entry.dataset_id}`)).data;
+		finetune_entry = (await axios.get(`/api/finetune_entry/${id}`)).data;
+		model_entry = (await axios.get(`/api/openllm/${finetune_entry.model_id}`)).data;
+		dataset_entry = (await axios.get(`/api/dataset_entry/${finetune_entry.dataset_id}`)).data;
 		finetune_entry_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -199,14 +199,14 @@
 	let double_check = false;
 
 	async function delete_entry_handle() {
-		await axios.delete(`${$BACKEND}/finetune_entry/${id}`);
+		await axios.delete(`/api/finetune_entry/${id}`);
 		goto("/finetune");
 	}
 
 	let stop_modal = false
 
 	async function stop_handle() {
-		axios.put(`${$BACKEND}/finetune/stop/${id}`)
+		axios.put(`/api/finetune/stop/${id}`)
 	}
 </script>
 
@@ -268,7 +268,7 @@ loading
 		<div class="flex">
 			<div class="">
 				<Button href="/finetune">
-					<AngleLeftSolid size="sm" />返回
+					<AngleLeftOutline size="sm" />返回
 				</Button>
 			</div>
 			<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;详细信息</span>
@@ -325,7 +325,7 @@ loading
 							class="p-4 flex w-74 items-center px-5 bg-white border border-gray-200 rounded-lg shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 						>
 							<div class="w-20 max-w-20 min-w-[4rem]">
-								<img src={`${$BACKEND}/openllm/avatar/${model_entry.model_id}`} alt="no img" />
+								<img src={`/api/openllm/avatar/${model_entry.model_id}`} alt="no img" />
 							</div>
 							<div
 								class="w-full flex flex-col justify-between p-4 leading-normal items-center"
@@ -369,7 +369,7 @@ loading
 			<div class="m-1">
 				<span class="text-1xl pt-1 text-black-400 font-bold">训练设备当前状态:</span>
 				<div class="gap-2 m-1 grid grid-cols-1 lg:grid-cols-2">
-					{#each finetune_entry.devices == "auto" ? devices.map((each) => {return each.device_id}) : finetune_entry.devices.split(LIST_SPLITTER) as device}
+					{#each finetune_entry.devices[0] == "auto" ? devices.map((each) => {return each.device_id}) : finetune_entry.devices as device}
 						<div class="inline-block border-gray-200 shadow p-2 m-2 w-40">
 							<div class="m-2 text-md">CUDA:{devices[device].device_id}</div>
 							<hr class="m-1"/>

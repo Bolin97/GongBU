@@ -11,7 +11,7 @@ from sqlalchemy.orm.session import Session
 CHUNKY_BY = 1024
 
 
-def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int, file: BinaryIO):
+def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int, file: BinaryIO, identifier: str):
     db = get_db()
     # try both json and jsonl
     try:
@@ -26,6 +26,8 @@ def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int
         type=kind,
         created_on=date.today(),
         size=len(content),
+        owner=identifier,
+        public=False,
     )
     db.add(entry)
     db.commit()
@@ -40,6 +42,8 @@ def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int
         ds = FinetuneDataset(
             entry_id=entry.id,
             content=content[finished : finished + next_insertation_len],
+            owner=identifier,
+            public=False,
         )
         db.add(ds)
         db.commit()

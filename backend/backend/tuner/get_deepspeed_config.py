@@ -9,16 +9,16 @@ def get_deepspeed_config(
         "deepspeed_config"
     )
     if zero_stage == 1:
-        return os.path.join(config_folder, "zero_stage_1.json")
+        return os.path.join(config_folder, "deepspeed_1.json")
     elif zero_stage == 2:
         if zero_offload:
-            return os.path.join(config_folder, "zero_stage_2_off.json")
+            return os.path.join(config_folder, "deepspeed_2_off.json")
         else:
-            return os.path.join(config_folder, "zero_stage_2.json")
+            return os.path.join(config_folder, "deepspeed_2.json")
     elif zero_stage == 3:
         if zero_offload:
-            return os.path.join(config_folder, "zero_stage_3_off.json")
+            return os.path.join(config_folder, "deepspeed_3_off.json")
         else:
-            return os.path.join(config_folder, "zero_stage_3.json")
+            return os.path.join(config_folder, "deepspeed_3.json")
     else:
         raise ValueError("Invalid Deepspeed config.")

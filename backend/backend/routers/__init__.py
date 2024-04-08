@@ -9,3 +9,5 @@ from .finetune_progress import finetune_progress_router
 from .logging import logging_router
 from .eval_index import eval_index_router
 from .file import file_router
+from .user import user_router
+from .fault import fault_router

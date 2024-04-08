@@ -2,10 +2,9 @@
 	import axios from "axios";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
 	import { onMount } from "svelte";
-	import { BACKEND } from "../../store";
 	let models = [] as Array<OpenllmEntry>;
 	onMount(async () => {
-		models = (await axios.get(`${$BACKEND}/openllm/`)).data;
+		models = (await axios.get(`/api/openllm`)).data;
 	});
 
 	export let selectedId = "";
@@ -25,7 +24,7 @@
 					: 'border-gray-200'} rounded-lg shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 			>
 				<div class="w-20 max-w-20 min-w-[4rem]">
-					<img src={`${$BACKEND}/openllm/avatar/${model.model_id}`} alt="no img" />
+					<img src={`/api/openllm/avatar/${model.model_id}`} alt="no img" />
 				</div>
 				<div class="flex flex-col justify-between p-4 leading-normal">
 					<div class="flex flex-row justify-between">

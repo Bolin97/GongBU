@@ -1,11 +1,11 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import type OpenllmEntry from "../../class/OpenllmEntry";
-    import { BACKEND, MODEL_LIST, UPDATE_VIEW_INTERVAL } from "../store";
+    import { MODEL_LIST, UPDATE_VIEW_INTERVAL } from "../store";
     import { Alert, Button, Input, Modal, Toast } from "flowbite-svelte";
     import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
     import axios from "axios";
-    import { CloseSolid } from "flowbite-svelte-icons";
+    import { CloseOutline } from "flowbite-svelte-icons";
 
     let error_parsing = false;
 
@@ -38,7 +38,7 @@
 
     let model_stored = [] as Array<OpenllmEntry>;
     async function refresh_model_stored() {
-        model_stored = (await axios.get(`${$BACKEND}/openllm/`)).data as Array<OpenllmEntry>;
+        model_stored = (await axios.get(`/api/openllm`)).data as Array<OpenllmEntry>;
     }
     let updater: number;
 	onMount(async () => {
@@ -50,12 +50,12 @@
     });
 
     async function automatic_download(model: ModelListItem) {
-        const response = await axios.post(`${$BACKEND}/openllm/download`, model);
+        const response = await axios.post(`/api/openllm/download`, model);
         await refresh_model_stored();
     }
 
     async function write_only_info(model: ModelListItem) {
-        const response = await axios.post(`${$BACKEND}/openllm/no_download`, model);
+        const response = await axios.post(`/api/openllm/no_download`, model);
         await refresh_model_stored();
     }
 
@@ -89,7 +89,7 @@
     <svelte:fragment slot="footer">
         <div class="w-full flex justify-end gap-2">
             <Button color="red" on:click={() => {
-                axios.delete(`${$BACKEND}/openllm/${delete_modal_id}`);
+                axios.delete(`/api/openllm/${delete_modal_id}`);
                 refresh_model_stored();
                 delete_modal = false;
                 delete_modal_id = "";
@@ -112,7 +112,7 @@
     <svelte:fragment slot="footer">
         <div class="w-full flex justify-end gap-2">
             <Button color="red" on:click={() => {
-                axios.delete(`${$BACKEND}/openllm/entry/${delete_modal_id}`);
+                axios.delete(`/api/openllm/entry/${delete_modal_id}`);
                 refresh_model_stored();
                 delete_entry_modal = false;
                 delete_modal_id = "";
@@ -152,7 +152,7 @@
                     <div>{alert.body}</div>
                 </div>
                 <button on:click={() => {delete_alert(index)}}>
-                    <CloseSolid/>
+                    <CloseOutline/>
                 </button>
             </div>
         </Alert>

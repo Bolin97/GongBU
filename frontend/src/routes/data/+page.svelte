@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { Button } from "flowbite-svelte";
-	import { PlusSolid } from "flowbite-svelte-icons";
+	import { PlusOutline } from "flowbite-svelte-icons";
 	import type PoolEntry from "../../class/PoolEntry";
 	import { onMount } from "svelte";
 	import axios from "axios";
-	import { BACKEND } from "../store";
 
 	const col_names = ["ID", "名称", "创建时间", "条目数", "描述", ""];
 	let pools = [] as Array<PoolEntry>;
 	onMount(async () => {
-		pools = (await axios.get(`${$BACKEND}/pool/`)).data as Array<PoolEntry>;
+		pools = (await axios.get(`/api/pool/`)).data as Array<PoolEntry>;
 	});
 </script>
 
@@ -20,7 +19,7 @@
 <hr class="pt-1" />
 <div class="table w-full">
 	<div class="w-full p-5">
-		<Button href="/data/create_pool"><PlusSolid size="sm" />&nbsp;&nbsp;创建数据池</Button>
+		<Button href="/data/create_pool"><PlusOutline size="sm" />&nbsp;&nbsp;创建数据池</Button>
 	</div>
 	<div>
 		<table class="table-auto border-collapse w-full h-full">

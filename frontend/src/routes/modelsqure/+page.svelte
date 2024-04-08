@@ -3,10 +3,9 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import axios from "axios";
-	import { BACKEND } from "../store";
 	let models = [] as Array<OpenllmEntry>;
 	onMount(async () => {
-		models = (await axios.get(`${$BACKEND}/openllm/`)).data;
+		models = (await axios.get(`/api/openllm`)).data;
 	});
 </script>
 
@@ -25,7 +24,7 @@
 				class="flex items-center px-5 bg-white border border-gray-200 rounded-lg shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 			>
 				<div class="w-20 h-20 max-w-20 min-w-[4rem]">
-					<img src={`${$BACKEND}/openllm/avatar/${model.model_id}`} alt="no img" />
+					<img src={`/api/openllm/avatar/${model.model_id}`} alt="no img" />
 				</div>
 				<div class="flex flex-col justify-between p-4 leading-normal">
 					<div class="flex flex-row justify-between">

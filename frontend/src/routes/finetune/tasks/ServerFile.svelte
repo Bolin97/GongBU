@@ -2,10 +2,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from "svelte";
 	import { goto } from "$app/navigation";
-	import { FileSolid, FolderSolid, AngleLeftSolid } from "flowbite-svelte-icons";
+	import { FileOutline, FolderOutline } from "flowbite-svelte-icons";
 	import { Button, Input, Label, Modal } from "flowbite-svelte";
 	import axios from "axios";
-	import { BACKEND, DEFAULT_MODEL_OUTPUT, UPDATE_VIEW_INTERVAL } from "../../../store";
+	import { DEFAULT_MODEL_OUTPUT, UPDATE_VIEW_INTERVAL } from "../../store";
 
 	type FileEntry = {
 		name: string;
@@ -21,7 +21,7 @@
 	async function load() {
 		const res = (
 			await axios.get(
-				`${$BACKEND}/file`, {
+				`/api/file`, {
 					params: {
 						dir: encodeURIComponent("/" + dir.join("/"))
 					}
@@ -55,7 +55,7 @@
 
 	async function new_folder() {
 		axios.post(
-			`${$BACKEND}/file`, {}, {
+			`/api/file`, {}, {
 				params: {
 					dir: encodeURIComponent("/" + dir.join("/")),
 					new: new_folder_name,
@@ -95,7 +95,7 @@
 
 <div class="flex flex-row gap-2">
 	<Button
-		class="my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+		class={`my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${loading ? "transition ease-in-out opacity-50 disabled" : ""}`}
 		on:click={(_) => go_back()}
 		disabled={dir.length === 0}
 	>
@@ -105,7 +105,7 @@
 		返回上级
 	</Button>
 	<Button
-		class="my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+		class={`my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${loading ? "transition ease-in-out opacity-50 disabled" : ""}`}
 		on:click={(_) => load()}
 	>
 		<svg class="w-4 h-4 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 20">
@@ -114,7 +114,7 @@
 		刷新
 	</Button>
 	<Button
-		class="my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+	class={`my-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${loading ? "transition ease-in-out opacity-50 disabled" : ""}`}
 		on:click={(_) => (new_folder_modal = true)}
 	>
 		<svg class="w-4 h-4 text-white mr-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 18">
@@ -137,9 +137,9 @@
 				on:click={(_) => navigate(file)}
 			>
 				{#if file.isDirectory}
-					<FolderSolid class="text-blue-500" />
+					<FolderOutline class="text-blue-500" />
 				{:else}
-					<FileSolid class="text-gray-500" />
+					<FileOutline class="text-gray-500" />
 				{/if}
 				<p class="text-gray-700">{file.name}</p>
 			</button>

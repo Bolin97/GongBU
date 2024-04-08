@@ -1,3 +1,4 @@
+from backend.auth import check_access, get_current_identifier
 from backend.db import get_db
 from fastapi import APIRouter
 from fastapi.params import Depends
@@ -9,7 +10,9 @@ logging_router = APIRouter()
 
 
 @logging_router.get("/after/{id}")
-async def get_logging_after(id: int, after: float, db: Session = Depends(get_db)):
+async def get_logging_after(id: int, after: float, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
+    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+        return None
     return (
         db.query(LoggingRecord)
         .filter(LoggingRecord.entry_id == id)
@@ -20,17 +23,23 @@ async def get_logging_after(id: int, after: float, db: Session = Depends(get_db)
 
 
 @logging_router.get("/{id}")
-async def get_logging(id: int, db: Session = Depends(get_db)):
+async def get_logging(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
+    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+        return None
     return db.query(LoggingRecord).filter(LoggingRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/{id}")
-async def get_eval(id: int, db: Session = Depends(get_db)):
+async def get_eval(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
+    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+        return None
     return db.query(EvalRecord).filter(EvalRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/after/{id}")
-async def get_eval_after(id: int, after: float, db: Session = Depends(get_db)):
+async def get_eval_after(id: int, after: float, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
+    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+        return None
     return (
         db.query(EvalRecord)
         .filter(EvalRecord.entry_id == id)

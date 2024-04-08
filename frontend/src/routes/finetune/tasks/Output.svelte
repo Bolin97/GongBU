@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Label, Input } from "flowbite-svelte";
-	import ServerFile from "./serverfile/ServerFile.svelte";
+	import ServerFile from "./ServerFile.svelte";
 	import { DEFAULT_MODEL_OUTPUT } from "../../store";
 
 	export let dirArr: Array<string> = $DEFAULT_MODEL_OUTPUT.split("/").filter((x) => x != "");

@@ -2,7 +2,6 @@ version: '3.9'
 
 services:
   db:
-    container_name: db
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
@@ -16,8 +15,7 @@ services:
       - 5432
     ports:
       - "54320:5432"
-  api:
-    container_name: api
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -29,14 +27,16 @@ services:
       - ./models:/models
       - ./finetune_output:/finetune_output
       - ./bert-base-chinese:/backend/bert-base-chinese
-      # - ./roberta-large:/backend/roberta-large
       - ./ext:/backend/ext
-      - ./logs:/backend/logs
+      - ./logs:/logs
+      - /dev/shm:/dev/shm
     depends_on:
       - db
     environment:
       - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
       - MODEL_PATH=/models
+      - SERCET_KEY=secret
+      - LOG_PATH=/logs
     deploy:
       resources:
         reservations:
@@ -49,8 +49,7 @@ services:
         - action: sync
           path: ./backend
           target: /backend
-  web:
-    container_name: web
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -59,9 +58,8 @@ services:
     volumes:
       - /frontend/node_modules
     depends_on:
-      - api
+      - backend
     environment:
-      - VITE_BACKEND=http://localhost:8000
       - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
     develop:
       watch:

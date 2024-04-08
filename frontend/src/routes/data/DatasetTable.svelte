@@ -11,7 +11,6 @@
 	} from "flowbite-svelte";
 	import type FinetuneDatasetEntry from "../../class/DatasetEntry";
 	import axios from "axios";
-	import { BACKEND } from "../store";
 	const col_names = ["id", "名称", "创建时间", "数据量", "格式", "描述"];
 
 	export let datasetEntries: Array<FinetuneDatasetEntry>;
@@ -26,7 +25,7 @@
 		if (id_to_delete == null) {
 			throw "Attempting to delete without an id";
 		}
-		await axios.delete(`${$BACKEND}/dataset/${id_to_delete}`);
+		await axios.delete(`/api/dataset/${id_to_delete}`);
 		dispatch("modified");
 	}
 </script>

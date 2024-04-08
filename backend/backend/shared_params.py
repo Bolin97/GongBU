@@ -5,7 +5,7 @@ from pydantic import BaseModel
 class FinetuneParams(BaseModel):
     model_id: str
     dataset_id: str
-    devices: Literal["auto"] | List[int]
+    devices: List[str]
     eval_indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
     output_dir: str
     adapter_name: str
@@ -37,3 +37,9 @@ class FinetuneParams(BaseModel):
     zero_optimization: bool
     zero_stage: int
     zero_offload: bool
+    use_dora: bool
+    use_rslora: bool
+    rank_dropout: float
+    module_dropout: float
+    use_effective_conv2d: bool
+    use_flash_attention: bool

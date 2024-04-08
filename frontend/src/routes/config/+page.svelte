@@ -1,6 +1,6 @@
 <script lang="ts">
     import { stringify } from "postcss";
-    import { BACKEND, MODEL_LIST } from "../store";
+    import { MODEL_LIST } from "../store";
     import { Input, Textarea } from "flowbite-svelte";
 </script>
 
@@ -14,12 +14,6 @@
 <hr class="pt-1" />
 
 <div class="grid grid-cols-1">
-    <div class="m-2 p-2">
-        <span class="my-2">后端地址</span>
-        <Input
-            bind:value={$BACKEND}
-        />
-    </div>
     <div class="m-2 p-2">
         <span class="my-2">模型列表</span>
         <Textarea

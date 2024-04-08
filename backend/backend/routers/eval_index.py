@@ -8,7 +8,7 @@ from backend.const import EPS
 eval_index_router = APIRouter()
 
 
-@eval_index_router.get("/")
+@eval_index_router.get("")
 async def eval_index_get(id: int, ind: str, db: Session = Depends(gen_db)):
     return (
         db.query(EvalIndexRecord)

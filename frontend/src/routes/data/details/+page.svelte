@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { Label, Radio, Button, Hr, Modal } from "flowbite-svelte";
-	import { AngleLeftSolid } from "flowbite-svelte-icons";
+	import { AngleLeftOutline } from "flowbite-svelte-icons";
 	import { page } from "$app/stores";
 	import Uploader from "../Uploader.svelte";
 	import { goto } from "$app/navigation";
 	import axios from "axios";
-	import { BACKEND } from "../../store";
 
 	const id = $page.url.searchParams.get("pool_id");
 
@@ -14,7 +13,7 @@
 	let stage_empty: boolean;
 
 	async function handle_delete() {
-		await axios.delete(`${$BACKEND}/pool/${id}`);
+		await axios.delete(`/api/pool/${id}`);
 		goto(`/data`);
 	}
 
@@ -75,7 +74,7 @@
 						return_handle();
 					}}
 				>
-					<AngleLeftSolid size="sm" />返回
+					<AngleLeftOutline size="sm" />返回
 				</Button>
 			</div>
 			<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;数据池详情</span>

@@ -4,8 +4,8 @@ export default interface FinetuneEntry {
 	description: string;
 	model_id: string
 	dataset_id: string;
-	devices: string;
-	eval_indexes: string;
+	devices: Array<string>;
+	eval_indexes: Array<string>;
 	output_dir: string;
 	adapter_name: string;
 	batch_size: number;

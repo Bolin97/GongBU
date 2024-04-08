@@ -2,9 +2,9 @@
 	import { StepIndicator, Button, Label, Input, Tooltip } from "flowbite-svelte";
 	import { Timeline, TimelineItem } from "flowbite-svelte";
 	import {
-		CalendarWeekSolid,
+		CalendarWeekOutline,
 		CheckCircleOutline,
-		AdjustmentsHorizontalSolid
+		AdjustmentsHorizontalOutline
 	} from "flowbite-svelte-icons";
 	import Model from "./Model.svelte";
 	import Finetuning from "./Finetuning.svelte";
@@ -16,7 +16,7 @@
 	import { default_finetune_params } from "../../../class/FinetuneParams";
 	import Eval from "./Eval.svelte";
 	import axios from "axios";
-	import { BACKEND, DEFAULT_MODEL_OUTPUT } from "../../store";
+	import { DEFAULT_MODEL_OUTPUT } from "../../store";
 	import { goto } from "$app/navigation";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
 
@@ -45,14 +45,14 @@
 	}
 	$: {
 		if(current_step == 2) {
-			axios.get(`${$BACKEND}/openllm/${selected_model_id}`).then((res) => {
+			axios.get(`/api/openllm/${selected_model_id}`).then((res) => {
 				model_entry = res.data
 			})
 		}
 	}
 
 	$: {
-		finetune_params.devices = use_devices;
+		finetune_params.devices = use_devices == "auto" ? ["auto"] : use_devices.map((x) => x.toString());
 		finetune_params.dataset_id = selected_dataset_id.toString();
 		finetune_params.model_id = selected_model_id.toString();
 		finetune_params.output_dir = output_dir;
@@ -89,7 +89,7 @@
 
 	async function submit_handle() {
 		uploading = true;
-		await axios.post(`${$BACKEND}/finetune/`, finetune_params, {
+		await axios.post(`/api/finetune`, finetune_params, {
 			params: {
 				name: name,
 				description: description
@@ -120,7 +120,7 @@
 							class="flex absolute -left-3 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-primary-900"
 						>
 							{#if i + 1 === current_step}
-								<AdjustmentsHorizontalSolid
+								<AdjustmentsHorizontalOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>
@@ -130,7 +130,7 @@
 									class="text-primary-500 dark:text-primary-400"
 								/>
 							{:else}
-								<CalendarWeekSolid
+								<CalendarWeekOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>

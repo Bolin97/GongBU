@@ -11,7 +11,7 @@ class FileEntry(BaseModel):
     name: str
     isDirectory: bool
 
-@file_router.get("/")
+@file_router.get("")
 async def read_files(dir: Optional[str] = Query(None)):
     try:
         dir = unquote(dir)
@@ -26,7 +26,7 @@ async def read_files(dir: Optional[str] = Query(None)):
     except Exception as e:
         return {"failure": True}
 
-@file_router.post("/", response_model=FileEntry)
+@file_router.post("", response_model=FileEntry)
 async def create_directory(dir: Optional[str] = Query(None), new: Optional[str] = Query(None)):
     try:
         dir = unquote(dir)

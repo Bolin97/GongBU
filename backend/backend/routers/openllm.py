@@ -1,6 +1,7 @@
 import os
 import subprocess
 from threading import Thread
+from backend.auth import accessible, get_current_identifier, owns
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from backend.models import OpenLLM
@@ -19,8 +20,8 @@ from io import BytesIO
 openllm_router = APIRouter()
 
 @openllm_router.get("/{model_id}")
-async def read_openllms(model_id: int, db: Session = Depends(gen_db)):
-    llm_entry = db.query(OpenLLM).filter(OpenLLM.model_id == model_id).first()
+async def read_openllms(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+    llm_entry = accessible(db.query(OpenLLM).filter(OpenLLM.model_id == model_id), identifier).first()
     if llm_entry is None:
         raise HTTPException(status_code=404, detail="Model not found")
     return llm_entry
@@ -34,9 +35,9 @@ async def read_openllms_pic(model_id: int, db: Session = Depends(gen_db)):
     return FileResponse(path)
 
 
-@openllm_router.get("/")
-async def read_all_openllms(db: Session = Depends(gen_db)):
-    all_llm_entry = db.query(OpenLLM).all()
+@openllm_router.get("")
+async def read_all_openllms(db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+    all_llm_entry = accessible(db.query(OpenLLM), identifier).all()
     if all_llm_entry is None:
         raise HTTPException(status_code=404, detail="No model found")
     return all_llm_entry
@@ -49,7 +50,7 @@ class ModelListItem(BaseModel):
     download_url: str
     avatar_url: Optional[str] = None
 
-def download_model(info: ModelListItem, entry_id: int):
+def download_model(info: ModelListItem, entry_id: int, identifier: str = Depends(get_current_identifier)):
     db = get_db()
     if info.source == "git":
         entry = db.query(OpenLLM).filter(OpenLLM.model_id == entry_id).first()
@@ -67,7 +68,7 @@ def download_model(info: ModelListItem, entry_id: int):
         db.commit()
     db.close()
 
-def write_info(info: ModelListItem):
+def write_info(info: ModelListItem, identifier: str):
     # create model_avatars folder if not exists
     if not os.path.exists(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars")):
         os.makedirs(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars"))
@@ -95,6 +96,8 @@ def write_info(info: ModelListItem):
         local_store = 0,
         storage_state = "InfoOnly",
         storage_date = datetime.datetime.utcnow(),
+        owner = identifier,
+        public = False
     )
     db.add(entry)
     db.commit()
@@ -103,20 +106,22 @@ def write_info(info: ModelListItem):
     return entry_id
 
 @openllm_router.post("/download")
-async def create_openllm_download(info: ModelListItem):
+async def create_openllm_download(info: ModelListItem, identifier: str = Depends(get_current_identifier)):
     entry_id = write_info(info)
     # Download Model in a new thread
-    th = Thread(target=download_model, args=(info, entry_id))
+    th = Thread(target=download_model, args=(info, entry_id, identifier))
     th.start()
     return {"status": "success"}
 
 @openllm_router.post("/no_download")
-async def create_openllm(info: ModelListItem):
-    write_info(info)
+async def create_openllm(info: ModelListItem, identifier: str = Depends(get_current_identifier)):
+    write_info(info, identifier)
     return {"status": "success"}
 
 @openllm_router.delete("/{model_id}")
-async def delete_openllm(model_id: int, db: Session = Depends(gen_db)):
+async def delete_openllm(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+    if not owns(db.query(OpenLLM).filter(OpenLLM.model_id == model_id), identifier):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     entry = db.query(OpenLLM).filter(OpenLLM.model_id == model_id).first()
     # delete the avatar
     path = os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", entry.view_pic)
@@ -131,7 +136,9 @@ async def delete_openllm(model_id: int, db: Session = Depends(gen_db)):
     return {"status": "success"}
 
 @openllm_router.delete("/entry/{model_id}")
-async def delete_openllm_entry(model_id: int, db: Session = Depends(gen_db)):
+async def delete_openllm_entry(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+    if not owns(db.query(OpenLLM).filter(OpenLLM.model_id == model_id), identifier):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     entry = db.query(OpenLLM).filter(OpenLLM.model_id == model_id).first()
     if entry is None:
         raise HTTPException(status_code=404, detail="Model not found")

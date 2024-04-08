@@ -3,9 +3,9 @@
 	import type CudaDeviceEntry from "../../../class/CudaDeviceEntry";
 	import { onDestroy, onMount } from "svelte";
 	import axios from "axios";
-	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../../store";
+	import { UPDATE_VIEW_INTERVAL } from "../../store";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
-	import { PlusSolid, CheckCircleOutline } from "flowbite-svelte-icons";
+	import { PlusOutline, CheckCircleOutline } from "flowbite-svelte-icons";
 	let devices: Array<CudaDeviceEntry> = [];
 	export let updaterOn = true;
 	
@@ -13,10 +13,10 @@
 	onMount(async () => {
 		async function update() {
 			if (updaterOn) {
-				devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
+				devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
 			}
 		}
-		devices = (await axios.get(`${$BACKEND}/cuda/`)).data as Array<CudaDeviceEntry>;
+		devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
 		devices_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -67,7 +67,7 @@
 						{#if useDevices == "auto" || useDevices.includes(device.device_id)}
 							<CheckCircleOutline size="sm" class="text-blue-600"/>
 						{:else}
-							<PlusSolid size="sm" class="text-gray-400"/>
+							<PlusOutline size="sm" class="text-gray-400"/>
 						{/if}
 					
 						<div class="m-2 text-lg">CUDA:{device.device_id}</div>

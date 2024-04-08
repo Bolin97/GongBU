@@ -1,3 +1,4 @@
+from backend.auth import get_current_identifier
 from backend.db import gen_db
 from backend.models import *
 from backend.shared_params import FinetuneParams
@@ -12,19 +13,17 @@ import multiprocessing as mp
 finetune_router = APIRouter()
 
 
-@finetune_router.post("/")
+@finetune_router.post("")
 async def add_ft_task(
-    name: str, description: str, params: FinetuneParams, db: Session = Depends(gen_db)
+    name: str, description: str, params: FinetuneParams, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
 ):
     entry = FinetuneEntry(
         model_id=params.model_id,
         name=name,
         description=description,
         dataset_id=params.dataset_id,
-        devices=params.devices
-        if params.devices == "auto"
-        else LIST_SPLITTER.join(map(str, params.devices)),
-        eval_indexes=LIST_SPLITTER.join(params.eval_indexes),
+        devices=["auto"] if params.devices == "auto" else map(str, params.devices),
+        eval_indexes=params.eval_indexes,
         output_dir=params.output_dir,
         adapter_name=params.adapter_name,
         batch_size=params.batch_size,
@@ -57,6 +56,14 @@ async def add_ft_task(
         zero_optimization=params.zero_optimization,
         zero_stage=params.zero_stage,
         zero_offload=params.zero_offload,
+        use_dora=params.use_dora,
+        use_rslora=params.use_rslora,
+        rank_dropout=params.rank_dropout,
+        module_dropout=params.module_dropout,
+        use_effective_conv2d=params.use_effective_conv2d,
+        use_flash_attention=params.use_flash_attention,
+        owner=identifier,
+        public=False
     )
     db.add(entry)
     db.commit()
@@ -66,7 +73,7 @@ async def add_ft_task(
 
 
 @finetune_router.put("/stop/{id}")
-async def stop(id: int, db: Session = Depends(gen_db)):
-    db.add(Signal(entry_id=id, signal=0))
+async def stop(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+    db.add(Signal(entry_id=id, signal=0, owner=identifier, public=False))
     db.commit()
     return None

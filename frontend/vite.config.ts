@@ -11,4 +11,13 @@ export default defineConfig({
 		minify: 'terser', // enable minification
 		chunkSizeWarningLimit: 512, // set warning limit to 512kb
 	},
+	server: {
+		proxy: {
+			'/api': {
+				target: 'http://backend:8000/',
+				changeOrigin: true,
+				rewrite: path => path.replace(/^\/api/, '')
+			}
+		}
+	}
 });

@@ -20,8 +20,7 @@
 
 	import { Label } from "flowbite-svelte";
 	import { Dropzone } from "flowbite-svelte";
-	import { FileSolid } from "flowbite-svelte-icons";
-	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../store";
+	import { UPDATE_VIEW_INTERVAL } from "../store";
 	import DatasetTable from "./DatasetTable.svelte";
 	import type DatasetEntry from "../../class/DatasetEntry";
 	import { onDestroy, onMount } from "svelte";
@@ -83,7 +82,7 @@
 			const form = new FormData();
 			const entry = submissions[i]
 			form.append("file", entry.file);
-			await axios.post(`${$BACKEND}/dataset/`, form, {
+			await axios.post(`/api/dataset`, form, {
 				params: {
 					name: entry.name,
 					description: entry.description,
@@ -96,7 +95,7 @@
 		// submissions.forEach(async (entry) => {
 		// 	const form = new FormData();
 		// 	form.append("file", entry.file);
-		// 	await axios.post(`${$BACKEND}/dataset/`, form, {
+		// 	await axios.post(`/api/dataset/`, form, {
 		// 		params: {
 		// 			name: entry.name,
 		// 			description: entry.description,
@@ -111,7 +110,7 @@
 		// 	submissions.map((entry) => {
 		// 		const form = new FormData();
 		// 		form.append("file", entry.file);
-		// 		return axios.post(`${$BACKEND}/dataset/`, form, {
+		// 		return axios.post(`/api/dataset/`, form, {
 		// 			params: {
 		// 				name: entry.name,
 		// 				description: entry.description,
@@ -137,7 +136,7 @@
 	$: stageEmpty = submissions.length == 0;
 
 	async function fetch_dataset_entries() {
-		entries = (await axios.get(`${$BACKEND}/dataset_entry/by_pool/${poolId}`)).data;
+		entries = (await axios.get(`/api/dataset_entry/by_pool/${poolId}`)).data;
 	}
 
 	onMount(async () => {

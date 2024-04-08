@@ -1,7 +1,7 @@
 export interface FinetuneParams {
 	model_id: string;
 	dataset_id: string;
-	devices: Array<number> | "auto";
+	devices: Array<string>;
 	eval_indexes: Array<string>;
 	output_dir: string;
 	adapter_name: string;
@@ -33,6 +33,12 @@ export interface FinetuneParams {
 	zero_optimization: boolean;
 	zero_stage: number;
 	zero_offload: boolean;
+	use_dora: boolean;
+	use_rslora: boolean;
+	rank_dropout: number;
+	module_dropout: number;
+	use_effective_conv2d: boolean;
+	use_flash_attention: boolean;
 }
 
 export function default_finetune_params(): FinetuneParams {
@@ -71,5 +77,11 @@ export function default_finetune_params(): FinetuneParams {
 		zero_optimization: false,
 		zero_stage: 1,
 		zero_offload: false,
+		use_dora: false,
+		use_rslora: false,
+		rank_dropout: -1,
+		module_dropout: -1,
+		use_effective_conv2d: false,
+		use_flash_attention: false,
 	};
 }

@@ -4,14 +4,13 @@
 	import Information from "./Information.svelte";
 	import Dataset from "../DatasetTable.svelte";
 	import {
-		CalendarWeekSolid,
+		CalendarWeekOutline,
 		CheckCircleOutline,
-		AdjustmentsHorizontalSolid,
-		AngleLeftSolid
+		AdjustmentsHorizontalOutline,
+		AngleLeftOutline
 	} from "flowbite-svelte-icons";
 	import { goto } from "$app/navigation";
 	import axios from "axios";
-	import { BACKEND } from "../../store";
 	import type FinetuneDatasetEntry from "../../../class/DatasetEntry";
 	import type DatasetEntry from "../../../class/DatasetEntry";
 	import Uploader from "../Uploader.svelte";
@@ -33,7 +32,7 @@
 		form.append("description", description);
 		pool_id = (
 			await axios.post(
-				`${$BACKEND}/pool`,
+				`/api/pool`,
 				{},
 				{
 					params: {
@@ -102,7 +101,7 @@
 					return_handle();
 				}}
 			>
-				<AngleLeftSolid size="sm" />返回
+				<AngleLeftOutline size="sm" />返回
 			</Button>
 		</div>
 		<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;创建数据池</span>
@@ -121,7 +120,7 @@
 								class="flex absolute -left-3 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-primary-900"
 							>
 								{#if i + 1 === current_step}
-									<AdjustmentsHorizontalSolid
+									<AdjustmentsHorizontalOutline
 										size="sm"
 										class="text-primary-500 dark:text-primary-400"
 									/>
@@ -131,7 +130,7 @@
 										class="text-primary-500 dark:text-primary-400"
 									/>
 								{:else}
-									<CalendarWeekSolid
+									<CalendarWeekOutline
 										size="sm"
 										class="text-primary-500 dark:text-primary-400"
 									/>

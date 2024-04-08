@@ -2,7 +2,7 @@
 	import { Progressbar } from "flowbite-svelte";
 	import type FinetuneProgessEntry from "../../class/FinetuneProgessEntry";
 	import { onDestroy, onMount } from "svelte";
-	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../store";
+	import { UPDATE_VIEW_INTERVAL } from "../store";
 	import axios from "axios";
 	export let id;
 	export let noUpdate = false;
@@ -11,7 +11,7 @@
 	let percentage_updater: number;
 	onMount(async () => {
 		async function update() {
-			entry = (await axios.get(`${$BACKEND}/finetune_progress/${id}`))
+			entry = (await axios.get(`/api/finetune_progress/${id}`))
 				.data as FinetuneProgessEntry;
 			if (entry.current == entry.total) {
 				clearInterval(percentage_updater);

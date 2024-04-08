@@ -27,7 +27,7 @@ async def device_info(device_id: int):
     return ret
 
 
-@cuda_router.get("/")
+@cuda_router.get("")
 async def avaliable_device():
     # 初始化NVML库
     nvmlInit()

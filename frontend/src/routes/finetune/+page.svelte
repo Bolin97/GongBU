@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Button } from "flowbite-svelte";
-	import { PlusSolid } from "flowbite-svelte-icons";
 	import type FinetuneEntry from "../../class/FinetuneEntry";
 	import { onDestroy, onMount } from "svelte";
 	import axios from "axios";
-	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../store";
+	import { PlusOutline } from "flowbite-svelte-icons";
+	import { UPDATE_VIEW_INTERVAL } from "../store";
 	import FinetuneProgess from "./FinetuneProgess.svelte";
 	import { page } from "$app/stores";
 	import toFormatted from "../../utils/ConvertDatetimeString";
@@ -17,7 +17,7 @@
 	let entries_updater: number;
 	onMount(async () => {
 		async function update() {
-			entries = (await axios.get(`${$BACKEND}/finetune_entry/reduced`))
+			entries = (await axios.get(`/api/finetune_entry/reduced`))
 				.data as Array<FinetuneEntryReduced>;
 		}
 		update();
@@ -37,7 +37,10 @@
 <hr class="pt-1" />
 <div class="table w-full">
 	<div class="w-full p-5">
-		<Button href="/finetune/tasks"><PlusSolid size="sm" />&nbsp;&nbsp;创建微调任务</Button>
+		<Button href="/finetune/tasks">
+			<PlusOutline size="sm" />
+			&nbsp;&nbsp;创建微调任务
+		</Button>
 	</div>
 	<table class="table-auto border-collapse w-full h-full">
 		<thead>

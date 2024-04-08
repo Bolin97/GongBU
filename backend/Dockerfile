@@ -17,7 +17,7 @@ RUN rm /conf/linux_mb.tar.bz2
 # Create the env for the backend
 COPY ./requirements.txt /conf/requirements.txt
 
-RUN /micromamba/bin/micromamba create -y -n backend -c https://mirrors.aliyun.com/anaconda/cloud/conda-forge/ python=3.10
+RUN /micromamba/bin/micromamba create -y -n backend -c conda-forge python=3.10
 # Install packaging
 RUN /micromamba/bin/micromamba run -n backend pip install packaging -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
@@ -32,11 +32,14 @@ RUN /micromamba/bin/micromamba run -n backend pip install bert-score -i https://
 
 RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
-# Use the transformers from huggingface
 RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]" -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install accelerate==0.27.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install git+https://github.com/huggingface/transformers
 RUN /micromamba/bin/micromamba run -n backend pip install torch==2.2.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.37.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+# RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 RUN apt-get -y install libopenmpi-dev
 RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi.tuna.tsinghua.edu.cn/simple/
@@ -48,4 +51,5 @@ COPY . /backend
 WORKDIR /backend
 RUN /micromamba/bin/micromamba run -n backend pip install -e .
 
-CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 --reload > ./logs/output.log 2>&1
+RUN mkdir /logs
+CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 --reload

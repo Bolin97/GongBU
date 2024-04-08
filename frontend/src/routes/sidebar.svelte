@@ -4,18 +4,15 @@
 	import { page } from "$app/stores";
 	import { Sidebar, SidebarGroup, SidebarItem, SidebarWrapper } from "flowbite-svelte";
 	import {
-		GridSolid,
-		MailBoxSolid,
-		UserSolid,
-		ArrowRightToBracketSolid,
+		MailBoxOutline,
 	} from "flowbite-svelte-icons";
 	// $: activeUrl = $page.url.pathname;
-	let sidebar = ["模型广场", "应用广场", "微调管理", "数据管理", "部署管理", "模型下载", "设置"];
-	let route = ["/modelsqure", "/application", "/finetune", "/data", "/deployment", "/download", "/config"];
+	let sidebar = ["模型广场", "微调管理", "数据管理", "模型评估", "部署管理", "模型下载", "错误记录", "设置"];
+	let route = ["/modelsqure", "/finetune", "/data", "/eval", "/deployment", "/download", "/fault", "/config"];
 	// let darkmodebtn =
 	// 	'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-lg p-2.5 fixed right-4 top-2 z-50';
 
-	const icons = [GridSolid, ArrowRightToBracketSolid, UserSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid, MailBoxSolid];
+	const icons = [MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline, MailBoxOutline];
 </script>
 
 <!-- <DarkMode btnClass={darkmodebtn} /> -->

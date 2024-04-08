@@ -8,10 +8,8 @@ from backend.shared_params import FinetuneParams
 import os
 import multiprocessing as mp
 from pathlib import Path
-from .peft_finetune import train
-from pandas import DataFrame
-from transformers import TrainerCallback
-from .callback import ReportCallback
+from subprocess import Popen, PIPE
+
 import torch
 import datetime
 from itertools import chain
@@ -42,24 +40,28 @@ class Worker(Thread):
     def run(self):
         try:
             devices = None
-            if self.params.devices == "auto":
+            if self.params.devices[0] == "auto":
                 devices = [i for i in range(torch.cuda.device_count())]
             else:
-                devices = list(map(int, self.params.devices.split(LIST_SPLITTER)))
+                devices = list(map(int, self.params.devices))
             cuda_visible_devices = ",".join(map(str, devices))
-
-            conda_activation = f"conda activate backend"
 
             script_file = os.path.join(
                 os.path.dirname(__file__), "peft_finetune.py"
             )
-
-            command = f"""
-{conda_activation} && \
-CUDA_VISIBLE_DEVICES={cuda_visible_devices} accelerate launch {script_file} --finetune_id {self.id}
-            """
+            command = ""
+            if self.params.zero_optimization:
+                command = f"""
+CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend accelerate launch --main_process_port {29500 + self.id} {script_file} --finetune_id {self.id}
+                """
+            else:
+                command = f"""
+CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --finetune_id {self.id}
+                """
             # start a new tmux session named finetune_task_{self.id}
             os.system(f"tmux new-session -d -s finetune_task_{self.id} '{command}'")
+            # write the stdout of the tmux session in real time
+            os.system(f"tmux pipe-pane -o -t finetune_task_{self.id} 'cat > {os.getenv('LOG_PATH')}/finetune_task_{self.id}.log'")
             print(f"finetune_task_{self.id} started")
             # print tmux session name
             print(f"tmux session name:\nfinetune_task_{self.id}")

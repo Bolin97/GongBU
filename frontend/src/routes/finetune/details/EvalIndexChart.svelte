@@ -1,7 +1,7 @@
 <script lang="ts">
 	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";
-	import { BACKEND, UPDATE_VIEW_INTERVAL } from "../../store";
+	import { UPDATE_VIEW_INTERVAL } from "../../store";
 	import Chart from "../../components/Chart.svelte";
 
     export let name: string;
@@ -63,7 +63,7 @@
 	let eval_update;
 	onMount(async () => {
 		eval_raw = (
-			await axios.get(`${$BACKEND}/eval_index/`, {
+			await axios.get(`/api/eval_index`, {
 				params: {
 					id: id,
 					ind: name
@@ -75,7 +75,7 @@
 				eval_raw = [
 					...eval_raw,
 					...(
-						await axios.get(`${$BACKEND}/eval_index/after`, {
+						await axios.get(`/api/eval_index/after`, {
 							params: {
 								id: id,
 								ind: name,

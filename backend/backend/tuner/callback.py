@@ -18,7 +18,6 @@ import jieba
 from nltk.util import ngrams
 from collections import Counter
 from time import time
-from backend.sync import ctx
 from tqdm import tqdm
 import os
 import pickle
@@ -27,17 +26,28 @@ class ReportCallback(TrainerCallback):
     id: int
     indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
     eval_dataset: Any
-    enabled: bool = True
+    enabled: bool = False
+    identifier: str
+    public: bool
 
     def __init__(
-        self, finetune_id: int, indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
+        self, 
+        finetune_id: int, 
+        ds_type: int, 
+        indexes: List[Literal["F", "R", "P", "A", "B", "D"]],
+        identifier: str,
+        public: bool
     ):
         super().__init__()
         self.id = finetune_id
         self.indexes = indexes
+        self.ds_type = ds_type
         # if detected using deepspeed, only the first callback reports
+        # print(os.environ.get("LOCAL_RANK"))
         if os.environ.get("LOCAL_RANK") is None or int(os.environ.get("LOCAL_RANK")) == 0:
             self.enabled = True
+        self.identifier = identifier
+        self.public = public
         
     def set_eval_dataset(self, ds: Any):
         self.eval_dataset = ds
@@ -180,9 +190,9 @@ class ReportCallback(TrainerCallback):
                     return False
             
             def get_generated_output(data_point):
-                prompt = generate_prompt(data_point, for_infer=True)
+                prompt = generate_prompt(data_point, self.ds_type, for_infer=True)
                 input_ids = tokenizer.encode(prompt, return_tensors="pt").to("cuda")
-                output = model.generate(inputs=input_ids, max_length=len(generate_prompt(data_point)), stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
+                output = model.generate(inputs=input_ids, max_length=len(generate_prompt(data_point, self.ds_type)), stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
                 out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(prompt)
                 return out_text
 

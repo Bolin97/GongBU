@@ -5,6 +5,7 @@ import sys
 from accelerate.utils.modeling import check_tied_parameters_in_config, find_tied_parameters
 import fire
 import psutil
+from backend.dao.fault import submit_fault
 import torch
 import transformers
 from typing import List, Optional
@@ -13,7 +14,7 @@ from pandas import DataFrame
 from typing import List, Optional, Union, Any, Literal
 import datasets
 from backend.db import get_db
-from .generate_prompt import generate_prompt
+from backend.tuner.generate_prompt import generate_prompt
 from accelerate import infer_auto_device_map
 from peft import (  # noqa: E402
     AdaLoraConfig,
@@ -129,7 +130,7 @@ def get_target(bnb_config: Optional[BitsAndBytesConfig], named_modules) -> List[
     # Convert the set into a list and return it
     return list(lora_module_names)
 
-def get_device_map(devices: list[int] | str, model: AutoModelForCausalLM):
+def get_device_map(devices: list[int] | str, base_model: str):
     # if devices == "auto":
     #     return "auto"
     # else:
@@ -157,7 +158,7 @@ def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig,
         target_modules = TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[
             model.config.model_type.lower()
         ]
-    elif any(n in adapter_name.lower() for n in ["lora", "lokr", "loha"]):
+    elif any(n in adapter_name.lower() for n in ["adalora", "lora", "lokr", "loha"]):
         target_modules = get_target(bnb_config, model.named_modules())
 
     if adapter_name == "adalora":
@@ -169,10 +170,11 @@ def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig,
             bias="none",
             task_type="CAUSAL_LM",
         )
-    elif adapter_name == "adaption-prompt":
-        return AdaptionPromptConfig(
-            task_type="CAUSAL_LM",
-        )
+    # this is only for llama, not for general use, so abandon it
+    # elif adapter_name == "adaption-prompt":
+    #     return AdaptionPromptConfig(
+    #         task_type="CAUSAL_LM",
+    #     )
     elif adapter_name == "IA3":
         return IA3Config(
             target_modules=TRANSFORMERS_MODELS_TO_IA3_TARGET_MODULES_MAPPING[
@@ -211,20 +213,16 @@ def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig,
     elif adapter_name == "lokr":
         return LoKrConfig(
             r=lora_r,
-            lora_alpha=lora_alpha,
+            alpha=lora_alpha,
             target_modules=target_modules,
-            inference_mode=False,
-            lora_dropout=lora_dropout,
             bias="none",
             task_type="CAUSAL_LM",
         )
     elif adapter_name == "loha":
         return LoHaConfig(
             r=lora_r,
-            lora_alpha=lora_alpha,
+            alpha=lora_alpha,
             target_modules=target_modules,
-            inference_mode=False,
-            lora_dropout=lora_dropout,
             bias="none",
             task_type="CAUSAL_LM",
         )
@@ -273,7 +271,8 @@ def get_dataset(
     val_size: int,
     tokenizer: AutoTokenizer,
     cutoff_len: int,
-    callback: ReportCallback
+    callback: ReportCallback,
+    output_dir: str
 ):
     def tokenize(prompt, add_eos_token=True):
         result = tokenizer(
@@ -321,6 +320,7 @@ def get_dataset(
             test_size=val_size, shuffle=True, seed=42
         )
         callback.set_eval_dataset(train_val["test"])
+        train_val["test"].to_json(os.path.join(output_dir, "eval_dataset.json"))
         train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
         val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
     else:
@@ -392,7 +392,7 @@ def train(
     device_map = None
     
     if not zero_optimization:
-        device_map = get_device_map(devices, model)
+        device_map = get_device_map(devices, "")
 
     bnb_config = None
     if bits_and_bytes:
@@ -428,7 +428,7 @@ def train(
         model.model_parallel = True
 
     train_data, val_data = get_dataset(
-        dataset_type, dataset, val_set_size, tokenizer, cutoff_len, report_callback
+        dataset_type, dataset, val_set_size, tokenizer, cutoff_len, report_callback, output_dir
     )
 
     data_collator = transformers.DataCollatorForSeq2Seq(
@@ -485,9 +485,13 @@ from backend.models import *
 def wrapper(
     finetune_id: int,
 ):
+    exception = None
+    print("Start fine-tuning")
     try:
         db = get_db()
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        owner = entry.owner
+        public = entry.public
         model_path = (
             db.query(OpenLLM)
             .filter(OpenLLM.model_id == entry.model_id)
@@ -505,12 +509,15 @@ def wrapper(
             )
         )
         dataset_type = db.query(DatasetEntry).filter(DatasetEntry.id == entry.dataset_id).first().type
+        
+        callback = ReportCallback(finetune_id, dataset_type, entry.eval_indexes, owner, public)
+        
         train(
             base_model=model_path,
             dataset_type=dataset_type,
             dataset=dataset_json_obj,
             devices="auto",
-            report_callback=ReportCallback(finetune_id, 0 if entry.devices == "auto" else min(devices), entry.eval_indexes),
+            report_callback=callback,
             output_dir=entry.output_dir,
             adapter_name=entry.adapter_name,
             batch_size=entry.batch_size,
@@ -548,15 +555,36 @@ def wrapper(
             zero_stage=entry.zero_stage,
             zero_offload=entry.zero_offload,
         )
+    except RuntimeError as e:
+        exception = e
+        if "out of memory" in str(e):
+            submit_fault(
+                ["ft", str(finetune_id)],
+                str(e),
+                1000,
+                entry.owner,
+                False,
+                f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",
+            )
+        else:
+            submit_fault(
+                ["ft", str(finetune_id)],
+                str(e),
+                1999,
+                entry.owner,
+                False,
+                f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",
+            )
     except Exception as e:
-        print(e)
-        db = get_db()
-        entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
-        entry.state = -1
-        entry.end_time = datetime.utcnow()
-        db.commit()
-        db.close()
+        exception = e
     finally:
+        if not (exception is None):
+            print(exception)
+            db = get_db()
+            entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            entry.state = -1
+            entry.end_time = datetime.utcnow()
+            db.commit()
         db.close()
 
 if __name__ == "__main__":

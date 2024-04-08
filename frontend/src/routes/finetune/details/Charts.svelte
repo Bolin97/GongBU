@@ -1,7 +1,7 @@
 <script lang="ts">
 	import axios from "axios";
 	import type FinetuneEntry from "../../../class/FinetuneEntry";
-	import { BACKEND, LIST_SPLITTER, UPDATE_VIEW_INTERVAL } from "../../store";
+	import { UPDATE_VIEW_INTERVAL } from "../../store";
 	import { onDestroy, onMount } from "svelte";
 	import type LoggingRecord from "../../../class/LoggingRecord";
 	import type EvalRecord from "../../../class/EvalRecord";
@@ -37,7 +37,7 @@
 					logging_records = [
 						...logging_records,
 						...(
-							await axios.get(`${$BACKEND}/logging/after/${id}`, {
+							await axios.get(`/api/logging/after/${id}`, {
 								params: {
 									after:
 										logging_records.length == 0
@@ -50,7 +50,7 @@
 				}
 			}
 		}
-		logging_records = (await axios.get(`${$BACKEND}/logging/${id}`)).data;
+		logging_records = (await axios.get(`/api/logging/${id}`)).data;
 		logging_records_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -66,7 +66,7 @@
 					eval_records = [
 						...eval_records,
 						...(
-							await axios.get(`${$BACKEND}/logging/eval/after/${id}`, {
+							await axios.get(`/api/logging/eval/after/${id}`, {
 								params: {
 									after:
 										eval_records.length == 0
@@ -79,7 +79,7 @@
 				}
 			}
 		}
-		eval_records = (await axios.get(`${$BACKEND}/logging/eval/${id}`)).data;
+		eval_records = (await axios.get(`/api/logging/eval/${id}`)).data;
 		eval_records_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
 	});
 	onDestroy(() => {
@@ -188,7 +188,7 @@
 		update();
 	}
 
-	const eval_indexes = finetuneEntry.eval_indexes.split(LIST_SPLITTER);
+	const eval_indexes = finetuneEntry.eval_indexes;
 
 	const eval_index_full_name = {
 		A: "Accuracy",
