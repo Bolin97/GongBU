@@ -1,7 +1,7 @@
 <script lang="ts">
 	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";
-	import { UPDATE_VIEW_INTERVAL } from "../../store";
+	import { REALTIME_FINETUNE_DETAIL, UPDATE_VIEW_INTERVAL } from "../../store";
 	import Chart from "../../components/Chart.svelte";
 
     export let name: string;
@@ -71,6 +71,9 @@
 			})
 		).data;
 		eval_update = setInterval(async () => {
+			if (!$REALTIME_FINETUNE_DETAIL) {
+				return;
+			}
 			if (state == 0) {
 				eval_raw = [
 					...eval_raw,
@@ -112,7 +115,7 @@
 	}
 </script>
 
-<div class="m-1 p-2 w-full inline-block">
+<div class="m-1 p-2">
     <span class="text-1xl pt-1 text-black-400 font-bold"
         >&nbsp;&nbsp;{title}</span
     >

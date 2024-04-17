@@ -211,7 +211,7 @@ export const training_params: Array<ParamEntry> = [
 		name: "评估数据集的大小",
 		param_type: ParamType.slider,
 		description: "训练超参数",
-		constrains: [{ min: 0 }, { max: 10000 }]
+		constrains: [{ min: 0 }, { max: 1 }, {step: 0.001}]
 	},
 	{
 		var_name: "use_gradient_checkpointing",
@@ -228,11 +228,11 @@ export const training_params: Array<ParamEntry> = [
 		constrains: []
 	},
 	{
-		var_name: "zero_optimization_stage",
+		var_name: "zero_stage",
 		name: "zero优化阶段",
-		param_type: ParamType.number_box,
+		param_type: ParamType.radio,
 		description: "高级训练参数",
-		constrains: [{ min: 1 }, { max: 3}, { step: 1 }]
+		constrains: [{values: [1, 2, 3]}]
 	},
 	{
 		var_name: "zero_offload",
@@ -267,7 +267,7 @@ export function default_finetune_params() {
 		num_epochs: 10,
 		learning_rate: 0.0003,
 		cutoff_len: 512,
-		val_set_size: 1,
+		val_set_size: 0.3,
 		use_gradient_checkpointing: true,
 		eval_step: 1,
 		save_step: 8,
@@ -284,7 +284,7 @@ export function default_finetune_params() {
 		bnb_4bit_quant_type: "fp4",
 		bnb_4bit_use_double_quant: false,
 		zero_optimization: false,
-		zero_optimization_stage: 2,
+		zero_stage: 2,
 		zero_offload: false,
 		use_dora: false,
 		use_rslora: false,
@@ -293,4 +293,71 @@ export function default_finetune_params() {
 		use_effective_conv2d: false,
 		use_flash_attention: false,
 	};
+}
+// export interface DeploymentRequestParams {
+//     "model_or_adpater_id": number,
+//     "deploy_base_model": boolean,
+//     "bits_and_bytes": true,
+//     "load_8bit": true,
+//     "load_4bit": true,
+//     "use_flash_attention": true,
+//     "use_deepspeed": true,
+//     "devices": [
+//       "string"
+//     ],
+//     "port": 0
+// }
+
+export const deployment_params: Array<ParamEntry> = [
+	{
+		var_name: "bits_and_bytes",
+		name: "是否使用bits_and_bytes",
+		param_type: ParamType.bool,
+		description: "部署参数",
+		constrains: []
+	},
+	{
+		var_name: "use_flash_attention",
+		name: "是否使用flash attention",
+		param_type: ParamType.bool,
+		description: "部署参数",
+		constrains: []
+	},
+	{
+		var_name: "use_deepspeed",
+		name: "是否使用deepspeed",
+		param_type: ParamType.bool,
+		description: "部署参数",
+		constrains: []
+	}
+]
+
+export const deployment_port: Array<ParamEntry> = [
+	{
+		var_name: "port",
+		name: "端口",
+		param_type: ParamType.number_box,
+		description: "部署参数",
+		constrains: [{ min: 1000 }, { max: 65535 }, {values: [8760, 8761, 8762, 8763, 8764, 8765, 8766, 8767]}]
+	}
+]
+
+export const deployment_quantization_params: Array<ParamEntry> = [
+	{
+		var_name: "load_xbit",
+		name: "量化bit",
+		param_type: ParamType.radio,
+		description: "部署参数",
+		constrains: [{ values: [4, 8] }]
+	}
+]
+
+export function default_deployment_params() {
+	return {
+		bits_and_bytes: false,
+		load_xbit: 8,
+		use_flash_attention: false,
+		use_deepspeed: false,
+		port: 8760
+	}
 }

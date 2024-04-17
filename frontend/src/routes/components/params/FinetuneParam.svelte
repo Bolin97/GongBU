@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Radio, Label, Input, Hr, Accordion, AccordionItem, Button } from "flowbite-svelte";
-	import ParamGroup from "../../components/params/ParamGroup.svelte";
+	import ParamGroup from "./ParamGroup.svelte";
 	import {
 		type ParamEntry,
 		ParamType,
@@ -11,14 +11,14 @@
 		lora_quantization_advanced,
 		training_params,
 		training_advanced
-	} from "../../components/params/Params";
-	import type { FinetuneParams } from "../../../class/FinetuneParams";
+	} from "./Params";
+	import type { FinetuneRequestParams } from "../../../class/FinetuneRequestParams";
 	const adapters: Array<"lora" | "qlora" | "p-tuning" | "prefix-tuning" | "prompt-tuning" | "IA3" | "lokr" | "loha"> = ["lora", "qlora", "p-tuning", "prefix-tuning", "prompt-tuning", "IA3", "lokr", "loha"];
-	import { lora_specific_params } from "../../components/params/Params";
+	import { lora_specific_params } from "./Params";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
 	let adapter = "lora";
 	let params = default_finetune_params();
-	export let finetuneParam: FinetuneParams;
+	export let finetuneParam: FinetuneRequestParams;
 	$: {
 		Object.keys(params).forEach((k) => {
 			if (k in finetuneParam) {
@@ -29,7 +29,6 @@
 		finetuneParam.bits_and_bytes = adapter == "qlora";
 		finetuneParam.load_4bit = params.load_xbit == 4;
 		finetuneParam.load_8bit = params.load_xbit == 8;
-		// finetuneParam.save_step = params.eval_step;
 	}
 
 </script>

@@ -7,7 +7,10 @@ from .finetune import finetune_router
 from .finetune_entry import finetune_entry_router
 from .finetune_progress import finetune_progress_router
 from .logging import logging_router
-from .eval_index import eval_index_router
+from .ft_eval_index import ft_eval_index_router
 from .file import file_router
 from .user import user_router
 from .fault import fault_router
+from .adapter import adapter_router
+from .deployment import deployment_router
+from .eval import eval_router

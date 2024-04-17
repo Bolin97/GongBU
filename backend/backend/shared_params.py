@@ -14,7 +14,7 @@ class FinetuneParams(BaseModel):
     num_epochs: int
     learning_rate: float
     cutoff_len: int
-    val_set_size: int
+    val_set_size: float
     use_gradient_checkpointing: bool
     eval_step: int
     save_step: int

@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { Checkbox, Label, Progressbar, Radio, Toggle } from "flowbite-svelte";
-	import type CudaDeviceEntry from "../../../class/CudaDeviceEntry";
+    import type CudaDeviceEntry from "../../class/CudaDeviceEntry";
 	import { onDestroy, onMount } from "svelte";
 	import axios from "axios";
-	import { UPDATE_VIEW_INTERVAL } from "../../store";
-	import type OpenllmEntry from "../../../class/OpenllmEntry";
+    import { UPDATE_VIEW_INTERVAL } from "../store";
 	import { PlusOutline, CheckCircleOutline } from "flowbite-svelte-icons";
 	let devices: Array<CudaDeviceEntry> = [];
 	export let updaterOn = true;
 	
-	let devices_updater: number;
+	let devices_updater: any;
 	onMount(async () => {
 		async function update() {
 			if (updaterOn) {

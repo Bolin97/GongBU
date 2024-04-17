@@ -1,39 +1,40 @@
 <script lang="ts">
-	import { StepIndicator, Button, Label, Input, Tooltip } from "flowbite-svelte";
+	import { StepIndicator, Button, Label, Input, Tooltip, Hr } from "flowbite-svelte";
 	import { Timeline, TimelineItem } from "flowbite-svelte";
 	import {
 		CalendarWeekOutline,
 		CheckCircleOutline,
-		AdjustmentsHorizontalOutline
+		AdjustmentsHorizontalOutline,
+
+        AngleLeftOutline
+
 	} from "flowbite-svelte-icons";
-	import Model from "./Model.svelte";
-	import Finetuning from "./Finetuning.svelte";
-	import Data from "./Data.svelte";
-	import Device from "./Device.svelte";
+	import Finetuning from "../../components/params/FinetuneParam.svelte";
+	import Data from "../../components/Data.svelte";
 	import Output from "./Output.svelte";
-	import { fade } from "svelte/transition";
 	import { page } from "$app/stores";
-	import { default_finetune_params } from "../../../class/FinetuneParams";
-	import Eval from "./Eval.svelte";
+	import { default_finetune_request_params } from "../../../class/FinetuneRequestParams";
+	import EvalSelection from "../../components/EvalSelection.svelte";
 	import axios from "axios";
-	import { DEFAULT_MODEL_OUTPUT } from "../../store";
 	import { goto } from "$app/navigation";
 	import type OpenllmEntry from "../../../class/OpenllmEntry";
+    import ActionPageTitle from "../../components/ActionPageTitle.svelte";
+    import ModelSelection from "../../components/ModelSelection.svelte";
+    import DeviceSelection from "../../components/DeviceSelection.svelte";
 
 	let current_step = 1;
 	let selected_model_id: string = "";
 	let selected_dataset_id: string = "";
 	let use_devices: Array<number> | "auto" = [];
-	let dir_arr = $DEFAULT_MODEL_OUTPUT.split("/").filter((x) => x != "");
+	let dir_arr = [];
 	let evals = [];
 	let name = "";
 	let description = "";
 	$: output_dir = "/".concat(dir_arr.join("/"));
-
-	let finetune_params = default_finetune_params();
+	let finetune_params = default_finetune_request_params();
 
 	let model_entry: OpenllmEntry = {
-		model_id: "",
+		id: "",
 		model_name: "",
 		model_description: "",
 		view_pic: "",
@@ -42,6 +43,7 @@
 		local_store: 0,
 		storage_state: "",
 		storage_date: "",
+		display_name: "",
 	}
 	$: {
 		if(current_step == 2) {
@@ -102,13 +104,7 @@
 	$: device_updater_on = current_step == 5;
 </script>
 
-<div class="pt-2 w-full">
-	<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;创建微调任务</span>
-	<span class="text-1xl pt-2 text-black-400 text-center"
-		>&nbsp;&nbsp;按照提示步骤创建微调任务</span
-	>
-</div>
-<hr class="pt-1" />
+<ActionPageTitle title="微调任务" subtitle="微调任务的创建与管理" returnTo="/finetune"/>
 {#if !uploading}
 <div class="w-full flex flex-row p-1 m-2 mt-4">
 	<div>
@@ -148,19 +144,19 @@
 		<StepIndicator currentStep={current_step} {steps} color="blue" />
 		<div>
 			<div class={`${current_step == 1 ? "" : "hidden"}`}>
-				<Model bind:selectedId={selected_model_id} />
+				<ModelSelection bind:selectedModelId={selected_model_id} />
 			</div>
 			<div class={`${current_step == 2 ? "" : "hidden"}`}>
 				<Data bind:selectedSet={selected_dataset_id} />
 			</div>
 			<div class={`${current_step == 3 ? "" : "hidden"}`}>
-				<Eval bind:indexes={evals} />
+				<EvalSelection bind:indexes={evals} />
 			</div>
 			<div class={`${current_step == 4 ? "" : "hidden"}`}>
 				<Finetuning bind:finetuneParam={finetune_params} />
 			</div>
 			<div class={`${current_step == 5 ? "" : "hidden"}`}>
-				<Device bind:useDevices={use_devices} bind:updaterOn={device_updater_on}/>
+				<DeviceSelection bind:useDevices={use_devices} bind:updaterOn={device_updater_on}/>
 			</div>
 			<div class={`${current_step == 6 ? "" : "hidden"}`}>
 				<Output bind:dirArr={dir_arr} />

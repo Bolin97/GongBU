@@ -2,7 +2,6 @@ version: '3.9'
 
 services:
   db:
-    container_name: db
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
@@ -11,28 +10,29 @@ services:
       POSTGRES_DB: GONGBU
     volumes:
       - postgres:/data/postgres
-      - ./db_init/GONGBU.sql:/docker-entrypoint-initdb.d/GONGBU.sql
-    expose:
-      - 5432
-    ports:
-      - "54320:5432"
-    restart: unless-stopped
-  api:
-    container_name: api
+      - ./db_init/GONGBU_ps.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
+  backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
+    expose:
+      - 8000
     ports:
       - "8000:8000"
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
-      - ./ext:/backend/backend/ext
+      - ./bert-base-chinese:/backend/bert-base-chinese
+      - ./ext:/backend/ext
+      - ./logs:/logs
+      - /dev/shm:/dev/shm
     depends_on:
       - db
     environment:
       - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
       - MODEL_PATH=/models
+      - SERCET_KEY=secret
+      - LOG_PATH=/logs
     deploy:
       resources:
         reservations:
@@ -40,20 +40,29 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-  web:
-    container_name: web
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /backend
+  frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     volumes:
       - /frontend/node_modules
     depends_on:
-      - api
+      - backend
     environment:
-      - VITE_BACKEND=http://localhost:8000
       - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
-
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /frontend
+        - action: rebuild
+          path: ./frontend/package.json
 volumes:
   postgres:

@@ -9,12 +9,14 @@
 	import { page } from "$app/stores";
 	import toFormatted from "../../utils/ConvertDatetimeString";
 	import type FinetuneEntryReduced from "../../class/FinetuneEntryReduced";
+    import FinetuneCard from "./FinetuneCard.svelte";
+    import ActionPageTitle from "../components/ActionPageTitle.svelte";
 
 	const col_names = ["ID", "名称", "创建时间", "进度", "状态", "描述", ""];
 
 	let entries = [] as Array<FinetuneEntryReduced>;
 
-	let entries_updater: number;
+	let entries_updater: any;
 	onMount(async () => {
 		async function update() {
 			entries = (await axios.get(`/api/finetune_entry/reduced`))
@@ -28,66 +30,20 @@
 	});
 </script>
 
-<div class="pt-2 w-full">
-	<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;微调管理</span>
-	<span class="text-1xl pt-2 text-black-400 text-center"
-		>&nbsp;&nbsp;展示与管理已创建的微调任务，</span
-	>
-</div>
-<hr class="pt-1" />
-<div class="table w-full">
-	<div class="w-full p-5">
+<ActionPageTitle title="微调管理" subtitle="微调">
+	<svelte:fragment slot="right">
 		<Button href="/finetune/tasks">
-			<PlusOutline size="sm" />
-			&nbsp;&nbsp;创建微调任务
+			<PlusOutline />
+			创建微调任务
 		</Button>
-	</div>
-	<table class="table-auto border-collapse w-full h-full">
-		<thead>
-			<tr
-				class="rounded-lg text-sm font-medium text-gray-700 text-left"
-				style="font-size: 0.9674rem"
-			>
-				{#each col_names as name (name)}
-					<th class="px-4 py-2 bg-gray-200" style="background-color:#f8f8f8">{name}</th>
-				{/each}
-			</tr>
-		</thead>
-		<tbody class="text-sm font-normal text-gray-700">
-			{#each entries as entry}
-				<tr class="hover:bg-gray-100 rounded-lg">
-					<td class="px-4 py-4">{entry.id}</td>
-					<td class="px-4 py-4">{entry.name}</td>
-					<td class="px-4 py-4">{toFormatted(entry.start_time)}</td>
-					<td class="px-4 py-4 w-40">
-						{#if entry.state == -1}
-							<div class="text-2xl font-bold">-</div>
-						{:else}
-							<FinetuneProgess id={entry.id} noUpdate={entry.state == 1}/>
-						{/if}
-					</td>
-					<td class="px-4 py-4">
-						{#if entry.state == 0}
-							训练中
-						{:else if entry.state == 1}
-							训练完成
-						{:else if entry.state == -1}
-							出错
-						{:else}
-							无效状态码
-						{/if}
-					</td>
-					<td class="px-4 py-4">{entry.description}</td>
-					<td class="px-4 py-4">
-						<a
-							href={`/finetune/details?finetune_id=${entry.id}`}
-							class="text-blue-600 hover:underline"
-						>
-							详细信息
-						</a>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+	</svelte:fragment>
+</ActionPageTitle>
+
+<hr class="pt-1" />
+<div class="grid grid-cols-3">
+	{#each entries as entry}
+		<div class="mx-4 my-2">
+			<FinetuneCard entry={entry}/>
+		</div>
+	{/each}
 </div>

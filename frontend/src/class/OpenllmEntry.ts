@@ -1,6 +1,7 @@
 export default interface OpenllmEntry {
-	model_id: string;
+	id: string;
 	model_name: string;
+	display_name: string;
 	model_description: string;
 	view_pic: string;
 	remote_path: string;

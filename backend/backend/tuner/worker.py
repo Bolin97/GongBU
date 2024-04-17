@@ -49,22 +49,17 @@ class Worker(Thread):
             script_file = os.path.join(
                 os.path.dirname(__file__), "peft_finetune.py"
             )
-            command = ""
-            if self.params.zero_optimization:
-                command = f"""
-CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend accelerate launch --main_process_port {29500 + self.id} {script_file} --finetune_id {self.id}
-                """
-            else:
-                command = f"""
-CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --finetune_id {self.id}
-                """
+            
+            disable_ib_p2p = os.getenv("DISABLE_IB_P2P", None)
+            disable_ib_p2p_command = "NCCL_IB_DISABLE=1 NCCL_P2P_DISABLE=1"
+            
+            command = f"""
+{"" if disable_ib_p2p is None else disable_ib_p2p_command} CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend accelerate launch --main_process_port {29500 + self.id} {script_file} --finetune_id {self.id}
+            """
             # start a new tmux session named finetune_task_{self.id}
-            os.system(f"tmux new-session -d -s finetune_task_{self.id} '{command}'")
+            os.system(f"tmux new-session -d -s finetune_task_{self.id} '{command}'; tmux send-keys -t finetune_task_{self.id} exit")
             # write the stdout of the tmux session in real time
             os.system(f"tmux pipe-pane -o -t finetune_task_{self.id} 'cat > {os.getenv('LOG_PATH')}/finetune_task_{self.id}.log'")
-            print(f"finetune_task_{self.id} started")
-            # print tmux session name
-            print(f"tmux session name:\nfinetune_task_{self.id}")
         except Exception as e:
             self.report_error()
             print(e)

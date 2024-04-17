@@ -1,21 +1,26 @@
-FROM node:lts-iron
+FROM node:21-bookworm
 
 # Create app directory
 WORKDIR /frontend
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json ./
 
-# Use ali source
-# RUN npm config set registry http://registry.npm.taobao.org
-
+COPY bunfig.toml ./
+RUN npm config set registry http://registry.npm.taobao.org
+RUN npm i -g bun
 # Install dependencies
-RUN npm install
-
+RUN bun i
 # Copy the rest of the files
+
+# Somehow i18next needs manual installation, don't know why
+# like what the hell? It is in the package.json
+RUN bun i i18next svelte-i18next
+RUN bun i http-proxy-middleware
+
 COPY . .
 
 # Expose the port
 EXPOSE 5173
 
-CMD npm run dev
+CMD bun run dev

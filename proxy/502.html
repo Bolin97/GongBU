@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>502 ERROR</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .error-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            width: 80%;
+        }
+        .error-container div {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container" id="error-container">
+        <!-- Error messages will be inserted here -->
+    </div>
+
+    <script>
+        var lang = navigator.language || navigator.userLanguage; 
+        var errorContainer = document.getElementById('error-container');
+
+        var messages = {
+            en: [
+                "You have encountered a 502 bad gateway error.",
+                "This indicates that the model deployment task on this port failed or is yet not started.",
+                "Please try to stop the deployment task and start it again.",
+                "Or troubleshoot the issue based on the error logs.",
+                "If it still fails, please submit an issue on github."
+            ],
+            zh: [
+                "您遇到了502网关错误。",
+                "这表明此端口上的模型部署任务失败或未启动。",
+                "请尝试停止部署任务并重新启动。",
+                "或根据错误日志排查问题。",
+                "如果仍然失败，请在github上提交issue。"
+            ]
+        };
+
+        var langMessages = messages[lang.startsWith('zh') ? 'zh' : 'en'];
+
+        langMessages.forEach(function(message) {
+            var div = document.createElement('div');
+            div.textContent = message;
+            errorContainer.appendChild(div);
+        });
+    </script>
+</body>
+</html>

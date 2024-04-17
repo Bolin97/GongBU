@@ -65,31 +65,29 @@
 		</div>
 	</svelte:fragment>
 </Modal>
-<div>
-	<div class="flex flex-row justify-between">
-		<div class="flex">
-			<div class="flex flex-row">
-				<Button
-					on:click={(_) => {
-						return_handle();
-					}}
-				>
-					<AngleLeftOutline size="sm" />返回
-				</Button>
-			</div>
-			<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;数据池详情</span>
-		</div>
+<div class="flex flex-row justify-between">
+	<div class="flex">
 		<div class="flex flex-row">
 			<Button
 				on:click={(_) => {
-					delete_modal = true;
+					return_handle();
 				}}
-				color="red"
 			>
-				删除此数据池
+				<AngleLeftOutline size="sm" />返回
 			</Button>
 		</div>
+		<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;数据池详情</span>
 	</div>
-	<Hr />
-	<Uploader bind:stageEmpty={stage_empty} poolId={Number.parseInt(id)} />
+	<div class="flex flex-row">
+		<Button
+			on:click={(_) => {
+				delete_modal = true;
+			}}
+			color="red"
+		>
+			删除此数据池
+		</Button>
+	</div>
 </div>
+<Hr />
+<Uploader bind:stageEmpty={stage_empty} poolId={Number.parseInt(id)} />

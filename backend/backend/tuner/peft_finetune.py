@@ -3,9 +3,10 @@ from itertools import chain
 import os
 import sys
 from accelerate.utils.modeling import check_tied_parameters_in_config, find_tied_parameters
+from backend.service.dataset import fetch_dataset
 import fire
 import psutil
-from backend.dao.fault import submit_fault
+from backend.service.fault import submit_fault
 import torch
 import transformers
 from typing import List, Optional
@@ -268,7 +269,7 @@ def get_model_and_tokenizer(base_model: str, device_map: Any, bnb_config: BitsAn
 def get_dataset(
     dataset_type: int, 
     dataset: list, 
-    val_size: int,
+    val_size: float,
     tokenizer: AutoTokenizer,
     cutoff_len: int,
     callback: ReportCallback,
@@ -315,6 +316,9 @@ def get_dataset(
     data = datasets.DatasetDict(
         {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
     )
+    
+    val_size = 0 if val_size == 0 else max(int(val_size * len(data["train"])), 2)
+    
     if val_size > 0:
         train_val = data["train"].train_test_split(
             test_size=val_size, shuffle=True, seed=42
@@ -492,26 +496,14 @@ def wrapper(
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
         owner = entry.owner
         public = entry.public
-        model_path = (
+        base_model = (
             db.query(OpenLLM)
-            .filter(OpenLLM.model_id == entry.model_id)
+            .filter(OpenLLM.id == entry.model_id)
             .first()
-            .local_path
         )
-        dataset_json_obj = list(
-            chain(
-                *[
-                    each.content
-                    for each in db.query(FinetuneDataset)
-                    .filter(FinetuneDataset.entry_id == entry.dataset_id)
-                    .all()
-                ]
-            )
-        )
-        dataset_type = db.query(DatasetEntry).filter(DatasetEntry.id == entry.dataset_id).first().type
-        
-        callback = ReportCallback(finetune_id, dataset_type, entry.eval_indexes, owner, public)
-        
+        model_path = base_model.local_path
+        dataset_json_obj, dataset_type = fetch_dataset(entry.dataset_id)
+        callback = ReportCallback(finetune_id, dataset_type, entry.eval_indexes, owner, public, entry.name, entry.description, base_model.model_name)
         train(
             base_model=model_path,
             dataset_type=dataset_type,
@@ -561,7 +553,7 @@ def wrapper(
             submit_fault(
                 ["ft", str(finetune_id)],
                 str(e),
-                1000,
+                10000,
                 entry.owner,
                 False,
                 f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",
@@ -570,7 +562,7 @@ def wrapper(
             submit_fault(
                 ["ft", str(finetune_id)],
                 str(e),
-                1999,
+                99999,
                 entry.owner,
                 False,
                 f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",

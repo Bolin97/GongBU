@@ -14,10 +14,10 @@ async def get_logging_after(id: int, after: float, db: Session = Depends(get_db)
     if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
         return None
     return (
-        db.query(LoggingRecord)
-        .filter(LoggingRecord.entry_id == id)
-        .filter(LoggingRecord.step > after)
-        .order_by(LoggingRecord.step)
+        db.query(FtLoggingRecord)
+        .filter(FtLoggingRecord.entry_id == id)
+        .filter(FtLoggingRecord.step > after)
+        .order_by(FtLoggingRecord.step)
         .all()
     )
 
@@ -26,14 +26,14 @@ async def get_logging_after(id: int, after: float, db: Session = Depends(get_db)
 async def get_logging(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
     if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
         return None
-    return db.query(LoggingRecord).filter(LoggingRecord.entry_id == id).all()
+    return db.query(FtLoggingRecord).filter(FtLoggingRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/{id}")
 async def get_eval(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
     if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
         return None
-    return db.query(EvalRecord).filter(EvalRecord.entry_id == id).all()
+    return db.query(FtEvalLossRecord).filter(FtEvalLossRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/after/{id}")
@@ -41,8 +41,8 @@ async def get_eval_after(id: int, after: float, db: Session = Depends(get_db), i
     if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
         return None
     return (
-        db.query(EvalRecord)
-        .filter(EvalRecord.entry_id == id)
-        .filter(EvalRecord.epoch - after > EPS)
+        db.query(FtEvalLossRecord)
+        .filter(FtEvalLossRecord.entry_id == id)
+        .filter(FtEvalLossRecord.epoch - after > EPS)
         .all()
     )

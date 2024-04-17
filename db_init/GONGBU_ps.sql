@@ -25,6 +25,7 @@ CREATE TABLE finetune_entries (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
+  display_name TEXT NOT NULL
   model_id TEXT NOT NULL,
   dataset_id TEXT NOT NULL,
   devices TEXT[] NOT NULL,
@@ -36,7 +37,7 @@ CREATE TABLE finetune_entries (
   num_epochs INT NOT NULL,
   learning_rate FLOAT NOT NULL,
   cutoff_len INT NOT NULL,
-  val_set_size INT NOT NULL,
+  val_set_size FLOAT NOT NULL,
   use_gradient_checkpointing BOOLEAN NOT NULL,
   eval_step INT NOT NULL,
   save_step INT NOT NULL,
@@ -68,11 +69,12 @@ CREATE TABLE finetune_entries (
   module_dropout FLOAT NOT NULL,
   use_effective_conv2d BOOLEAN NOT NULL,
   use_flash_attention BOOLEAN NOT NULL,
+  adapter_id INT,
   owner TEXT NOT NULL,
   public BOOLEAN NOT NULL
 );
 
-CREATE TABLE eval_index_records (
+CREATE TABLE ft_eval_index_records (
     id SERIAL PRIMARY KEY, 
     entry_id INT NOT NULL, 
     name TEXT NOT NULL, 
@@ -81,7 +83,7 @@ CREATE TABLE eval_index_records (
     FOREIGN KEY (entry_id) REFERENCES finetune_entries (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE eval_records (
+CREATE TABLE ft_eval_loss_records (
     id SERIAL PRIMARY KEY, 
     loss FLOAT NOT NULL, 
     epoch FLOAT NOT NULL, 
@@ -105,7 +107,7 @@ CREATE TABLE finetune_progresses (
     PRIMARY KEY (id), FOREIGN KEY (id) REFERENCES finetune_entries (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE logging_records (
+CREATE TABLE ft_logging_records (
     id SERIAL PRIMARY KEY, 
     loss FLOAT NOT NULL, 
     learning_rate FLOAT NOT NULL, 
@@ -116,7 +118,7 @@ CREATE TABLE logging_records (
 );
 
 CREATE TABLE open_llms (
-    model_id SERIAL PRIMARY KEY, 
+    id SERIAL PRIMARY KEY, 
     model_name TEXT NOT NULL, 
     model_description TEXT NOT NULL, 
     view_pic TEXT NOT NULL, 
@@ -129,8 +131,19 @@ CREATE TABLE open_llms (
     public BOOLEAN NOT NULL
 );
 
+CREATE TABLE adapters (
+    id SERIAL PRIMARY KEY, 
+    base_model_name TEXT NOT NULL,
+    adapter_name TEXT NOT NULL, 
+    adapter_description TEXT NOT NULL, 
+    local_path TEXT, 
+    storage_date DATE,
+    owner TEXT NOT NULL,
+    public BOOLEAN NOT NULL
+);
+
 CREATE TABLE signals (
-    id SERIAL PRIMARY KEY, receiver TEXT NOT NULL, -- Assuming receiver is of type TEXT
+    id SERIAL PRIMARY KEY, receiver TEXT NOT NULL,
     signal INT NOT NULL, entry_id INT NOT NULL,
     owner TEXT NOT NULL,
     public BOOLEAN NOT NULL
@@ -154,7 +167,68 @@ CREATE TABLE fault_logs (
     id SERIAL PRIMARY KEY,
     fault_id INT NOT NULL,
     log_content TEXT NOT NULL,
-    owner TEXT NOT NULL,
-    public BOOLEAN NOT NULL,
     FOREIGN KEY (fault_id) REFERENCES faults (id) ON DELETE CASCADE ON UPDATE CASCADE
-)
+);
+
+CREATE TABLE deployments (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    state INT NOT NULL,
+    model_or_adapter_id INT NOT NULL,
+    deploy_base_model BOOLEAN NOT NULL,
+    bits_and_bytes BOOLEAN NOT NULL,
+    load_8bit BOOLEAN NOT NULL,
+    load_4bit BOOLEAN NOT NULL,
+    use_flash_attention BOOLEAN NOT NULL,
+    use_deepspeed BOOLEAN NOT NULl,
+    devices TEXT[] NOT NULL,
+    port INT NOT NULL,
+    owner TEXT NOT NULL,
+    public BOOLEAN NOT NULL
+);
+
+CREATE TABLE evaluations (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    state INT NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP,
+    model_or_adapter_id INT NOT NULL,
+    deploy_base_model BOOLEAN NOT NULL,
+    bits_and_bytes BOOLEAN NOT NULL,
+    load_8bit BOOLEAN NOT NULL,
+    load_4bit BOOLEAN NOT NULL,
+    use_flash_attention BOOLEAN NOT NULL,
+    use_deepspeed BOOLEAN NOT NULl,
+    devices TEXT[] NOT NULL,
+    indexes TEXT[] NOT NULL,
+    dataset_id INT NOT NULL,
+    val_set_size FLOAT NOT NULL,
+    result JSON,
+    owner TEXT NOT NULL,
+    public BOOLEAN NOT NULL
+);
+
+CREATE TABLE evaluation_data (
+    id SERIAL PRIMARY KEY,
+    entry_id INT NOT NULL,
+    content JSON NOT NULL,
+    FOREIGN KEY (entry_id) REFERENCES evaluations (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE evaluation_generation (
+    id SERIAL PRIMARY KEY,
+    entry_id INT NOT NULL,
+    content JSON NOT NULL,
+    FOREIGN KEY (entry_id) REFERENCES evaluations (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE evaluation_progresses (
+    id SERIAL PRIMARY KEY, 
+    entry_id INT NOT NULL,
+    current INT NOT NULL,
+    total INT NOT NULL, 
+    FOREIGN KEY (entry_id) REFERENCES evaluations (id) ON DELETE CASCADE ON UPDATE CASCADE
+);

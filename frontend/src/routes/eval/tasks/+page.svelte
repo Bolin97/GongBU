@@ -1,72 +1,41 @@
 <script lang="ts">
-	import { StepIndicator, Button, Label, Input, Tooltip } from "flowbite-svelte";
+	import { StepIndicator, Button, Label, Input, Tooltip, Hr } from "flowbite-svelte";
 	import { Timeline, TimelineItem } from "flowbite-svelte";
 	import {
-		CalendarWeekSolid,
+		CalendarWeekOutline,
 		CheckCircleOutline,
-		AdjustmentsHorizontalSolid
+		AdjustmentsHorizontalOutline,
+
+        AngleLeftOutline
+
 	} from "flowbite-svelte-icons";
-	import Model from "./Model.svelte";
-	import Data from "./Data.svelte";
-	import Device from "./Device.svelte";
-	import Test from "./Test.svelte"
-	import Eval from "./Eval.svelte"
-	import { fade } from "svelte/transition";
+	import Data from "../../components/Data.svelte";
 	import { page } from "$app/stores";
-	import { default_finetune_params } from "../../../class/FinetuneParams";
-	import axios from "axios";
-	import { DEFAULT_MODEL_OUTPUT } from "../../store";
+	import {ParamType} from "../../components/params/Params";
 	import { goto } from "$app/navigation";
-	import type OpenllmEntry from "../../../class/OpenllmEntry";
+	import ParamGroup from "../../components/params/ParamGroup.svelte";
+    import ActionPageTitle from "../../components/ActionPageTitle.svelte";
+    import ModelSelection from "../../components/ModelSelection.svelte";
+    import EvalSelection from "../../components/EvalSelection.svelte";
+    import DeviceSelection from "../../components/DeviceSelection.svelte";
+    import { default_deployment_params } from "../../components/params/Params";
+    import DeploymentParam from "../../components/params/DeploymentParam.svelte";
+    import { default_deployment_request_params } from "../../../class/DeploymentRequestParams";
+    import axios from "axios";
 
 	let current_step = 1;
 	let selected_model_id: string = "";
+	let selected_adapter_id: string = "";
 	let selected_dataset_id: string = "";
 	let use_devices: Array<number> | "auto" = [];
-	let dir_arr = $DEFAULT_MODEL_OUTPUT.split("/").filter((x) => x != "");
 	let evals = [];
 	let name = "";
 	let description = "";
-	$: output_dir = "/".concat(dir_arr.join("/"));
 
-	let finetune_params = default_finetune_params();
-
-	let model_entry: OpenllmEntry = {
-		model_id: "",
-		model_name: "",
-		model_description: "",
-		view_pic: "",
-		remote_path: "",
-		local_path: "",
-		local_store: 0,
-		storage_state: "",
-		storage_date: "",
-	}
-
-
-
-	$: {
-		if(current_step == 2) {
-			axios.get(`/api/openllm/${selected_model_id}`).then((res) => {
-				model_entry = res.data
-			})
-		}
-	}
-
-	$: {
-		finetune_params.devices = use_devices == "auto" ? ["auto"] : use_devices.map((x) => x.toString());
-		finetune_params.dataset_id = selected_dataset_id.toString();
-		finetune_params.model_id = selected_model_id.toString();
-		finetune_params.output_dir = output_dir;
-		finetune_params.eval_indexes = evals;
-	}
-
-	let eval_finetuned = false;
 
 	const params = $page.url.searchParams;
 	if (params.has("model_id")) {
 		selected_model_id = params.get("model_id");
-		eval_finetuned = Boolean(params.get("finetuned"))
 		current_step = 2;
 	}
 
@@ -74,44 +43,56 @@
 		"模型选择",
 		"数据选择",
 		"评估指标",
-		"生成测试",
+		"参数选择",
 		"设备选择",
 		"项目名称"
 	];
 
 	const steps_description = [
-		"选择待评估的模型",
-		"选择已上传到数据池的评估数据",
+		"选择合适的开源大模型",
+		"选择已上传到数据池的数据",
 		"选择评估指标",
-		"进行测试并调整生成参数(可跳过)",
-		"选择用于平度的本地设备",
-		"输入任务名称与描述"
+		"选择平台支持的微调方法并配置参数",
+		"选择可支持微调的本地设备",
+		"确定微调输出路径",
+		"输入项目名称与描述"
 	];
 
 	let uploading = false;
-	
+
+	let deploy_request_params = default_deployment_request_params();
+	let val_set_size_params = {
+		val_set_size: 1
+	};
+
 	async function submit_handle() {
 		uploading = true;
-		await axios.post(`/api/finetune/`, finetune_params, {
+		await axios.post(`/api/eval`, {
+			model_or_adapter_id: selected_model_id.length == 0 ? selected_adapter_id : selected_model_id,
+			deploy_base_model: selected_adapter_id.length == 0,
+			bits_and_bytes: deploy_request_params.bits_and_bytes,
+			load_8bit: deploy_request_params.load_8bit,
+			load_4bit: deploy_request_params.load_4bit,
+			use_flash_attention: deploy_request_params.use_flash_attention,
+			use_deepspeed: deploy_request_params.use_deepspeed,
+			devices: use_devices == "auto" ? ["auto"] : use_devices.map((x) => x.toString()),
+			indexes: evals,
+			dataset_id: selected_dataset_id,
+			val_set_size: val_set_size_params.val_set_size
+		}, {
 			params: {
 				name: name,
 				description: description
 			}
 		});
 		uploading = false;
-		goto("/finetune");
+		goto("/eval");
 	}
 
 	$: device_updater_on = current_step == 5;
 </script>
 
-<div class="pt-2 w-full">
-	<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;创建评估任务</span>
-	<span class="text-1xl pt-2 text-black-400 text-center"
-		>&nbsp;&nbsp;按照提示步骤创建评估任务</span
-	>
-</div>
-<hr class="pt-1" />
+<ActionPageTitle title="微调任务" subtitle="微调任务的创建与管理" returnTo="/finetune"/>
 {#if !uploading}
 <div class="w-full flex flex-row p-1 m-2 mt-4">
 	<div>
@@ -123,7 +104,7 @@
 							class="flex absolute -left-3 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-primary-900"
 						>
 							{#if i + 1 === current_step}
-								<AdjustmentsHorizontalSolid
+								<AdjustmentsHorizontalOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>
@@ -133,7 +114,7 @@
 									class="text-primary-500 dark:text-primary-400"
 								/>
 							{:else}
-								<CalendarWeekSolid
+								<CalendarWeekOutline
 									size="sm"
 									class="text-primary-500 dark:text-primary-400"
 								/>
@@ -151,19 +132,39 @@
 		<StepIndicator currentStep={current_step} {steps} color="blue" />
 		<div>
 			<div class={`${current_step == 1 ? "" : "hidden"}`}>
-				<Model bind:selectedId={selected_model_id} bind:evalFinetuned={eval_finetuned}/>
+				<ModelSelection bind:selectedModelId={selected_model_id} bind:selectedAdapterId={selected_adapter_id} enableAdapterSelection/>
 			</div>
 			<div class={`${current_step == 2 ? "" : "hidden"}`}>
 				<Data bind:selectedSet={selected_dataset_id} />
+				<ParamGroup
+					entries={
+						[
+							{
+								var_name: "val_set_size",
+								description: "验证集大小",
+								param_type: ParamType.slider,
+								name: "验证集大小",
+								constrains: [
+									{min: 0},
+									{max: 1},
+									{step: 0.01},
+									{values: [0.3, 0.5, 1]}
+								]
+							}
+						]
+					}
+					title="验证集大小"
+					bind:params={val_set_size_params}
+				/>
 			</div>
 			<div class={`${current_step == 3 ? "" : "hidden"}`}>
-				<Eval bind:indexes={evals} />
+				<EvalSelection bind:indexes={evals}/>
 			</div>
 			<div class={`${current_step == 4 ? "" : "hidden"}`}>
-				<Test/>
+				<DeploymentParam bind:deploymentParams={deploy_request_params} no_port/>
 			</div>
 			<div class={`${current_step == 5 ? "" : "hidden"}`}>
-				<Device bind:useDevices={use_devices} bind:updaterOn={device_updater_on}/>
+				<DeviceSelection bind:useDevices={use_devices} bind:updaterOn={device_updater_on}/>
 			</div>
 			<div class={`${current_step == 6 ? "" : "hidden"}`}>
 				<div class="m-2 p-2">
@@ -183,14 +184,12 @@
 			</div>
 		</div>
 		<div class="flex flex-row-reverse gap-5 m-2">
-			{#if current_step === 7}
+			{#if current_step === 6}
 				<Button
 					on:click={(_) => {
 						submit_handle();
 					}}>完成</Button
 				>
-			{:else if current_step === 6}
-				<Button on:click={(_) => ++current_step}>保存模型到当前位置</Button>
 			{:else if current_step === 5}
 				<Button disabled={use_devices.length === 0} on:click={(_) => ++current_step}
 					>下一步</Button
@@ -203,7 +202,7 @@
 					>下一步</Button
 				>
 			{:else if current_step === 1}
-				<Button disabled={selected_model_id.length === 0} on:click={(_) => ++current_step}
+				<Button disabled={selected_model_id.length === 0 && selected_adapter_id.length === 0} on:click={(_) => ++current_step}
 					>下一步</Button
 				>
 			{:else}

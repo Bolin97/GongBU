@@ -15,6 +15,7 @@
 	import type DatasetEntry from "../../../class/DatasetEntry";
 	import Uploader from "../Uploader.svelte";
 	import { onMount } from "svelte";
+    import ActionPageTitle from "../../components/ActionPageTitle.svelte";
 	let current_step = 1;
 	let name = "";
 	let description = "";
@@ -94,22 +95,7 @@
 		</svelte:fragment>
 	</Modal>
 
-	<div class="pt-2 w-full flex flex-row">
-		<div class="flex flex-row">
-			<Button
-				on:click={(_) => {
-					return_handle();
-				}}
-			>
-				<AngleLeftOutline size="sm" />返回
-			</Button>
-		</div>
-		<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;创建数据池</span>
-		<span class="text-1xl pt-2 text-black-400 text-center"
-			>&nbsp;&nbsp;按照提示步骤创建数据池</span
-		>
-	</div>
-	<Hr/>
+	<ActionPageTitle returnTo="/data" title="创建数据池" subtitle="按照提示步骤创建数据池" />
 	<div class="w-full flex flex-row p-1 m-2 mt-4">
 		<div>
 			<Timeline order="vertical">
@@ -163,7 +149,7 @@
 						>
 					{:else}
 						<Button
-							disabled={name.length == 0 || description.length == 0}
+							disabled={false && (name.length == 0 || description.length == 0)}
 							on:click={async (_) => {
 								await create_pool_handle();
 								++current_step;

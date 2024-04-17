@@ -2,9 +2,8 @@
 	import axios from "axios";
 	import { Select, Label } from "flowbite-svelte";
 	import { onMount } from "svelte";
-	import type PoolEntry from "../../../class/PoolEntry";
-	import type DatasetEntry from "../../../class/DatasetEntry";
-
+	import type PoolEntry from "../../class/PoolEntry";
+	import type DatasetEntry from "../../class/DatasetEntry";
 	interface ValueNamePair {
 		value: string;
 		name: string;

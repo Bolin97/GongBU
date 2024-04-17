@@ -5,7 +5,7 @@
 	import { FileOutline, FolderOutline } from "flowbite-svelte-icons";
 	import { Button, Input, Label, Modal } from "flowbite-svelte";
 	import axios from "axios";
-	import { DEFAULT_MODEL_OUTPUT, UPDATE_VIEW_INTERVAL } from "../../store";
+	import { UPDATE_VIEW_INTERVAL } from "../../store";
 
 	type FileEntry = {
 		name: string;
@@ -13,7 +13,7 @@
 	};
 
 	let files: Array<FileEntry> = [];
-	export let dir: Array<string> = $DEFAULT_MODEL_OUTPUT.split("/").filter((x) => x != "");
+	export let dir: Array<string> = [];
 
 	onMount(load);
 
@@ -63,7 +63,7 @@
 			}
 		);
 		new_folder_name = "";
-		setTimeout(load, UPDATE_VIEW_INTERVAL);
+		setTimeout(load, UPDATE_VIEW_INTERVAL / 20);
 	}
 
 	// let new_folder_updater: number;

@@ -230,13 +230,13 @@
                 </div></TableBodyCell>
                 <TableBodyCell><div class="flex flex-row">
                     <button class="mx-2 text-red-600 hover:underline" on:click={() => {
-                        delete_modal_id = model.model_id;
+                        delete_modal_id = model.id;
                         delete_modal = true;
                     }}>
                         删除记录和模型文件
                     </button>
                     <button class="mx-2 text-red-600 hover:underline" on:click={() => {
-                        delete_modal_id = model.model_id;
+                        delete_modal_id = model.id;
                         delete_entry_modal = true;
                     }}>
                         仅删除记录

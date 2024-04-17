@@ -43,6 +43,8 @@ from .routers import *
 
 app.include_router(openllm_router, prefix="/openllm")
 
+app.include_router(adapter_router, prefix="/adapter")
+
 app.include_router(cuda_router, prefix="/cuda")
 
 app.include_router(pool_router, prefix="/pool")
@@ -61,11 +63,15 @@ app.include_router(finetune_progress_router, prefix="/finetune_progress")
 
 app.include_router(logging_router, prefix="/logging")
 
-app.include_router(eval_index_router, prefix="/eval_index")
+app.include_router(ft_eval_index_router, prefix="/eval_index")
 
 app.include_router(file_router, prefix="/file")
 
 app.include_router(user_router, prefix="/user")
+
+app.include_router(deployment_router, prefix="/deployment")
+
+app.include_router(eval_router, prefix="/eval")
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")

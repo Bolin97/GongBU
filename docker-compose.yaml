@@ -21,8 +21,10 @@ services:
       dockerfile: Dockerfile
     expose:
       - 8000
+      - 8760
     ports:
       - "8000:8000"
+      - "8760:8760"
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
@@ -37,6 +39,8 @@ services:
       - MODEL_PATH=/models
       - SERCET_KEY=secret
       - LOG_PATH=/logs
+      - FINETUNE_OUTPUT=/finetune_output
+      - DISABLE_IB_P2P=1
     deploy:
       resources:
         reservations:
@@ -59,8 +63,6 @@ services:
       - /frontend/node_modules
     depends_on:
       - backend
-    environment:
-      - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
     develop:
       watch:
         - action: sync
@@ -68,5 +70,23 @@ services:
           target: /frontend
         - action: rebuild
           path: ./frontend/package.json
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    expose:
+      - 80
+    ports:
+      - "80:80"
+    links:
+      - backend
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: rebuild
+          path: ./proxy
+          target: /proxy
+    
 volumes:
   postgres:

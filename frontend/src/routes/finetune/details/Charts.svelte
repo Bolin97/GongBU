@@ -201,7 +201,7 @@
 </script>
 
 {#each graphs as graph}
-	<div class="m-1 p-2 w-full inline-block">
+	<div class="m-1 p-2">
 		<span class="text-1xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;{graph.title}：</span>
 		<Chart options={graph.options} />
 	</div>

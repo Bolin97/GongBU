@@ -41,18 +41,11 @@
 	import { REALTIME_FINETUNE_DETAIL } from "../../store";
 	import type CudaDeviceEntry from "../../../class/CudaDeviceEntry";
     import type DatasetEntry from "../../../class/DatasetEntry";
-	let devices: Array<CudaDeviceEntry> = [];
-	let devices_updater: number;
-	onMount(async () => {
-		async function update() {
-			devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
-		}
-		devices = (await axios.get(`/api/cuda`)).data as Array<CudaDeviceEntry>;
-		devices_updater = setInterval(update, UPDATE_VIEW_INTERVAL);
-	});
-	onDestroy(() => {
-		clearInterval(devices_updater);
-	});
+    import GoBack from "../../components/GoBack.svelte";
+    import ModelCard from "../../components/ModelCard.svelte";
+    import DeviceInfo from "../../components/DeviceInfo.svelte";
+    import ActionPageTitle from "../../components/ActionPageTitle.svelte";
+	
 
 	let real_time_toggle = $REALTIME_FINETUNE_DETAIL;
 	$: {
@@ -63,12 +56,12 @@
 		real_time = v
 	})
 	const id = $page.url.searchParams.get("finetune_id");
-
+	// const id = "2"
 	let finetune_entry: FinetuneEntry;
 	let model_entry: OpenllmEntry;
 	
 
-	let finetune_entry_updater: number;
+	let finetune_entry_updater: any;
 	let dataset_entry: DatasetEntry
 	onMount(async () => {
 		async function update() {
@@ -264,35 +257,31 @@ loading
 {:else}
 
 <div>
-	<div class="flex flex-row justify-between">
-		<div class="flex">
-			<div class="">
-				<Button href="/finetune">
-					<AngleLeftOutline size="sm" />返回
-				</Button>
-			</div>
-			<span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;详细信息</span>
+	<ActionPageTitle returnTo="/finetune" title="详细信息">
+		<svelte:fragment slot="left">
 			<div class="flex flex-row mx-2 p-2">
 				<span class="mx-2">实时数据</span>
 				<Toggle bind:checked={real_time_toggle}/>
 			</div>
-		</div>
-		<div class="flex gap-2">
-			<Button color="red" class={`${finetune_entry.state == 0 ? "": "hidden"}`} on:click={(_) => {stop_modal = true}}>打断</Button>
-			<Button href="/deployment/tasks" class={`${finetune_entry.state == 1 ? "" : "hidden"}`} color="blue">部署</Button>
-			<Button
-				on:click={(_) => {
-					delete_modal = true;
-				}}
-				class={`${finetune_entry.state != 0 ? "" : "hidden"}`}
-				color="red"
-			>
-				删除
-			</Button>
-		</div>
-	</div>
+		</svelte:fragment>
+		<svelte:fragment slot="right">
+			<div class="flex gap-2">
+				<Button color="red" class={`${finetune_entry.state == 0 ? "": "hidden"}`} on:click={(_) => {stop_modal = true}}>打断</Button>
+				<Button href="/deployment/tasks" class={`${finetune_entry.state == 1 ? "" : "hidden"}`} color="blue">部署</Button>
+				<Button
+					on:click={(_) => {
+						delete_modal = true;
+					}}
+					class={`${finetune_entry.state != 0 ? "" : "hidden"}`}
+					color="red"
+				>
+					删除
+				</Button>
+			</div>
+		</svelte:fragment>
+	</ActionPageTitle>
 	<div class="flex flex-row">
-		<div class="flex flex-col w-1/3">
+		<div class="flex flex-col w-1/2">
 			<div class="m-4">
 				<div class="flex flex-row mb-1 items-center w-full">
 					<span class="text-1xl pt-1 text-black-400 font-bold">模型：</span>
@@ -321,22 +310,7 @@ loading
 							loading...
 						</div>
 					{:else}
-						<div
-							class="p-4 flex w-74 items-center px-5 bg-white border border-gray-200 rounded-lg shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-						>
-							<div class="w-20 max-w-20 min-w-[4rem]">
-								<img src={`/api/openllm/avatar/${model_entry.model_id}`} alt="no img" />
-							</div>
-							<div
-								class="w-full flex flex-col justify-between p-4 leading-normal items-center"
-							>
-								<h5
-									class="mb-2 font-bold tracking-tight text-gray-900 dark:text-white"
-								>
-									{model_entry.model_name}
-								</h5>
-							</div>
-						</div>
+						<ModelCard modelId={model_entry.id} baseModelNoCursorChange/>
 					{/if}
 				</div>
 			</div>
@@ -369,23 +343,7 @@ loading
 			<div class="m-1">
 				<span class="text-1xl pt-1 text-black-400 font-bold">训练设备当前状态:</span>
 				<div class="gap-2 m-1 grid grid-cols-1 lg:grid-cols-2">
-					{#each finetune_entry.devices[0] == "auto" ? devices.map((each) => {return each.device_id}) : finetune_entry.devices as device}
-						<div class="inline-block border-gray-200 shadow p-2 m-2 w-40">
-							<div class="m-2 text-md">CUDA:{devices[device].device_id}</div>
-							<hr class="m-1"/>
-							<div class="m-1">
-								<div>GPU利用率：</div>
-								<div>{devices[device].gpu_utilization.toFixed(1)}%</div>
-								<Progressbar progress={devices[device].gpu_utilization.toFixed(1)} />
-							</div>
-							<hr class="m-1"/>
-							<div class="m-1">
-								<div>显存利用率：</div>
-								<div>{devices[device].memory_utilization.toFixed(1)}%</div>
-								<Progressbar progress={devices[device].memory_utilization.toFixed(1)} />
-							</div>
-						</div>
-					{/each}
+					<DeviceInfo showDevices={finetune_entry.devices} />
 				</div>
 			</div>
 			<Hr />
@@ -433,7 +391,7 @@ loading
 				</AccordionItem>
 			</Accordion>
 		</div>
-		<div class="w-2/3 grid grid-cols-1 lg:grid-cols-2 p-4">
+		<div class="w-1/2 p-4">
 			<Charts finetuneEntry={finetune_entry} id={id} realTime={real_time}/>
 		</div>
 	</div>

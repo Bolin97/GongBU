@@ -21,6 +21,7 @@ from time import time
 from tqdm import tqdm
 import os
 import pickle
+from backend.eval.evaluate import evaluate
 
 class ReportCallback(TrainerCallback):
     id: int
@@ -29,6 +30,9 @@ class ReportCallback(TrainerCallback):
     enabled: bool = False
     identifier: str
     public: bool
+    task_name: str
+    task_description: str
+    base_model_name: str
 
     def __init__(
         self, 
@@ -36,7 +40,10 @@ class ReportCallback(TrainerCallback):
         ds_type: int, 
         indexes: List[Literal["F", "R", "P", "A", "B", "D"]],
         identifier: str,
-        public: bool
+        public: bool,
+        task_name: str,
+        task_description: str,
+        base_model_name: str
     ):
         super().__init__()
         self.id = finetune_id
@@ -48,6 +55,9 @@ class ReportCallback(TrainerCallback):
             self.enabled = True
         self.identifier = identifier
         self.public = public
+        self.task_name = task_name
+        self.task_description = task_description
+        self.base_model_name = base_model_name
         
     def set_eval_dataset(self, ds: Any):
         self.eval_dataset = ds
@@ -72,7 +82,7 @@ class ReportCallback(TrainerCallback):
                 epoch = last_history["epoch"]
                 step = last_history["step"]
                 db.add(
-                    LoggingRecord(
+                    FtLoggingRecord(
                         entry_id=self.id,
                         loss=loss,
                         learning_rate=learning_rate,
@@ -93,7 +103,7 @@ class ReportCallback(TrainerCallback):
             ):
                 loss = last_history["eval_loss"]
                 epoch = last_history["epoch"]
-                db.add(EvalRecord(loss=loss, epoch=epoch, entry_id=self.id))
+                db.add(FtEvalLossRecord(loss=loss, epoch=epoch, entry_id=self.id))
                 db.commit()
         except:
             pass
@@ -134,15 +144,6 @@ class ReportCallback(TrainerCallback):
         progress.current += 1
         progress.total = state.max_steps
         db.commit()
-
-        signals = db.query(Signal).filter(Signal.entry_id == self.id).all()
-
-        # 0 for stop
-        if len(signals) > 0 and signals[0].signal == 0:
-            control.should_save = 1
-            control.should_training_stop = 1
-            db.delete(signals)
-            db.commit()
         db.close()
 
     def on_train_end(
@@ -159,6 +160,30 @@ class ReportCallback(TrainerCallback):
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == self.id).first()
         entry.state = 1
         entry.end_time = datetime.datetime.now()
+        """
+        class Adapter(Base):
+            __tablename__ = 'adapters'
+            id = Column(Integer, primary_key=True, autoincrement=True)
+            adapter_name = Column(String, nullable=False)
+            base_model_name = Column(String, nullable=False)
+            adapter_description = Column(String, nullable=False)
+            local_path = Column(String)
+            storage_date = Column(Date)
+            owner = Column(String, nullable=False)
+            public = Column(Boolean, nullable=False)
+        """
+        adapter = Adapter(
+            adapter_name=self.task_name,
+            adapter_description=self.task_description,
+            base_model_name=self.base_model_name,
+            local_path=args.output_dir,
+            storage_date=datetime.datetime.now(),
+            owner=self.identifier,
+            public=self.public
+        )
+        db.add(adapter)
+        
+        
         db.commit()
         db.close()
     
@@ -201,73 +226,17 @@ class ReportCallback(TrainerCallback):
             for each in tqdm(self.eval_dataset):
                 cands.append(get_generated_output(each))  
             refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
-            if any(ind in self.indexes for ind in ["P", "R", "F"]):
-                P, R, F = score(
-                    cands, refs, model_type="bert-base-chinese", lang="zh", verbose=True
-                )
-                db.add(
-                    EvalIndexRecord(
-                        name="P", value=P.mean().item(), epoch=epoch, entry_id=self.id
-                    )
-                )
-                db.add(
-                    EvalIndexRecord(
-                        name="R", value=R.mean().item(), epoch=epoch, entry_id=self.id
-                    )
-                )
-                db.add(
-                    EvalIndexRecord(
-                        name="F", value=F.mean().item(), epoch=epoch, entry_id=self.id
-                    )
-                )
-            if "A" in self.indexes:
-                def remove_blank(s):
-                    return s.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r", "").replace("　", "")
-                db.add(
-                    EvalIndexRecord(
-                        name="A",
-                        value=sum([1 for c, r in zip(list(map(remove_blank, cands)), list(map(remove_blank, refs))) if c == r]) / len(cands),
-                        epoch=epoch,
-                        entry_id=self.id,
-                    )
-                )
-            if "B" in self.indexes:
-                cands_b = [jieba.lcut(sent) for sent in cands]
-                refs_b = [jieba.lcut(sent) for sent in refs]
-                db.add(
-                    EvalIndexRecord(
-                        name="B",
-                        value=corpus_bleu(refs_b, cands_b),
-                        epoch=epoch,
-                        entry_id=self.id,
-                    )
-                )
-            if "D" in self.indexes:
-
-                def calculate_distinct_n(text):
-                    n = 2
-                    # Split the text into words
-                    words = jieba.lcut(text)
-
-                    # Calculate n-grams
-                    n_grams = list(ngrams(words, n))
-
-                    # Count distinct n-grams
-                    distinct_ngrams = len(Counter(n_grams))
-
-                    # Calculate distinct-n
-                    distinct_n = distinct_ngrams / len(n_grams) if len(n_grams) > 0 else 0
-
-                    return distinct_n
-
-                db.add(
-                    EvalIndexRecord(
-                        name="D",
-                        value=np.vectorize(calculate_distinct_n)(cands).mean(),
-                        epoch=epoch,
-                        entry_id=self.id,
-                    )
-                )
+            
+            eval_result = evaluate(self.indexes, refs, cands)
+            
+            for k, v in eval_result.items():
+                db.add(FtEvalIndexRecord(
+                    entry_id=self.id,
+                    name=k,
+                    epoch=epoch,
+                    value=v
+                ))
+            
             db.commit()
         except Exception as e:
             print(e)

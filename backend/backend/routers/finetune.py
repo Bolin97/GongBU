@@ -1,3 +1,4 @@
+import os
 from backend.auth import get_current_identifier
 from backend.db import gen_db
 from backend.models import *
@@ -15,16 +16,23 @@ finetune_router = APIRouter()
 
 @finetune_router.post("")
 async def add_ft_task(
-    name: str, description: str, params: FinetuneParams, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
+    name: str, description: str, params: FinetuneParams, adapter_id: int | None = None, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
 ):
+    base_dir = os.path.join(os.environ.get("FINETUNE_OUTPUT"), identifier)
+    dir = params.output_dir
+    dir = dir.removeprefix("/")
+    full_path = os.path.abspath(
+        os.path.join(base_dir, dir)
+    )
     entry = FinetuneEntry(
         model_id=params.model_id,
+        adapter_id=adapter_id,
         name=name,
         description=description,
         dataset_id=params.dataset_id,
         devices=["auto"] if params.devices == "auto" else map(str, params.devices),
         eval_indexes=params.eval_indexes,
-        output_dir=params.output_dir,
+        output_dir=full_path,
         adapter_name=params.adapter_name,
         batch_size=params.batch_size,
         micro_batch_size=params.micro_batch_size,
@@ -74,6 +82,5 @@ async def add_ft_task(
 
 @finetune_router.put("/stop/{id}")
 async def stop(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    db.add(Signal(entry_id=id, signal=0, owner=identifier, public=False))
-    db.commit()
+    # TODO: Implement this
     return None

@@ -33,10 +33,10 @@ class FinetuneEntry(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     model_id = Column(String, nullable=False)
+    adapter_id = Column(Integer, nullable=True)
     dataset_id = Column(Integer, ForeignKey('dataset_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     devices = Column(ARRAY(String, dimensions=1), nullable=False)
     eval_indexes = Column(ARRAY(String, dimensions=1), nullable=False)
-    eval_indexes = Column(String, nullable=False)
     output_dir = Column(String, nullable=False)
     adapter_name = Column(String, nullable=False)
     batch_size = Column(Integer, nullable=False)
@@ -44,7 +44,7 @@ class FinetuneEntry(Base):
     num_epochs = Column(Integer, nullable=False)
     learning_rate = Column(Float, nullable=False)
     cutoff_len = Column(Integer, nullable=False)
-    val_set_size = Column(Integer, nullable=False)
+    val_set_size = Column(Float, nullable=False)
     use_gradient_checkpointing = Column(Boolean, nullable=False)
     eval_step = Column(Integer, nullable=False)
     save_step = Column(Integer, nullable=False)
@@ -79,21 +79,19 @@ class FinetuneEntry(Base):
     owner = Column(String, nullable=False)
     public = Column(Boolean, nullable=False)
 
-class EvalIndexRecord(Base):
-    __tablename__ = 'eval_index_records'
+class FtEvalIndexRecord(Base):
+    __tablename__ = 'ft_eval_index_records'
     id = Column(Integer, primary_key=True)
     entry_id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     name = Column(String, nullable=False)
     epoch = Column(Float, nullable=False)
     value = Column(Float, nullable=False)
 
-class EvalRecord(Base):
-    __tablename__ = 'eval_records'
+class FtEvalLossRecord(Base):
+    __tablename__ = 'ft_eval_loss_records'
     id = Column(Integer, primary_key=True)
     loss = Column(Float, nullable=False)
     epoch = Column(Float, nullable=False)
-    owner = Column(String, nullable=False)
-    public = Column(Boolean, nullable=False)
     entry_id = Column(Integer, ForeignKey('finetune_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
 
 class FinetuneDataset(Base):
@@ -110,8 +108,8 @@ class FinetuneProgress(Base):
     current = Column(Integer, nullable=False)
     total = Column(Integer, nullable=False)
 
-class LoggingRecord(Base):
-    __tablename__ = 'logging_records'
+class FtLoggingRecord(Base):
+    __tablename__ = 'ft_logging_records'
     id = Column(Integer, primary_key=True)
     loss = Column(Float, nullable=False)
     learning_rate = Column(Float, nullable=False)
@@ -121,8 +119,9 @@ class LoggingRecord(Base):
 
 class OpenLLM(Base):
     __tablename__ = 'open_llms'
-    model_id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     model_name = Column(String, nullable=False)
+    display_name = Column(String, nullable=False)
     model_description = Column(String, nullable=False)
     view_pic = Column(String, nullable=False)
     remote_path = Column(String, nullable=False)
@@ -130,15 +129,6 @@ class OpenLLM(Base):
     local_store = Column(Boolean, nullable=False)
     storage_state = Column(String)
     storage_date = Column(Date)
-    owner = Column(String, nullable=False)
-    public = Column(Boolean, nullable=False)
-
-class Signal(Base):
-    __tablename__ = 'signals'
-    id = Column(Integer, primary_key=True)
-    receiver = Column(String, nullable=False)
-    signal = Column(Integer, nullable=False)
-    entry_id = Column(Integer, nullable=False)
     owner = Column(String, nullable=False)
     public = Column(Boolean, nullable=False)
 
@@ -162,3 +152,75 @@ class FaultLog(Base):
     id = Column(Integer, primary_key=True)
     fault_id = Column(Integer, ForeignKey('faults.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     log_content = Column(String, nullable=False)
+
+class Adapter(Base):
+    __tablename__ = 'adapters'
+    id = Column(Integer, primary_key=True)
+    adapter_name = Column(String, nullable=False)
+    base_model_name = Column(String, nullable=False)
+    adapter_description = Column(String, nullable=False)
+    local_path = Column(String)
+    storage_date = Column(Date)
+    owner = Column(String, nullable=False)
+    public = Column(Boolean, nullable=False)
+
+class Deployment(Base):
+    __tablename__ = 'deployments'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    state = Column(Integer, nullable=False)
+    model_or_adapter_id = Column(Integer, nullable=False)
+    deploy_base_model = Column(Boolean, nullable=False)
+    bits_and_bytes = Column(Boolean, nullable=False)
+    load_8bit = Column(Boolean, nullable=False)
+    load_4bit = Column(Boolean, nullable=False)
+    use_flash_attention = Column(Boolean, nullable=False)
+    use_deepspeed = Column(Boolean, nullable=False)
+    port = Column(Integer, nullable=False)
+    devices = Column(ARRAY(String, dimensions=1), nullable=False)
+    owner = Column(String, nullable=False)
+    public = Column(Boolean, nullable=False)
+
+class Evaluation(Base):
+    __tablename__ = 'evaluations'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    state = Column(Integer, nullable=False)
+    start_time = Column(TIMESTAMP, nullable=False)
+    end_time = Column(TIMESTAMP)
+    model_or_adapter_id = Column(Integer, nullable=False)
+    deploy_base_model = Column(Boolean, nullable=False)
+    bits_and_bytes = Column(Boolean, nullable=False)
+    load_8bit = Column(Boolean, nullable=False)
+    load_4bit = Column(Boolean, nullable=False)
+    use_flash_attention = Column(Boolean, nullable=False)
+    use_deepspeed = Column(Boolean, nullable=False)
+    devices = Column(ARRAY(String, dimensions=1), nullable=False)
+    indexes = Column(ARRAY(String, dimensions=1), nullable=False)
+    dataset_id = Column(Integer, ForeignKey('dataset_entries.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    val_set_size = Column(Float, nullable=False)
+    result = Column(JSON)
+    owner = Column(String, nullable=False)
+    public = Column(Boolean, nullable=False)
+    
+class EvaluationData(Base):
+    __tablename__ = 'evaluation_data'
+    id = Column(Integer, primary_key=True)
+    entry_id = Column(Integer, ForeignKey('evaluations.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    content = Column(JSON, nullable=False)
+
+class EvaluationGeneration(Base):
+    __tablename__ = 'evaluation_generation'
+    id = Column(Integer, primary_key=True)
+    entry_id = Column(Integer, ForeignKey('evaluations.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    content = Column(JSON, nullable=False)
+
+class EvaluationProgress(Base):
+    __tablename__ = 'evaluation_progresses'
+    id = Column(Integer, primary_key=True)
+    entry_id = Column(Integer, ForeignKey('evaluations.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    current = Column(Integer, nullable=False)
+    total = Column(Integer, nullable=False)

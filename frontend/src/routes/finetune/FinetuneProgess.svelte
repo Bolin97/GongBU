@@ -4,11 +4,11 @@
 	import { onDestroy, onMount } from "svelte";
 	import { UPDATE_VIEW_INTERVAL } from "../store";
 	import axios from "axios";
-	export let id;
+	export let id: string;
 	export let noUpdate = false;
 	let percentage = "0";
 	let entry: FinetuneProgessEntry = undefined;
-	let percentage_updater: number;
+	let percentage_updater: any;
 	onMount(async () => {
 		async function update() {
 			entry = (await axios.get(`/api/finetune_progress/${id}`))
@@ -28,6 +28,7 @@
 	});
 </script>
 
+{#if entry != undefined && entry != null}
 <div class="w-full h-4 bg-gray-400 rounded dark:bg-gray-700">
 	{#if Number.parseFloat(percentage) >= 0.05}
 		<div
@@ -50,3 +51,4 @@
 	</div>
 	{/if}
 </div>
+{/if}

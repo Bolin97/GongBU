@@ -1,4 +1,4 @@
-export interface FinetuneParams {
+export interface FinetuneRequestParams {
 	model_id: string;
 	dataset_id: string;
 	devices: Array<string>;
@@ -41,7 +41,7 @@ export interface FinetuneParams {
 	use_flash_attention: boolean;
 }
 
-export function default_finetune_params(): FinetuneParams {
+export function default_finetune_request_params(): FinetuneRequestParams {
 	return {
 		model_id: "",
 		dataset_id: "",
