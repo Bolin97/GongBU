@@ -1,4 +1,5 @@
 env
+models
 models/model_avatars
 models
 finetune_output
@@ -27,3 +28,8 @@ __bert-base-chinese
 roberta-large
 output.log
 logs
+frontend_bak
+bunfig.toml
+bun.lockb
+package-lock.json
+sign_up_token.txt
