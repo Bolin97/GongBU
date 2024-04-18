@@ -23,13 +23,16 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
+generate_sign_up_token()
 
-@app.get("")
-async def root():
-    return "Server is running"
+@app.get("/ping")
+async def pong():
+    return "pong"
 
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(gen_db)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(gen_db)
+):
     identifier, password = form_data.username, form_data.password
     user = db.query(User).filter(User.identifier == identifier).first()
     if not user or not bcrypt.checkpw(password.encode(), user.password.encode()):
@@ -38,6 +41,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
             detail="Incorrect username or password",
         )
     return {"access_token": generate_jwt_token(identifier), "token_type": "bearer"}
+
 
 from .routers import *
 

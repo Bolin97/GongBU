@@ -11,7 +11,15 @@ from sqlalchemy.orm.session import Session
 # 1 KB
 CHUNKY_BY = 1024
 
-def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int, file: BinaryIO, identifier: str):
+
+def submit_finetune_dataset(
+    pool_id: int,
+    name: str,
+    description: str,
+    kind: int,
+    file: BinaryIO,
+    identifier: str,
+):
     db = get_db()
     # try both json and jsonl
     try:
@@ -54,6 +62,7 @@ def submit_finetune_dataset(pool_id: int, name: str, description: str, kind: int
     db.commit()
     db.close()
 
+
 def fetch_dataset(entry_id: int) -> tuple[list, int]:
     db = get_db()
     dataset_json_obj = list(
@@ -66,10 +75,13 @@ def fetch_dataset(entry_id: int) -> tuple[list, int]:
             ]
         )
     )
-    dataset_type = db.query(DatasetEntry).filter(DatasetEntry.id == entry_id).first().type
+    dataset_type = (
+        db.query(DatasetEntry).filter(DatasetEntry.id == entry_id).first().type
+    )
 
     db.close()
     return dataset_json_obj, dataset_type
+
 
 def submit_evaluation_data(entry_id: int, data: list):
     db = get_db()
@@ -90,6 +102,7 @@ def submit_evaluation_data(entry_id: int, data: list):
         finished += next_insertation_len
     db.close()
 
+
 def submit_evaluation_generation(entry_id: int, data: list):
     db = get_db()
     finished = 0
@@ -102,7 +115,7 @@ def submit_evaluation_generation(entry_id: int, data: list):
                 break
         ds = EvaluationGeneration(
             entry_id=entry_id,
-            content=data[finished:finished + next_insertation_len],
+            content=data[finished : finished + next_insertation_len],
         )
         db.add(ds)
         db.commit()

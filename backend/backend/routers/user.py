@@ -8,10 +8,9 @@ from backend.auth import *
 
 user_router = APIRouter()
 
+
 @user_router.post("")
-async def add_user(
-    identifier: str, password: str, db: Session = Depends(gen_db)
-):
+async def add_user(identifier: str, password: str, db: Session = Depends(gen_db)):
     user = db.query(User).filter(User.identifier == identifier).first()
     if user:
         raise HTTPException(
@@ -23,8 +22,7 @@ async def add_user(
     db.commit()
     return user
 
+
 @user_router.get("/me")
-async def get_user_me(
-    current_identifier: str = Depends(get_current_identifier)
-):
+async def get_user_me(current_identifier: str = Depends(get_current_identifier)):
     return current_identifier

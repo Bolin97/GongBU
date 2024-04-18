@@ -12,15 +12,31 @@ dataset_router = APIRouter()
 
 
 @dataset_router.post("")
-async def upload_finetune(name: str, description: str, pool_id: str, kind: int, file: UploadFile, identifier: str = Depends(get_current_identifier)):
-    #submit_finetune_dataset(pool_id, name, description, kind, file.file)
-    th = Thread(target=submit_finetune_dataset, args=(pool_id, name, description, kind, file.file, identifier))
+async def upload_finetune(
+    name: str,
+    description: str,
+    pool_id: str,
+    kind: int,
+    file: UploadFile,
+    identifier: str = Depends(get_current_identifier),
+):
+    # submit_finetune_dataset(pool_id, name, description, kind, file.file)
+    th = Thread(
+        target=submit_finetune_dataset,
+        args=(pool_id, name, description, kind, file.file, identifier),
+    )
     th.start()
 
 
 @dataset_router.delete("/{id}")
-async def remove(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    entry = accessible(db.query(DatasetEntry).filter(DatasetEntry.id == id), identifier).first()
+async def remove(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    entry = accessible(
+        db.query(DatasetEntry).filter(DatasetEntry.id == id), identifier
+    ).first()
     pool = db.query(Pool).filter(Pool.id == entry.pool_id).first()
     pool.size -= 1
     db.delete(entry)

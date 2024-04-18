@@ -11,24 +11,40 @@ finetune_entry_router = APIRouter()
 
 
 @finetune_entry_router.get("")
-async def get_all_ft_entry(db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def get_all_ft_entry(
+    db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
+):
     return accessible(db.query(FinetuneEntry), identifier).all()
 
 
 @finetune_entry_router.get("/reduced/{id}")
-async def reduced(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    entry = accessible(db.query(FinetuneEntry), identifier).filter(FinetuneEntry.id == id).first()
-    return {
-        "id": entry.id,
-        "name": entry.name,
-        "description": entry.description,
-        "start_time": entry.start_time,
-        "state": entry.state,
-    } if entry else None
+async def reduced(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    entry = (
+        accessible(db.query(FinetuneEntry), identifier)
+        .filter(FinetuneEntry.id == id)
+        .first()
+    )
+    return (
+        {
+            "id": entry.id,
+            "name": entry.name,
+            "description": entry.description,
+            "start_time": entry.start_time,
+            "state": entry.state,
+        }
+        if entry
+        else None
+    )
 
 
 @finetune_entry_router.get("/reduced")
-async def reduced(db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def reduced(
+    db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
+):
     return list(
         map(
             lambda entry: {
@@ -44,13 +60,25 @@ async def reduced(db: Session = Depends(gen_db), identifier: str = Depends(get_c
 
 
 @finetune_entry_router.get("/{id}")
-async def get_all_ft_entry(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    return accessible(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier).first()
+async def get_all_ft_entry(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    return accessible(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ).first()
 
 
 @finetune_entry_router.delete("/{id}")
-async def delete_files_and_entry(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    entry = accessible(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier).first()
+async def delete_files_and_entry(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    entry = accessible(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ).first()
     db.delete(entry)
     # under entry.output_dir
     # remove all folder follows checkpoint-number

@@ -11,12 +11,27 @@ dataset_entry_router = APIRouter()
 
 
 @dataset_entry_router.get("/by_pool/{pool_id}")
-async def by_pool(pool_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def by_pool(
+    pool_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
     try:
-        return accessible(db.query(DatasetEntry).filter(DatasetEntry.pool_id == pool_id), identifier).all()
+        return accessible(
+            db.query(DatasetEntry).filter(DatasetEntry.pool_id == pool_id), identifier
+        ).all()
     except:
         return []
 
+
 @dataset_entry_router.get("/{dataset_entry_id}")
-async def by_id(dataset_entry_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    return accessible(db.query(DatasetEntry), identifier).filter(DatasetEntry.id == dataset_entry_id).first()
+async def by_id(
+    dataset_entry_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    return (
+        accessible(db.query(DatasetEntry), identifier)
+        .filter(DatasetEntry.id == dataset_entry_id)
+        .first()
+    )

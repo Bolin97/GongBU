@@ -1,0 +1,92 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      PGDATA: /data/postgres
+      POSTGRES_DB: GONGBU
+    volumes:
+      - postgres:/data/postgres
+      - ./db_init/GONGBU_ps.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
+    expose:
+      - 5432
+    ports:
+      - "54320:5432"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.mirror
+    expose:
+      - 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/models
+      - ./finetune_output:/finetune_output
+      - ./bert-base-chinese:/backend/bert-base-chinese
+      - ./ext:/backend/ext
+      - ./logs:/logs
+      - /dev/shm:/dev/shm
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:pwd@db:5432/GONGBU
+      - MODEL_PATH=/models
+      - SERCET_KEY=secret
+      - LOG_PATH=/logs
+      - FINETUNE_OUTPUT=/finetune_output
+      - DISABLE_IB_P2P=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /backend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.mirror
+    ports:
+      - "5173:5173"
+    volumes:
+      - /frontend/node_modules
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /frontend
+        - action: rebuild
+          path: ./frontend/package.json
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    expose:
+      - 80
+    ports:
+      - "80:80"
+    links:
+      - backend
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: rebuild
+          path: ./proxy
+          target: /proxy
+    
+volumes:
+  postgres:

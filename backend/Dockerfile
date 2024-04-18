@@ -17,32 +17,30 @@ RUN rm /conf/linux_mb.tar.bz2
 # Create the env for the backend
 COPY ./requirements.txt /conf/requirements.txt
 
-RUN /micromamba/bin/micromamba create -y -n backend -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/ python=3.10
+RUN /micromamba/bin/micromamba create -y -n backend -c conda-forge python=3.10
 # Install packaging
-RUN /micromamba/bin/micromamba run -n backend pip install packaging -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install packaging
 
 # Cache some very large packages
-RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cublas-cu12 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-cupti-cu12 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-nvrtc-cu12 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-runtime-cu12 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install scipy==1.11.4 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install mkl-service==2.4.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install bert-score -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cublas-cu12
+RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-cupti-cu12
+RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-nvrtc-cu12
+RUN /micromamba/bin/micromamba run -n backend pip install nvidia-cuda-runtime-cu12
+RUN /micromamba/bin/micromamba run -n backend pip install scipy==1.11.4
+RUN /micromamba/bin/micromamba run -n backend pip install mkl-service==2.4.0
+RUN /micromamba/bin/micromamba run -n backend pip install --no-deps bert-score
 
-RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt
 
-RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]" -i https://pypi.tuna.tsinghua.edu.cn/simple/
-# RUN /micromamba/bin/micromamba run -n backend pip install git+https://github.com/huggingface/transformers
-RUN /micromamba/bin/micromamba run -n backend pip install torch -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.37.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-# RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-
-RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]"
+RUN /micromamba/bin/micromamba run -n backend pip install torch
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.37.2
+RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0
+# RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517
+RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3
 
 RUN apt-get -y install libopenmpi-dev
-RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install mpi4py
 
 # Use the gradio from source because latest version supports detecting root_path
 # Reduces tons of work

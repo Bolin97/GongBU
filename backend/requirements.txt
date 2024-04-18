@@ -162,7 +162,6 @@ tornado==6.4
 tqdm==4.66.2
 traitlets==5.14.1
 triton==2.2.0
-trl==0.7.11
 typer==0.9.0
 types-python-dateutil==2.8.19.20240106
 typing_extensions==4.9.0

@@ -16,14 +16,17 @@ finetune_router = APIRouter()
 
 @finetune_router.post("")
 async def add_ft_task(
-    name: str, description: str, params: FinetuneParams, adapter_id: int | None = None, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
+    name: str,
+    description: str,
+    params: FinetuneParams,
+    adapter_id: int | None = None,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
 ):
     base_dir = os.path.join(os.environ.get("FINETUNE_OUTPUT"), identifier)
     dir = params.output_dir
     dir = dir.removeprefix("/")
-    full_path = os.path.abspath(
-        os.path.join(base_dir, dir)
-    )
+    full_path = os.path.abspath(os.path.join(base_dir, dir))
     entry = FinetuneEntry(
         model_id=params.model_id,
         adapter_id=adapter_id,
@@ -71,7 +74,7 @@ async def add_ft_task(
         use_effective_conv2d=params.use_effective_conv2d,
         use_flash_attention=params.use_flash_attention,
         owner=identifier,
-        public=False
+        public=False,
     )
     db.add(entry)
     db.commit()
@@ -81,6 +84,10 @@ async def add_ft_task(
 
 
 @finetune_router.put("/stop/{id}")
-async def stop(id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def stop(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
     # TODO: Implement this
     return None

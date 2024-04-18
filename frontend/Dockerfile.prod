@@ -1,21 +1,10 @@
-FROM node:lts-iron
-
-# Create app directory
+FROM node:21-bookworm
 WORKDIR /frontend
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the files
+COPY package.json ./
+RUN npm i -g bun
+RUN bun i
+RUN bun i i18next svelte-i18next
+RUN bun i http-proxy-middleware
 COPY . .
-
-# Build the app
-RUN npm run build
-
-# Expose the port
-EXPOSE 5173
-
-CMD npm run preview
+RUN bun run build
+CMD bun run /frontend/build/index.js

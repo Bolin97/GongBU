@@ -1,8 +1,9 @@
 from multiprocessing import Lock
 
+
 class SafeDict(dict):
     lock: any
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lock = Lock()
@@ -26,19 +27,19 @@ class SafeDict(dict):
     def __len__(self):
         with self.lock:
             return super().__len__()
-    
+
     def __iter__(self):
         with self.lock:
             return super().__iter__()
-    
+
     def __repr__(self):
         with self.lock:
             return super().__repr__()
-    
+
     def __str__(self):
         with self.lock:
             return super().__str__()
-    
+
     def __hash__(self):
         with self.lock:
             return super().__hash__()

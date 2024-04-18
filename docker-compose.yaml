@@ -11,6 +11,7 @@ services:
     volumes:
       - postgres:/data/postgres
       - ./db_init/GONGBU_ps.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
     expose:
       - 5432
     ports:
@@ -21,10 +22,8 @@ services:
       dockerfile: Dockerfile
     expose:
       - 8000
-      - 8760
     ports:
       - "8000:8000"
-      - "8760:8760"
     volumes:
       - ./models:/models
       - ./finetune_output:/finetune_output
@@ -32,6 +31,7 @@ services:
       - ./ext:/backend/ext
       - ./logs:/logs
       - /dev/shm:/dev/shm
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
     depends_on:
       - db
     environment:

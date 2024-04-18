@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.exc import DisconnectionError, OperationalError
 import os
 
-SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, pool_size=128, max_overflow=128, pool_recycle=3600

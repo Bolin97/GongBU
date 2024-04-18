@@ -11,10 +11,15 @@ services:
     volumes:
       - postgres:/data/postgres
       - ./db_init/GONGBU_ps.sql:/docker-entrypoint-initdb.d/GONGBU_ps.sql
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
+    expose:
+      - 5432
+    ports:
+      - "54320:5432"
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     expose:
       - 8000
     ports:
@@ -26,6 +31,7 @@ services:
       - ./ext:/backend/ext
       - ./logs:/logs
       - /dev/shm:/dev/shm
+      - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
     depends_on:
       - db
     environment:
@@ -33,6 +39,8 @@ services:
       - MODEL_PATH=/models
       - SERCET_KEY=secret
       - LOG_PATH=/logs
+      - FINETUNE_OUTPUT=/finetune_output
+      - DISABLE_IB_P2P=1
     deploy:
       resources:
         reservations:
@@ -48,15 +56,11 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
+      dockerfile: Dockerfile.prod
     volumes:
       - /frontend/node_modules
     depends_on:
       - backend
-    environment:
-      - VITE_DEFAULT_MODEL_OUTPUT=/finetune_output
     develop:
       watch:
         - action: sync
@@ -64,5 +68,23 @@ services:
           target: /frontend
         - action: rebuild
           path: ./frontend/package.json
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.prod
+    expose:
+      - 80
+    ports:
+      - "5173:80"
+    links:
+      - backend
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: rebuild
+          path: ./proxy
+          target: /proxy
+    
 volumes:
   postgres:

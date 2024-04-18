@@ -23,6 +23,7 @@ import os
 import pickle
 from backend.eval.evaluate import evaluate
 
+
 class ReportCallback(TrainerCallback):
     id: int
     indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
@@ -35,15 +36,15 @@ class ReportCallback(TrainerCallback):
     base_model_name: str
 
     def __init__(
-        self, 
-        finetune_id: int, 
-        ds_type: int, 
+        self,
+        finetune_id: int,
+        ds_type: int,
         indexes: List[Literal["F", "R", "P", "A", "B", "D"]],
         identifier: str,
         public: bool,
         task_name: str,
         task_description: str,
-        base_model_name: str
+        base_model_name: str,
     ):
         super().__init__()
         self.id = finetune_id
@@ -51,14 +52,17 @@ class ReportCallback(TrainerCallback):
         self.ds_type = ds_type
         # if detected using deepspeed, only the first callback reports
         # print(os.environ.get("LOCAL_RANK"))
-        if os.environ.get("LOCAL_RANK") is None or int(os.environ.get("LOCAL_RANK")) == 0:
+        if (
+            os.environ.get("LOCAL_RANK") is None
+            or int(os.environ.get("LOCAL_RANK")) == 0
+        ):
             self.enabled = True
         self.identifier = identifier
         self.public = public
         self.task_name = task_name
         self.task_description = task_description
         self.base_model_name = base_model_name
-        
+
     def set_eval_dataset(self, ds: Any):
         self.eval_dataset = ds
 
@@ -125,7 +129,7 @@ class ReportCallback(TrainerCallback):
         db.close()
         # save validation set
         if self.eval_dataset is not None:
-            with open(os.path.join(args.output_dir, "eval_dataset.pkl"), 'wb') as f:
+            with open(os.path.join(args.output_dir, "eval_dataset.pkl"), "wb") as f:
                 pickle.dump(self.eval_dataset, f)
 
     def on_step_end(
@@ -179,14 +183,12 @@ class ReportCallback(TrainerCallback):
             local_path=args.output_dir,
             storage_date=datetime.datetime.now(),
             owner=self.identifier,
-            public=self.public
+            public=self.public,
         )
         db.add(adapter)
-        
-        
+
         db.commit()
         db.close()
-    
 
     def on_evaluate(
         self,
@@ -205,38 +207,45 @@ class ReportCallback(TrainerCallback):
             epoch = state.log_history[-1]["epoch"]
 
             stop_token_ids = [tokenizer.eos_token_id]
+
             class StopOnTokens(StoppingCriteria):
                 def __call__(
-                    self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+                    self,
+                    input_ids: torch.LongTensor,
+                    scores: torch.FloatTensor,
+                    **kwargs
                 ) -> bool:
                     for stop_id in stop_token_ids:
                         if input_ids[0][-1] == stop_id:
                             return True
                     return False
-            
+
             def get_generated_output(data_point):
                 prompt = generate_prompt(data_point, self.ds_type, for_infer=True)
                 input_ids = tokenizer.encode(prompt, return_tensors="pt").to("cuda")
-                output = model.generate(inputs=input_ids, max_length=len(generate_prompt(data_point, self.ds_type)), stopping_criteria=StoppingCriteriaList([StopOnTokens()]))
-                out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(prompt)
+                output = model.generate(
+                    inputs=input_ids,
+                    max_length=len(generate_prompt(data_point, self.ds_type)),
+                    stopping_criteria=StoppingCriteriaList([StopOnTokens()]),
+                )
+                out_text = tokenizer.decode(
+                    output[0], skip_special_tokens=True
+                ).removeprefix(prompt)
                 return out_text
 
             db = get_db()
             cands = []
             for each in tqdm(self.eval_dataset):
-                cands.append(get_generated_output(each))  
+                cands.append(get_generated_output(each))
             refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
-            
+
             eval_result = evaluate(self.indexes, refs, cands)
-            
+
             for k, v in eval_result.items():
-                db.add(FtEvalIndexRecord(
-                    entry_id=self.id,
-                    name=k,
-                    epoch=epoch,
-                    value=v
-                ))
-            
+                db.add(
+                    FtEvalIndexRecord(entry_id=self.id, name=k, epoch=epoch, value=v)
+                )
+
             db.commit()
         except Exception as e:
             print(e)

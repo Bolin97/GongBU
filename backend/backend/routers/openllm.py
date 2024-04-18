@@ -19,28 +19,41 @@ from io import BytesIO
 
 openllm_router = APIRouter()
 
+
 @openllm_router.get("/{model_id}")
-async def read_openllms(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    llm_entry = accessible(db.query(OpenLLM).filter(OpenLLM.id == model_id), identifier).first()
+async def read_openllms(
+    model_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    llm_entry = accessible(
+        db.query(OpenLLM).filter(OpenLLM.id == model_id), identifier
+    ).first()
     if llm_entry is None:
         raise HTTPException(status_code=404, detail="Model not found")
     return llm_entry
 
+
 @openllm_router.get("/avatar/{model_id}")
 async def read_openllms_pic(model_id: int, db: Session = Depends(gen_db)):
     llm_entry = db.query(OpenLLM).filter(OpenLLM.id == model_id).first()
-    path = os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", llm_entry.view_pic)
+    path = os.path.join(
+        os.environ.get("MODEL_PATH"), "model_avatars", llm_entry.view_pic
+    )
     if not os.path.exists(path):
         return FileResponse("./logo.webp")
     return FileResponse(path)
 
 
 @openllm_router.get("")
-async def read_all_openllms(db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def read_all_openllms(
+    db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)
+):
     all_llm_entry = accessible(db.query(OpenLLM), identifier).all()
     if all_llm_entry is None:
         raise HTTPException(status_code=404, detail="No model found")
     return all_llm_entry
+
 
 class ModelListItem(BaseModel):
     model_name: str
@@ -50,7 +63,12 @@ class ModelListItem(BaseModel):
     download_url: str
     avatar_url: Optional[str] = None
 
-def download_model(info: ModelListItem, entry_id: int, identifier: str = Depends(get_current_identifier)):
+
+def download_model(
+    info: ModelListItem,
+    entry_id: int,
+    identifier: str = Depends(get_current_identifier),
+):
     db = get_db()
     if info.source == "git":
         entry = db.query(OpenLLM).filter(OpenLLM.id == entry_id).first()
@@ -58,9 +76,11 @@ def download_model(info: ModelListItem, entry_id: int, identifier: str = Depends
         local_path = os.path.join(os.environ.get("MODEL_PATH"), info.model_name)
         db.commit()
         command = f"""cd {os.environ.get("MODEL_PATH")} && git init && git lfs install && git clone {info.download_url} {info.model_name}"""
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(
+            command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
         # Stream output to stdout
-        for line in iter(process.stdout.readline, b''):
+        for line in iter(process.stdout.readline, b""):
             print(line.decode().strip())
         entry.local_path = local_path
         entry.local_store = 1
@@ -68,37 +88,45 @@ def download_model(info: ModelListItem, entry_id: int, identifier: str = Depends
         db.commit()
     db.close()
 
+
 def write_info(info: ModelListItem, identifier: str):
     # create model_avatars folder if not exists
     if not os.path.exists(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars")):
         os.makedirs(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars"))
-    
+
     db = get_db()
     # avatar
     view_pic = f"{info.model_name}.webp"
     try:
-        response = rq.get(info.avatar_url, timeout=5, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299"
-        })
+        response = rq.get(
+            info.avatar_url,
+            timeout=5,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299"
+            },
+        )
         img = Image.open(BytesIO(response.content))
         ratio = min(128 / img.size[0], 128 / img.size[1])
-        img.resize((int(ratio * img.size[0]), int(ratio * img.size[1]))).save(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", view_pic), format='WEBP')
+        img.resize((int(ratio * img.size[0]), int(ratio * img.size[1]))).save(
+            os.path.join(os.environ.get("MODEL_PATH"), "model_avatars", view_pic),
+            format="WEBP",
+        )
     except:
         view_pic = "ERR"
-    
+
     local_path = os.path.join(os.environ.get("MODEL_PATH"), info.model_name)
     entry = OpenLLM(
-        model_name = info.model_name,
-        display_name = info.model_display_name,
-        model_description = info.model_description,
-        view_pic = view_pic,
-        remote_path = info.download_url,
-        local_path = local_path,
-        local_store = 0,
-        storage_state = "InfoOnly",
-        storage_date = datetime.datetime.utcnow(),
-        owner = identifier,
-        public = False
+        model_name=info.model_name,
+        display_name=info.model_display_name,
+        model_description=info.model_description,
+        view_pic=view_pic,
+        remote_path=info.download_url,
+        local_path=local_path,
+        local_store=0,
+        storage_state="InfoOnly",
+        storage_date=datetime.datetime.utcnow(),
+        owner=identifier,
+        public=False,
     )
     db.add(entry)
     db.commit()
@@ -106,21 +134,32 @@ def write_info(info: ModelListItem, identifier: str):
     db.close()
     return entry_id
 
+
 @openllm_router.post("/download")
-async def create_openllm_download(info: ModelListItem, identifier: str = Depends(get_current_identifier)):
+async def create_openllm_download(
+    info: ModelListItem, identifier: str = Depends(get_current_identifier)
+):
     entry_id = write_info(info)
     # Download Model in a new thread
     th = Thread(target=download_model, args=(info, entry_id, identifier))
     th.start()
     return {"status": "success"}
 
+
 @openllm_router.post("/no_download")
-async def create_openllm(info: ModelListItem, identifier: str = Depends(get_current_identifier)):
+async def create_openllm(
+    info: ModelListItem, identifier: str = Depends(get_current_identifier)
+):
     write_info(info, identifier)
     return {"status": "success"}
 
+
 @openllm_router.delete("/{model_id}")
-async def delete_openllm(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def delete_openllm(
+    model_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
     if not owns(db.query(OpenLLM).filter(OpenLLM.id == model_id), identifier):
         raise HTTPException(status_code=401, detail="Unauthorized")
     entry = db.query(OpenLLM).filter(OpenLLM.id == model_id).first()
@@ -136,8 +175,13 @@ async def delete_openllm(model_id: int, db: Session = Depends(gen_db), identifie
     db.commit()
     return {"status": "success"}
 
+
 @openllm_router.delete("/entry/{model_id}")
-async def delete_openllm_entry(model_id: int, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
+async def delete_openllm_entry(
+    model_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
     if not owns(db.query(OpenLLM).filter(OpenLLM.id == model_id), identifier):
         raise HTTPException(status_code=401, detail="Unauthorized")
     entry = db.query(OpenLLM).filter(OpenLLM.id == model_id).first()
@@ -147,7 +191,14 @@ async def delete_openllm_entry(model_id: int, db: Session = Depends(gen_db), ide
     db.commit()
     return {"status": "success"}
 
+
 @openllm_router.get("/entry/by_model_name/{model_name}")
-async def get_by_model_name(model_name: str, db: Session = Depends(gen_db), identifier: str = Depends(get_current_identifier)):
-    entry = accessible(db.query(OpenLLM).filter(OpenLLM.model_name == model_name), identifier).first()
+async def get_by_model_name(
+    model_name: str,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    entry = accessible(
+        db.query(OpenLLM).filter(OpenLLM.model_name == model_name), identifier
+    ).first()
     return entry

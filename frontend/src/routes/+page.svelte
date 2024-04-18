@@ -1,5 +1,5 @@
 <script lang="ts">
-import { getContext } from "svelte";
+  import { getContext } from "svelte";
 </script>
 
 <!-- <h1 class="text-3xl dark:text-white">欢迎来到工部大模型微调平台</h1> -->

@@ -10,8 +10,15 @@ logging_router = APIRouter()
 
 
 @logging_router.get("/after/{id}")
-async def get_logging_after(id: int, after: float, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
-    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+async def get_logging_after(
+    id: int,
+    after: float,
+    db: Session = Depends(get_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    if not check_access(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ):
         return None
     return (
         db.query(FtLoggingRecord)
@@ -23,22 +30,41 @@ async def get_logging_after(id: int, after: float, db: Session = Depends(get_db)
 
 
 @logging_router.get("/{id}")
-async def get_logging(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
-    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+async def get_logging(
+    id: int,
+    db: Session = Depends(get_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    if not check_access(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ):
         return None
     return db.query(FtLoggingRecord).filter(FtLoggingRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/{id}")
-async def get_eval(id: int, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
-    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+async def get_eval(
+    id: int,
+    db: Session = Depends(get_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    if not check_access(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ):
         return None
     return db.query(FtEvalLossRecord).filter(FtEvalLossRecord.entry_id == id).all()
 
 
 @logging_router.get("/eval/after/{id}")
-async def get_eval_after(id: int, after: float, db: Session = Depends(get_db), identifier: str = Depends(get_current_identifier)):
-    if not check_access(db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier):
+async def get_eval_after(
+    id: int,
+    after: float,
+    db: Session = Depends(get_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    if not check_access(
+        db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
+    ):
         return None
     return (
         db.query(FtEvalLossRecord)

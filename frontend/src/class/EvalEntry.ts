@@ -54,24 +54,24 @@
   }
  */
 export default interface EvalEntry {
-    id: number;
-    name: string;
-    end_time: string;
-    devices: string[];
-    model_or_adapter_id: number;
-    indexes: string[];
-    deploy_base_model: boolean;
-    dataset_id: number;
-    bits_and_bytes: boolean;
-    val_set_size: number;
-    load_8bit: boolean;
-    result: { [index: string]: number };
-    description: string;
-    load_4bit: boolean;
-    owner: string;
-    state: number;
-    use_flash_attention: boolean;
-    public: boolean;
-    start_time: string;
-    use_deepspeed: boolean;
+  id: number;
+  name: string;
+  end_time: string;
+  devices: string[];
+  model_or_adapter_id: number;
+  indexes: string[];
+  deploy_base_model: boolean;
+  dataset_id: number;
+  bits_and_bytes: boolean;
+  val_set_size: number;
+  load_8bit: boolean;
+  result: { [index: string]: number };
+  description: string;
+  load_4bit: boolean;
+  owner: string;
+  state: number;
+  use_flash_attention: boolean;
+  public: boolean;
+  start_time: string;
+  use_deepspeed: boolean;
 }

@@ -2,7 +2,10 @@ from datetime import datetime
 from itertools import chain
 import os
 import sys
-from accelerate.utils.modeling import check_tied_parameters_in_config, find_tied_parameters
+from accelerate.utils.modeling import (
+    check_tied_parameters_in_config,
+    find_tied_parameters,
+)
 from backend.service.dataset import fetch_dataset
 import fire
 import psutil
@@ -131,6 +134,7 @@ def get_target(bnb_config: Optional[BitsAndBytesConfig], named_modules) -> List[
     # Convert the set into a list and return it
     return list(lora_module_names)
 
+
 def get_device_map(devices: list[int] | str, base_model: str):
     # if devices == "auto":
     #     return "auto"
@@ -146,11 +150,20 @@ def get_device_map(devices: list[int] | str, base_model: str):
     #         no_split_module_classes=type(model)._no_split_modules
     #     )
     #     return device_map
-    
+
     # Now we use CUDA_VISIBLE_DEVICES to control the device, so device_map is always auto
     return "auto"
 
-def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig, adapter_name: str, lora_r: int, lora_alpha: int, lora_dropout: float, num_virtual_tokens: int):
+
+def get_peft_config(
+    model: AutoModelForCausalLM,
+    bnb_config: BitsAndBytesConfig,
+    adapter_name: str,
+    lora_r: int,
+    lora_alpha: int,
+    lora_dropout: float,
+    num_virtual_tokens: int,
+):
     target_modules = []
     if (
         model.config.model_type.lower()
@@ -230,7 +243,15 @@ def get_peft_config(model: AutoModelForCausalLM, bnb_config: BitsAndBytesConfig,
     else:
         raise ValueError(f"Unknown adapter name: {adapter_name}")
 
-def get_model_and_tokenizer(base_model: str, device_map: Any, bnb_config: BitsAndBytesConfig, zero_optimization: bool, zero_stage: int, zero_offload: bool) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+
+def get_model_and_tokenizer(
+    base_model: str,
+    device_map: Any,
+    bnb_config: BitsAndBytesConfig,
+    zero_optimization: bool,
+    zero_stage: int,
+    zero_offload: bool,
+) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     model, tokenizer = None, None
     if zero_optimization:
         model = AutoModelForCausalLM.from_pretrained(
@@ -266,14 +287,15 @@ def get_model_and_tokenizer(base_model: str, device_map: Any, bnb_config: BitsAn
         tokenizer.pad_token_id = 0
     return model, tokenizer
 
+
 def get_dataset(
-    dataset_type: int, 
-    dataset: list, 
+    dataset_type: int,
+    dataset: list,
     val_size: float,
     tokenizer: AutoTokenizer,
     cutoff_len: int,
     callback: ReportCallback,
-    output_dir: str
+    output_dir: str,
 ):
     def tokenize(prompt, add_eos_token=True):
         result = tokenizer(
@@ -316,9 +338,9 @@ def get_dataset(
     data = datasets.DatasetDict(
         {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
     )
-    
+
     val_size = 0 if val_size == 0 else max(int(val_size * len(data["train"])), 2)
-    
+
     if val_size > 0:
         train_val = data["train"].train_test_split(
             test_size=val_size, shuffle=True, seed=42
@@ -394,7 +416,7 @@ def train(
 
     gradient_accumulation_steps = batch_size // micro_batch_size
     device_map = None
-    
+
     if not zero_optimization:
         device_map = get_device_map(devices, "")
 
@@ -412,12 +434,22 @@ def train(
             bnb_4bit_use_double_quant=bnb_4bit_use_double_quant,
         )
 
-    model, tokenizer = get_model_and_tokenizer(base_model, device_map, bnb_config, zero_optimization, zero_stage, zero_offload)
-    
+    model, tokenizer = get_model_and_tokenizer(
+        base_model, device_map, bnb_config, zero_optimization, zero_stage, zero_offload
+    )
 
-    model = get_peft_model(model, get_peft_config(
-        model, bnb_config, adapter_name, lora_r, lora_alpha, lora_dropout, num_virtual_tokens
-    ))
+    model = get_peft_model(
+        model,
+        get_peft_config(
+            model,
+            bnb_config,
+            adapter_name,
+            lora_r,
+            lora_alpha,
+            lora_dropout,
+            num_virtual_tokens,
+        ),
+    )
 
     if bits_and_bytes:
         model = prepare_model_for_kbit_training(
@@ -432,7 +464,13 @@ def train(
         model.model_parallel = True
 
     train_data, val_data = get_dataset(
-        dataset_type, dataset, val_set_size, tokenizer, cutoff_len, report_callback, output_dir
+        dataset_type,
+        dataset,
+        val_set_size,
+        tokenizer,
+        cutoff_len,
+        report_callback,
+        output_dir,
     )
 
     data_collator = transformers.DataCollatorForSeq2Seq(
@@ -460,7 +498,11 @@ def train(
         group_by_length=group_by_length,
         report_to=None,
         run_name=None,
-        deepspeed= None if not zero_optimization else get_deepspeed_config(zero_stage, zero_offload),
+        deepspeed=(
+            None
+            if not zero_optimization
+            else get_deepspeed_config(zero_stage, zero_offload)
+        ),
     )
 
     trainer = transformers.Trainer(
@@ -485,7 +527,10 @@ def train(
 
     model.save_pretrained(output_dir)
 
+
 from backend.models import *
+
+
 def wrapper(
     finetune_id: int,
 ):
@@ -496,14 +541,19 @@ def wrapper(
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
         owner = entry.owner
         public = entry.public
-        base_model = (
-            db.query(OpenLLM)
-            .filter(OpenLLM.id == entry.model_id)
-            .first()
-        )
+        base_model = db.query(OpenLLM).filter(OpenLLM.id == entry.model_id).first()
         model_path = base_model.local_path
         dataset_json_obj, dataset_type = fetch_dataset(entry.dataset_id)
-        callback = ReportCallback(finetune_id, dataset_type, entry.eval_indexes, owner, public, entry.name, entry.description, base_model.model_name)
+        callback = ReportCallback(
+            finetune_id,
+            dataset_type,
+            entry.eval_indexes,
+            owner,
+            public,
+            entry.name,
+            entry.description,
+            base_model.model_name,
+        )
         train(
             base_model=model_path,
             dataset_type=dataset_type,
@@ -573,11 +623,14 @@ def wrapper(
         if not (exception is None):
             print(exception)
             db = get_db()
-            entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            entry = (
+                db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            )
             entry.state = -1
             entry.end_time = datetime.utcnow()
             db.commit()
         db.close()
+
 
 if __name__ == "__main__":
     fire.Fire(wrapper)
