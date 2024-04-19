@@ -18,10 +18,7 @@
 <hr class="pt-1" />
 
 <div class="grid grid-cols-1">
-  <div class="m-2 p-2">
-    <span class="my-2">{t("config.model_list")}</span>
-    <Textarea rows="16" bind:value={$MODEL_LIST} />
-  </div>
+  
 
   <div class="m-2 p-2">
     <span class="my-2">{t("config.log_out")}</span>

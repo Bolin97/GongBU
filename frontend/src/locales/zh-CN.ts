@@ -29,5 +29,10 @@ export default {
   "delpoyment.starting": "启动中",
   "delpoyment.running": "运行中",
 
+  "root.sign_up_token": "注册验证Token",
+  "root.sign_up": "注册",
+  "root.switch_to_login": "切换到登陆页",
+  "root.switch_to_signup": "切换到注册页",
+
   "component.go_back": "返回",
 };

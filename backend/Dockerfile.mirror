@@ -45,7 +45,7 @@ RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi
 # Use the gradio from source because latest version supports detecting root_path
 # Reduces tons of work
 # When this version is released, just use the new version
-RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2
+RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 WORKDIR /backend
 

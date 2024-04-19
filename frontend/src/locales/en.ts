@@ -30,5 +30,10 @@ export default {
   "delpoyment.starting": "Starting",
   "delpoyment.running": "Running",
 
+  "root.sign_up_token": "Sign Up Token",
+  "root.sign_up": "Sign Up",
+  "root.switch_to_login": "Switch to Login",
+  "root.switch_to_signup": "Switch to Sign Up",
+
   "component.go_back": "Go back",
 };

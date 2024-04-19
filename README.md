@@ -20,7 +20,44 @@ Then run the following command:
 docker compose -f docker-compose.prod.yaml up
 ```
 
-The platform should be running on `localhost:3000`.
+The platform should be running on `localhost:5173` behind an nginx reverse proxy. Simply use `localhost:5173/home` to access the platform.
+
+## 🔧 Usage
+
+After accessing the platform, you will be welcomed by the log in page. By default, the platform does not provide any user, so you need to create a user by clicking the sign up button.
+
+When signing up, by default, you will need a token to sign up. It will be in the `sign_up_token.txt` file in the root directory of the project. You can change the token in the `sign_up_token.txt` however you want. Nevertheless, you can use a permissive registering strategy by setting the environment variable `NO_SIGNUP_TOKEN` in the docker compose file, which will allow anyone to sign up.
+
+After logging in, you will find everything to be empty, here's how you can import assets into the platform, only two kinds of assets are needed, the dataset and the model.
+
+- To upload a dataset, you need to go to the data page. The datasets are arranged in pools, with each pools containing several datasets. You can create a new pool by clicking the create button, and follow the instructions to upload a dataset. You can also click the details button of an existing pool to upload a dataset to that pool.
+
+- To download models, you need to go to the model download page. It will ask for a model list, which is a json list, and below is an example.
+
+    ```json
+    [
+        {
+            "model_display_name": "560m",
+            "model_name": "bloom-560m",
+            "source": "git",
+            "model_description": "This is the description of bloom-560m model",
+            "download_url": "https://huggingface.co/bigscience/bloomz-560m",
+            "avatar_url": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/1634806038075-5df7e9e5da6d0311fd3d53f9.png?w=200&h=200&f=face"
+        }
+    ]
+    ```
+
+    The avatar is optional.
+
+    Then, you can click the download button in the same page to download the models.
+
+    We will soon provide a list for common models. Currently, we have to trouble you to write the json list yourself.
+
+After you have uploaded the datasets and downloaded the models, you can fintune, evaluate and deploy the models on respective pages.
+
+## ✅ Current Status
+
+The platform is now fully functional, albeit under constant development and polishing, especially the frontend, and breaking changes may take place.
 
 ## 🧾 Trivials
 

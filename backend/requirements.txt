@@ -180,6 +180,6 @@ xxhash==3.4.1
 yarl==1.9.4
 zipp==3.17.0
 python-jose==3.3.0
-bcrypt==4.1.2
 passlib==1.7.4
 passlib[bcrypt]==1.7.4
+poetry-core==1.9.0

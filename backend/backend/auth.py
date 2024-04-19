@@ -16,8 +16,6 @@ def veify_password(plain_password, hashed_password):
 
 
 def generate_jwt_token(identifier):
-    with open("./s.txt", "w") as f:
-        f.write(SERCET_KEY)
     expiration = datetime.now(timezone.utc) + timedelta(days=TOKEN_EXPIRATION_DELTA)
     return jwt.encode(
         {"sub": identifier, "exp": expiration}, SERCET_KEY, algorithm="HS256"
@@ -53,6 +51,9 @@ def generate_sign_up_token():
         )
 
 def get_sign_up_token():
+    if not sign_up_token_exists():
+        print("sign up token not found, regenerating")
+        generate_sign_up_token()
     with open(SIGN_UP_TOKEN_PATH, "r") as f:
         return f.read()
 

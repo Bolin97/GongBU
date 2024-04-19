@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { getContext, onDestroy, onMount } from "svelte";
   import type OpenllmEntry from "../../class/OpenllmEntry";
   import { MODEL_LIST, UPDATE_VIEW_INTERVAL } from "../store";
-  import { Alert, Button, Input, Modal, Toast } from "flowbite-svelte";
+  import { Alert, Button, Input, Modal, Textarea, Toast } from "flowbite-svelte";
   import {
     Table,
     TableBody,
@@ -13,7 +13,7 @@
   } from "flowbite-svelte";
   import axios from "axios";
   import { CloseOutline } from "flowbite-svelte-icons";
-
+  const t: any = getContext("t")
   let error_parsing = false;
 
   class ModelListItem {
@@ -27,19 +27,22 @@
 
   let model_list: ModelListItem[] = [];
 
-  try {
-    model_list = JSON.parse($MODEL_LIST);
-    //check if every element in the model_list is a Model
-    const valid = Object.keys(new ModelListItem()).every((key) => {
-      return model_list.every((model) => {
-        return key in model;
+  $: {
+    error_parsing = false;
+    try {
+      model_list = JSON.parse($MODEL_LIST);
+      //check if every element in the model_list is a Model
+      const valid = Object.keys(new ModelListItem()).every((key) => {
+        return model_list.every((model) => {
+          return key in model;
+        });
       });
-    });
-    if (!valid) {
-      throw new Error("Invalid model list");
+      if (!valid) {
+        
+      }
+    } catch (e) {
+      error_parsing = true;
     }
-  } catch (e) {
-    error_parsing = true;
   }
 
   let model_stored = [] as Array<OpenllmEntry>;
@@ -47,7 +50,7 @@
     model_stored = (await axios.get(`/api/openllm`))
       .data as Array<OpenllmEntry>;
   }
-  let updater: number;
+  let updater: any;
   onMount(async () => {
     refresh_model_stored();
     updater = setInterval(refresh_model_stored, UPDATE_VIEW_INTERVAL);
@@ -181,8 +184,14 @@
   </div>
 {/each}
 
+
+<div class="m-2 p-2">
+  <span class="my-2">{t("config.model_list")}</span>
+  <Textarea rows="16" bind:value={$MODEL_LIST} />
+</div>
+
 {#if error_parsing}
-  <div class="text-red-500">模型列表无效，请在设置页重设。</div>
+  <div class="text-red-500">模型列表无效，请重设。</div>
 {:else}
   <div class="text-lg font-bold m-2">
     <span>模型列表</span>
