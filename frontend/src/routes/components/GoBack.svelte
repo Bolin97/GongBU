@@ -15,5 +15,5 @@
     goto(returnTo);
   }}
 >
-  <AngleLeftOutline size="sm" />{t("component.go_back")}
+  <AngleLeftOutline size="sm" />{t("components.go_back")}
 </Button>

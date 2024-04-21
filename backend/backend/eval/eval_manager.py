@@ -2,7 +2,7 @@ from backend.db import get_db
 from backend.sync import SafeDict
 from backend.models import *
 import os
-
+from backend.enumerate import *
 import torch
 
 
@@ -41,23 +41,22 @@ class EvalManager:
         command = f"""
 CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --evaluation_id {evaluation_id}
             """
+        seesion_name = f"{TaskType.evaluation.value}_task_{evaluation_id}"
         # start a new tmux session named evaluation_task_{self.id}
-        os.system(f"tmux new-session -d -s evaluation_task_{evaluation_id} '{command}'")
+        os.system(f"tmux new-session -d -s {seesion_name} '{command}'")
         # write the stdout of the tmux session in real time
         os.system(
-            f"tmux pipe-pane -o -t evaluation_task_{evaluation_id} 'cat > {os.getenv('LOG_PATH')}/evaluation_task_{evaluation_id}.log'"
+            f"tmux pipe-pane -o -t {seesion_name} 'cat > {os.getenv('LOG_PATH')}/{seesion_name}.log'"
         )
-        print(f"evaluation_task_{evaluation_id} started")
-        # print tmux session name
-        print(f"tmux session name:\nevaluation_task_{evaluation_id}")
         db.close()
 
     def stop(self, evaluation_id: int):
         if evaluation_id in self.evaluations:
             del self.evaluations[evaluation_id]
-        os.system(f"tmux send-keys -t evaluation_task_{evaluation_id} C-c")
+        seesion_name = f"{TaskType.evaluation.value}_task_{evaluation_id}"
+        os.system(f"tmux send-keys -t {seesion_name} C-c")
         # then delete the tmux session
-        os.system(f"tmux kill-session -t evaluation_task_{evaluation_id}")
+        os.system(f"tmux kill-session -t {seesion_name}")
         db = get_db()
         evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
         evaluation.state = 0

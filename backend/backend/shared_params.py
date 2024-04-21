@@ -7,7 +7,6 @@ class FinetuneParams(BaseModel):
     dataset_id: str
     devices: List[str]
     eval_indexes: List[Literal["F", "R", "P", "A", "B", "D"]]
-    output_dir: str
     adapter_name: str
     batch_size: int
     micro_batch_size: int

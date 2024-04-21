@@ -1,8 +1,12 @@
+from backend.enumerate import FaultCode
 from fire import Fire
 from backend.db import get_db
 from backend.models import *
 from backend.llmw import LLMW
 import gradio as gr
+from backend.enumerate import DeploymentState
+from backend.service.fault import *
+from backend.enumerate import *
 
 
 def run(deployment_id: int):
@@ -34,7 +38,7 @@ def run(deployment_id: int):
         llmw = LLMW(base_model.local_path, adapter.local_path)
     llmw.load()
 
-    entry.state = 2
+    entry.state = DeploymentState.running.value
     db.commit()
     db.close()
 
@@ -45,7 +49,24 @@ def run(deployment_id: int):
     iface.launch(
         share=False, server_port=port, server_name="0.0.0.0", root_path=f"/net/{port}/"
     )
+    
+def wrapper(deployment_id: int):
+    try:
+        run(deployment_id)
+    except Exception as e:
+        db = get_db()
+        entry = db.query(Deployment).filter(Deployment.id == deployment_id).first()
+        entry.state = DeploymentState.error.value
+        db.commit()
+        submit_fault(
+            [TaskType.deployment.value, str(deployment_id)],
+            str(e),
+            FaultCode.other.value,
+            entry.owner,
+            False,
+            generate_log_path(TaskType.deployment.value, str(deployment_id)),
+        )
 
 
 if __name__ == "__main__":
-    Fire(run)
+    Fire(wrapper)

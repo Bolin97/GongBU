@@ -2,7 +2,7 @@ from itertools import chain
 from typing import BinaryIO
 from backend.db import get_db
 from backend.models import *
-from backend.interfaces import *
+from backend.enumerate import *
 from datetime import date
 import json
 from sys import getsizeof

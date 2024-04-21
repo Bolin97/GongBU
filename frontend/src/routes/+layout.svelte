@@ -16,7 +16,7 @@
   setContext("t", t);
 
   let logged_in = false;
-  let loginCheckPromise;
+  let loginCheckPromise: Promise<void>;
 
   onMount(() => {
     if (localStorage.getItem("access_token")) {
@@ -26,6 +26,7 @@
         .get(`/api/user/me`)
         .then((res) => {
           logged_in = true;
+          localStorage.setItem("identifier", res.data);
         })
         .catch((err) => {
           logged_in = false;
@@ -34,7 +35,7 @@
     } else {
       loginCheckPromise = Promise.resolve();
     }
-  }); 
+  });
 
   let switch_to_signup = false;
 </script>
@@ -51,17 +52,19 @@
       <div class="w-full p-2">
         <slot />
       </div>
-    {:else}
-      {#if switch_to_signup}
-        <Signup on:switch={() => {
+    {:else if switch_to_signup}
+      <Signup
+        on:switch={() => {
           switch_to_signup = false;
-        }}/>
-      {:else}
-      <Login bind:logged_in={logged_in} on:switch={() => {
+        }}
+      />
+    {:else}
+      <Login
+        bind:logged_in
+        on:switch={() => {
           switch_to_signup = true;
-        }}/>
-      {/if}
+        }}
+      />
     {/if}
   </div>
 {/await}
-

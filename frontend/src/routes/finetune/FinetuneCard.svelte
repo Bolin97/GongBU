@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import type FinetuneEntry from "../../class/FinetuneEntry";
   import type FinetuneEntryReduced from "../../class/FinetuneEntryReduced";
   import toFormatted from "../../utils/ConvertDatetimeString";
   import FinetuneProgess from "./FinetuneProgess.svelte";
 
   export let entry: FinetuneEntryReduced;
+
+  const t: any = getContext("t");
 </script>
 
 <div
@@ -17,32 +20,33 @@
     <p class="mt-2 text-gray-500">{toFormatted(entry.start_time)}</p>
     <div class="mt-2">
       {#if entry.state == -1}
-        <div class="text-2xl font-bold">-</div>
+        <div class="text-xs font-bold">&nbsp;</div>
       {:else}
         <FinetuneProgess id={entry.id.toString()} noUpdate={entry.state == 1} />
       {/if}
     </div>
-    <div class="mt-2">
+    <div class="mt-8">
       {#if entry.state == 0}
-        训练中
+        {t('finetune.training')}
       {:else if entry.state == 1}
-        训练完成
+        {t('finetune.training_completed')}
       {:else if entry.state == -1}
-        出错
+        {t('finetune.error')}
       {:else}
-        无效状态码
+        {t('finetune.invalid_status_code')}
       {/if}
     </div>
     <p class="mt-2 text-gray-500">
-      {entry.description}
       {#if entry.description == ""}
-        &nbsp;
+      &nbsp;
+      {:else}
+      {entry.description}
       {/if}
     </p>
     <div class="mt-2">
       <a
         href={`/finetune/details?finetune_id=${entry.id}`}
-        class="text-blue-600 hover:underline">详细信息</a
+        class="text-blue-600 hover:underline">{t("finetune.details")}</a
       >
     </div>
   </div>

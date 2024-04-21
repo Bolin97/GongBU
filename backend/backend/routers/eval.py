@@ -7,6 +7,7 @@ from backend.eval.eval_manager import eval_mgr
 from fastapi.params import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm.session import Session
+from backend.enumerate import *
 
 eval_router = APIRouter()
 
@@ -36,7 +37,7 @@ async def create(
     entry = Evaluation(
         name=name,
         description=description,
-        state=0,
+        state=EvalState.loading_model.value,
         start_time=datetime.datetime.utcnow(),
         model_or_adapter_id=params.model_or_adapter_id,
         deploy_base_model=params.deploy_base_model,

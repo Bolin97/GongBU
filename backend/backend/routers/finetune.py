@@ -1,15 +1,16 @@
 import os
 from backend.auth import get_current_identifier
 from backend.db import gen_db
+from backend.enumerate import FinetuneState, TaskType
 from backend.models import *
 from backend.shared_params import FinetuneParams
 from fastapi import APIRouter
 from typing import List, Literal
 from fastapi.params import Depends
 from sqlalchemy.orm.session import Session
-from backend.tuner.worker import Worker
 import datetime
-import multiprocessing as mp
+from backend.tuner.fintune_manager import ft_mgr
+
 
 finetune_router = APIRouter()
 
@@ -23,10 +24,6 @@ async def add_ft_task(
     db: Session = Depends(gen_db),
     identifier: str = Depends(get_current_identifier),
 ):
-    base_dir = os.path.join(os.environ.get("FINETUNE_OUTPUT"), identifier)
-    dir = params.output_dir
-    dir = dir.removeprefix("/")
-    full_path = os.path.abspath(os.path.join(base_dir, dir))
     entry = FinetuneEntry(
         model_id=params.model_id,
         adapter_id=adapter_id,
@@ -35,7 +32,7 @@ async def add_ft_task(
         dataset_id=params.dataset_id,
         devices=["auto"] if params.devices == "auto" else map(str, params.devices),
         eval_indexes=params.eval_indexes,
-        output_dir=full_path,
+        output_dir="",
         adapter_name=params.adapter_name,
         batch_size=params.batch_size,
         micro_batch_size=params.micro_batch_size,
@@ -62,7 +59,7 @@ async def add_ft_task(
         bnb_4bit_compute_dtype=params.bnb_4bit_compute_dtype,
         bnb_4bit_quant_type=params.bnb_4bit_quant_type,
         bnb_4bit_use_double_quant=params.bnb_4bit_use_double_quant,
-        state=0,
+        state=FinetuneState.running.value,
         start_time=datetime.datetime.now(),
         zero_optimization=params.zero_optimization,
         zero_stage=params.zero_stage,
@@ -78,8 +75,12 @@ async def add_ft_task(
     )
     db.add(entry)
     db.commit()
-    w = Worker(entry.id, params)
-    w.start()
+    session_name = f"{TaskType.finetune.value}_task_{entry.id}"
+    base_dir = os.path.join(os.environ.get("FINETUNE_OUTPUT"), identifier, session_name)
+    full_path = os.path.abspath(base_dir)
+    entry.output_dir = full_path
+    db.commit()
+    ft_mgr.start(entry.id, params)
     return entry.id
 
 
@@ -89,5 +90,5 @@ async def stop(
     db: Session = Depends(gen_db),
     identifier: str = Depends(get_current_identifier),
 ):
-    # TODO: Implement this
+    ft_mgr.stop(id)
     return None

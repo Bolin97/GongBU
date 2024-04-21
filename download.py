@@ -1,5 +1,4 @@
 import inquirer
-from rich.prompt import Prompt
 import rich
 import os
 

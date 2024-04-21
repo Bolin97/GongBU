@@ -56,14 +56,7 @@
           value: value,
         }))
       : [];
-  const eval_index_full_name = {
-    A: "Accuracy",
-    B: "BLEU",
-    D: "Distinct-2",
-    F: "F1-Score",
-    R: "ROUGHE",
-    P: "Precision",
-  };
+  import { eval_index_full_name } from "../../shared";
 </script>
 
 <Modal title="Confirm Deletion" bind:open={delete_modal} autoclose>

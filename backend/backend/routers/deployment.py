@@ -1,4 +1,5 @@
 from backend.db import gen_db
+from backend.enumerate import DeploymentState
 from backend.models import Deployment
 from fastapi import APIRouter
 from backend.deployment.deployment_manager import depl_mgr
@@ -34,7 +35,7 @@ async def deploy(
         name=name,
         description=description,
         owner=identifier,
-        state=0,
+        state=DeploymentState.stopped.value,
         public=False,
         model_or_adapter_id=params.model_or_adpater_id,
         deploy_base_model=params.deploy_base_model,

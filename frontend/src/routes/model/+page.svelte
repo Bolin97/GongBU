@@ -1,13 +1,15 @@
 <script lang="ts">
   import type OpenllmEntry from "../../class/OpenllmEntry";
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { goto } from "$app/navigation";
   import axios from "axios";
   import ModelCard from "../components/ModelCard.svelte";
+  import VisbilityButton from "../components/VisbilityButton.svelte";
   let models = [] as Array<OpenllmEntry>;
   onMount(async () => {
     models = (await axios.get(`/api/openllm`)).data;
   });
+  const t: any = getContext("t");
 </script>
 
 <div class="pt-2 w-full">
@@ -37,15 +39,16 @@
               type="button"
               class="text-white bg-[#1da1f2] hover:bg-[#1da1f2]/90 focus:ring-4 focus:outline-none focus:ring-[#1da1f2]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#1da1f2]/55 me-2 mb-2"
             >
-              微调
+              {t("model.finetune")}
             </button>
             <button
               on:click={(_) => goto(`/deployment/tasks?model_id=${model.id}`)}
               type="button"
               class="text-white bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#4285F4]/55 me-2 mb-2"
             >
-              部署
+              {t("model.deploy")}
             </button>
+            <VisbilityButton id={model.id} asset="openllm" interactStyle="button" />
           </svelte:fragment>
           <svelte:fragment slot="adapter-action" let:adapter>
             <button
@@ -56,8 +59,9 @@
               type="button"
               class="mx-1 text-blue-600 hover:underline"
             >
-              部署
+              {t("model.deploy")}
             </button>
+            <VisbilityButton id={adapter.id} asset="adapter" interactStyle="link" />
           </svelte:fragment>
         </ModelCard>
       </div>

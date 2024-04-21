@@ -7,6 +7,7 @@ from backend.db import get_db
 from backend.models import *
 from typing import *
 import torch
+from backend.enumerate import *
 from peft import PeftModelForCausalLM
 from transformers import AutoTokenizer
 from bert_score import score
@@ -21,7 +22,7 @@ from time import time
 from tqdm import tqdm
 import os
 import pickle
-from backend.eval.evaluate import evaluate
+from backend.evaluate import evaluate
 
 
 class ReportCallback(TrainerCallback):
@@ -160,22 +161,9 @@ class ReportCallback(TrainerCallback):
         if not self.enabled:
             return
         db = get_db()
-        # 0 training 1 done -1 error
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == self.id).first()
-        entry.state = 1
+        entry.state = FinetuneState.done.value
         entry.end_time = datetime.datetime.now()
-        """
-        class Adapter(Base):
-            __tablename__ = 'adapters'
-            id = Column(Integer, primary_key=True, autoincrement=True)
-            adapter_name = Column(String, nullable=False)
-            base_model_name = Column(String, nullable=False)
-            adapter_description = Column(String, nullable=False)
-            local_path = Column(String)
-            storage_date = Column(Date)
-            owner = Column(String, nullable=False)
-            public = Column(Boolean, nullable=False)
-        """
         adapter = Adapter(
             adapter_name=self.task_name,
             adapter_description=self.task_description,

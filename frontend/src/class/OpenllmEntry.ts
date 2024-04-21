@@ -9,4 +9,6 @@ export default interface OpenllmEntry {
   local_store: number;
   storage_state: string;
   storage_date: string;
+  owner: string;
+  public: boolean;
 }

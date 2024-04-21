@@ -1,7 +1,6 @@
 <script lang="ts">
   export let indexes: Array<string>;
 
-  const values = ["A", "B", "D", "F", "P", "R"];
   const presets = [
     {
       name: "Accuracy",

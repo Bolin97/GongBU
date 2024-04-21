@@ -5,4 +5,6 @@ export default interface Adapter {
   adapter_description: string;
   id: string;
   storage_date: string;
+  owner: string;
+  public: boolean;
 }

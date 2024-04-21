@@ -13,5 +13,4 @@ export default interface Deployment {
   load_8bit: boolean;
   use_flash_attention: boolean;
   port: number;
-  owner: string;
 }

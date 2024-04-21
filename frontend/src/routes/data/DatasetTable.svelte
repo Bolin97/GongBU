@@ -18,6 +18,7 @@
   let id_to_delete: null | number = null;
 
   import { createEventDispatcher } from "svelte";
+  import VisbilityButton from "../components/VisbilityButton.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -68,6 +69,7 @@
               delete_modal = true;
             }}>删除数据</button
           >
+          <VisbilityButton id={row.id.toString()} asset="dataset" interactStyle="link" />
         </TableBodyCell>
       </TableBodyRow>
     {/each}

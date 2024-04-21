@@ -28,7 +28,7 @@
     },
   };
 
-  let logging_records_updater: number;
+  let logging_records_updater: any;
   let logging_records = [] as Array<LoggingRecord>;
   onMount(async () => {
     async function update() {
@@ -57,7 +57,7 @@
     clearInterval(logging_records_updater);
   });
 
-  let eval_records_updater: number;
+  let eval_records_updater: any;
   let eval_records = [] as Array<EvalRecord>;
   onMount(async () => {
     async function update() {
@@ -190,14 +190,7 @@
 
   const eval_indexes = finetuneEntry.eval_indexes;
 
-  const eval_index_full_name = {
-    A: "Accuracy",
-    B: "BLEU",
-    D: "Distinct-2",
-    F: "F1-Score",
-    R: "ROUGHE",
-    P: "Precision",
-  };
+  import { eval_index_full_name } from "../../shared";
 </script>
 
 {#each graphs as graph}

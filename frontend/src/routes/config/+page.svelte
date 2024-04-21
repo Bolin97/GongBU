@@ -18,8 +18,6 @@
 <hr class="pt-1" />
 
 <div class="grid grid-cols-1">
-  
-
   <div class="m-2 p-2">
     <span class="my-2">{t("config.log_out")}</span>
     <div class="my-2">

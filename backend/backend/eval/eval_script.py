@@ -1,5 +1,5 @@
 import datetime
-from backend.eval.evaluate import evaluate
+from backend.evaluate import evaluate
 from backend.service.dataset import (
     fetch_dataset,
     submit_evaluation_data,
@@ -13,6 +13,7 @@ from backend.models import *
 from pandas import DataFrame
 import datasets
 from tqdm import tqdm
+from backend.enumerate import *
 
 
 def get_dataset(dataset_id: int, val_size: float, entry_id: int) -> tuple[list, int]:
@@ -72,7 +73,7 @@ def run(evaluation_id: int):
         )
         llmw = LLMW(base_model.local_path, adapter.local_path)
     llmw.load()
-    entry.state = 1
+    entry.state = EvalState.generating.value
     db.commit()
 
     eval_dataset, ds_type = get_dataset(entry.dataset_id, entry.val_set_size, entry.id)
@@ -91,11 +92,11 @@ def run(evaluation_id: int):
         progress_increment(entry.id, len(eval_dataset))
     refs = list(map(lambda data_point: data_point["output"], eval_dataset))
     submit_evaluation_generation(entry.id, eval_dataset)
-    entry.state = 2
+    entry.state = EvalState.evaluating.value
     db.commit()
 
     eval_result = evaluate(indexes, refs, cands)
-    entry.state = 3
+    entry.state = EvalState.done.value
     entry.result = eval_result
     entry.end_time = datetime.datetime.utcnow()
     db.commit()

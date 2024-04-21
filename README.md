@@ -4,13 +4,13 @@
 
 📈 You can easily finetune, evaluate, and deploy models with the platform. 
 
-📦 Currently, by default, the platform should be started with docker-compose in a linux system with nvidia-docker. However, by installing the required dependencies, with correct configurations, the platform can be run locally. However, by installing locally, you need to manually twick the configurations, ports and the proxy settings.
+📦 Currently, by default, the platform should be started with docker-compose in a linux system with nvidia-docker. However, by installing the required dependencies, with correct configurations, the platform can be run locally.
 
 ## 📦 Recommended Way of Installation
 
 The recommended installation is to use the docker-compose file provided in the repository on a linux system with nvidia-docker. This is the easiest way to install the platform.
 
-It's simple, clone the repository, then run the `download.py` to download necessary files that are not included in the repository.
+It's simple, clone the repository, then run the `download.py` (inquirer and rich libraries are required) to download necessary files that are not included in the repository, micromamba and a bert model to be exact.
 
 You need to install docker and [nvidia-docker](https://github.com/NVIDIA/nvidia-container-toolkit).
 
@@ -37,17 +37,17 @@ After logging in, you will find everything to be empty, here's how you can impor
     ```json
     [
         {
-            "model_display_name": "560m",
+            "model_display_name": "Bloom 560m",
             "model_name": "bloom-560m",
             "source": "git",
-            "model_description": "This is the description of bloom-560m model",
+            "model_description": "This is the description for the bloom-560m model",
             "download_url": "https://huggingface.co/bigscience/bloomz-560m",
             "avatar_url": "https://aeiljuispo.cloudimg.io/v7/https://cdn-uploads.huggingface.co/production/uploads/1634806038075-5df7e9e5da6d0311fd3d53f9.png?w=200&h=200&f=face"
         }
     ]
     ```
 
-    The avatar is optional.
+    The avatar is optional, you can simply omit it. `source` defines how the model should be downloaded, and currently, only `git` is supported.
 
     Then, you can click the download button in the same page to download the models.
 
@@ -59,7 +59,7 @@ After you have uploaded the datasets and downloaded the models, you can fintune,
 
 The platform is now fully functional, albeit under constant development and polishing, especially the frontend, and breaking changes may take place.
 
-## 🧾 Trivials
+## 🧾 Trivial
 
 - We used [bun](https://bun.sh) instead of node, which is a blazingly-fast, all-in-one js bundler, runtime, test runner, package manager, etc. It is a relatively new project, but its performance attracted us to use it. Currently, it is stable for our use. However, if you want to switch to node for better stability, simply change all the bun-related command in the dockerfile to node or npm.
 

@@ -72,24 +72,24 @@
         >
           {t("root.login")}
         </button>
-    </div>
-    <div class="flex items-center justify-between mt-10">
+      </div>
+      <div class="flex items-center justify-between mt-10">
         <button
-        type="button"
-        on:click={(_) => {
-            dispatch("switch")
-        }}
-        class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          type="button"
+          on:click={(_) => {
+            dispatch("switch");
+          }}
+          class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
-            {t("root.switch_to_signup")}
+          {t("root.switch_to_signup")}
         </button>
-    </div>
+      </div>
     </form>
   </div>
 {:else}
-<div class="relative w-screen h-screen">
+  <div class="relative w-screen h-screen">
     <div
-        class="absolute top-1/2 left-1/2 animate-spin border-t-4 border-blue-500 rounded-full w-32 h-32"
+      class="absolute top-1/2 left-1/2 animate-spin border-t-4 border-blue-500 rounded-full w-32 h-32"
     ></div>
-</div>
+  </div>
 {/if}

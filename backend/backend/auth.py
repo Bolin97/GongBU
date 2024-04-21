@@ -35,13 +35,14 @@ async def get_current_identifier(token: str = Depends(oauth2_scheme)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
-        
-SIGN_UP_TOKEN_PATH = os.path.join(
-    os.path.dirname(__file__), "sign_up_token.txt"
-)
+
+
+SIGN_UP_TOKEN_PATH = os.path.join(os.path.dirname(__file__), "sign_up_token.txt")
 
 import hashlib
 import random
+
+
 def generate_sign_up_token():
     with open(SIGN_UP_TOKEN_PATH, "w") as f:
         f.write(
@@ -50,12 +51,14 @@ def generate_sign_up_token():
             ).hexdigest()
         )
 
+
 def get_sign_up_token():
     if not sign_up_token_exists():
         print("sign up token not found, regenerating")
         generate_sign_up_token()
     with open(SIGN_UP_TOKEN_PATH, "r") as f:
         return f.read()
+
 
 def sign_up_token_exists():
     return os.path.exists(SIGN_UP_TOKEN_PATH)

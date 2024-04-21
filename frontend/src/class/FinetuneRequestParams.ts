@@ -3,7 +3,6 @@ export interface FinetuneRequestParams {
   dataset_id: string;
   devices: Array<string>;
   eval_indexes: Array<string>;
-  output_dir: string;
   adapter_name: string;
   batch_size: number;
   micro_batch_size: number;
@@ -47,7 +46,6 @@ export function default_finetune_request_params(): FinetuneRequestParams {
     dataset_id: "",
     devices: [],
     eval_indexes: [],
-    output_dir: "",
     adapter_name: "",
     batch_size: -1,
     micro_batch_size: -1,

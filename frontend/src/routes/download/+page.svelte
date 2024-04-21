@@ -2,7 +2,14 @@
   import { getContext, onDestroy, onMount } from "svelte";
   import type OpenllmEntry from "../../class/OpenllmEntry";
   import { MODEL_LIST, UPDATE_VIEW_INTERVAL } from "../store";
-  import { Alert, Button, Input, Modal, Textarea, Toast } from "flowbite-svelte";
+  import {
+    Alert,
+    Button,
+    Input,
+    Modal,
+    Textarea,
+    Toast,
+  } from "flowbite-svelte";
   import {
     Table,
     TableBody,
@@ -13,7 +20,7 @@
   } from "flowbite-svelte";
   import axios from "axios";
   import { CloseOutline } from "flowbite-svelte-icons";
-  const t: any = getContext("t")
+  const t: any = getContext("t");
   let error_parsing = false;
 
   class ModelListItem {
@@ -38,7 +45,7 @@
         });
       });
       if (!valid) {
-        
+        error_parsing = true;
       }
     } catch (e) {
       error_parsing = true;
@@ -183,7 +190,6 @@
     </Alert>
   </div>
 {/each}
-
 
 <div class="m-2 p-2">
   <span class="my-2">{t("config.model_list")}</span>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button } from "flowbite-svelte";
   import type FinetuneEntry from "../../class/FinetuneEntry";
-  import { onDestroy, onMount } from "svelte";
+  import { getContext, onDestroy, onMount } from "svelte";
   import axios from "axios";
   import { PlusOutline } from "flowbite-svelte-icons";
   import { UPDATE_VIEW_INTERVAL } from "../store";
@@ -11,8 +11,7 @@
   import type FinetuneEntryReduced from "../../class/FinetuneEntryReduced";
   import FinetuneCard from "./FinetuneCard.svelte";
   import ActionPageTitle from "../components/ActionPageTitle.svelte";
-
-  const col_names = ["ID", "名称", "创建时间", "进度", "状态", "描述", ""];
+  const t: any = getContext("t");
 
   let entries = [] as Array<FinetuneEntryReduced>;
 
@@ -30,11 +29,11 @@
   });
 </script>
 
-<ActionPageTitle title="微调管理" subtitle="微调">
+<ActionPageTitle title={t('finetune.management')} subtitle={t('finetune.finetune')}>
   <svelte:fragment slot="right">
     <Button href="/finetune/tasks">
       <PlusOutline />
-      创建微调任务
+      {t('finetune.create_task')}
     </Button>
   </svelte:fragment>
 </ActionPageTitle>

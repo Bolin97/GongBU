@@ -25,9 +25,11 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 generate_sign_up_token()
 
+
 @app.get("/ping")
 async def pong():
     return "pong"
+
 
 @app.post("/token")
 async def login(
@@ -76,6 +78,8 @@ app.include_router(user_router, prefix="/user")
 app.include_router(deployment_router, prefix="/deployment")
 
 app.include_router(eval_router, prefix="/eval")
+
+app.include_router(visibility_router, prefix="/visibility")
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")

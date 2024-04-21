@@ -4,4 +4,6 @@ export default interface PoolEntry {
   name: string;
   created_on: Date;
   description: string;
+  owner: string;
+  public: boolean;
 }

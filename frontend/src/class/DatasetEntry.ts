@@ -6,4 +6,6 @@ export default interface DatasetEntry {
   type: string;
   created_on: string;
   size: number;
+  owner: string;
+  public: boolean;
 }

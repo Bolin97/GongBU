@@ -6,6 +6,7 @@ from accelerate.utils.modeling import (
     check_tied_parameters_in_config,
     find_tied_parameters,
 )
+from backend.enumerate import *
 from backend.service.dataset import fetch_dataset
 import fire
 import psutil
@@ -20,6 +21,7 @@ import datasets
 from backend.db import get_db
 from backend.tuner.generate_prompt import generate_prompt
 from accelerate import infer_auto_device_map
+from backend.service.fault import generate_log_path
 from peft import (  # noqa: E402
     AdaLoraConfig,
     AdaptionPromptConfig,
@@ -534,8 +536,6 @@ from backend.models import *
 def wrapper(
     finetune_id: int,
 ):
-    exception = None
-    print("Start fine-tuning")
     try:
         db = get_db()
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
@@ -597,38 +597,22 @@ def wrapper(
             zero_stage=entry.zero_stage,
             zero_offload=entry.zero_offload,
         )
-    except RuntimeError as e:
-        exception = e
-        if "out of memory" in str(e):
-            submit_fault(
-                ["ft", str(finetune_id)],
-                str(e),
-                10000,
-                entry.owner,
-                False,
-                f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",
-            )
-        else:
-            submit_fault(
-                ["ft", str(finetune_id)],
-                str(e),
-                99999,
-                entry.owner,
-                False,
-                f"{os.getenv('LOG_PATH')}/finetune_task_{finetune_id}.log",
-            )
     except Exception as e:
-        exception = e
-    finally:
-        if not (exception is None):
-            print(exception)
-            db = get_db()
-            entry = (
-                db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
-            )
-            entry.state = -1
-            entry.end_time = datetime.utcnow()
-            db.commit()
+        db = get_db()
+        entry = (
+            db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        )
+        entry.state = FinetuneState.error.value
+        entry.end_time = datetime.utcnow()
+        db.commit()
+        submit_fault(
+            [TaskType.finetune.value, str(finetune_id)],
+            str(e),
+            FaultCode.other.value,
+            entry.owner,
+            False,
+            generate_log_path(TaskType.finetune.value, entry.id)
+        )
         db.close()
 
 

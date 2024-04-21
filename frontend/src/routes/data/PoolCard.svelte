@@ -1,5 +1,6 @@
 <script lang="ts">
   import type PoolEntry from "../../class/PoolEntry";
+  import VisbilityButton from "../components/VisbilityButton.svelte";
 
   export let pool: PoolEntry; // Replace 'any' with the actual type of 'pool' if available
 </script>
@@ -30,6 +31,7 @@
           href={`/data/details?pool_id=${pool.id}`}
           class="text-blue-600 hover:underline">查看详情</a
         >
+        <VisbilityButton id={pool.id.toString()} asset="pool" interactStyle="link" />
       </div>
     </div>
   </div>
