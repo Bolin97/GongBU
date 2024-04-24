@@ -1,4 +1,5 @@
-FROM node:21-bookworm
+# Build stage
+FROM node:21-bookworm AS build
 WORKDIR /frontend
 COPY package.json ./
 RUN echo "[install]\nregistry = \"http://registry.npm.taobao.org\"" > ./bunfig.toml
@@ -9,4 +10,11 @@ RUN bun i i18next svelte-i18next
 RUN bun i http-proxy-middleware
 COPY . .
 RUN bun run build
+
+# Production stage
+FROM node:21-bookworm AS production
+WORKDIR /frontend
+RUN npm config set registry http://registry.npm.taobao.org
+RUN npm i -g bun
+COPY --from=build /frontend/build ./build
 CMD bun run /frontend/build/index.js
