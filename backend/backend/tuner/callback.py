@@ -129,9 +129,9 @@ class ReportCallback(TrainerCallback):
         db.commit()
         db.close()
         # save validation set
-        if self.eval_dataset is not None:
-            with open(os.path.join(args.output_dir, "eval_dataset.pkl"), "wb") as f:
-                pickle.dump(self.eval_dataset, f)
+        # if self.eval_dataset is not None:
+        #     with open(os.path.join(args.output_dir, "eval_dataset.pkl"), "wb") as f:
+        #         pickle.dump(self.eval_dataset, f)
 
     def on_step_end(
         self,

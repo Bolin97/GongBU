@@ -13,6 +13,13 @@
     async function update() {
       entry = (await axios.get(`/api/finetune_progress/${id}`))
         .data as FinetuneProgessEntry;
+      if (entry == null || entry == undefined) {
+        entry = {
+          id: Number.parseInt(id),
+          current: 0,
+          total: 1,
+        };
+      }
       if (entry.current == entry.total) {
         clearInterval(percentage_updater);
       }
@@ -28,7 +35,7 @@
   });
 </script>
 
-{#if entry != undefined && entry != null}
+{#if entry != undefined && entry != null && entry.current != undefined && entry.current != null}
   <div class="w-full h-4 bg-gray-400 rounded dark:bg-gray-700">
     {#if Number.parseFloat(percentage) >= 0.05}
       <div

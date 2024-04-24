@@ -25,4 +25,4 @@ COPY . .
 # Expose the port
 EXPOSE 5173
 
-CMD bun run dev
+CMD npm run dev

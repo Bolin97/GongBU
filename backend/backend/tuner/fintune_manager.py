@@ -31,7 +31,8 @@ def run(task_id: int, params: FinetuneParams):
     os.system(
         f"tmux pipe-pane -o -t {session_name} 'cat > {os.getenv('LOG_PATH')}/{session_name}.log'"
     )
-    
+
+
 class FinetuneManager:
     instance: "FinetuneManager"
 
@@ -68,7 +69,9 @@ class FinetuneManager:
         # then delete the tmux session
         os.system(f"tmux kill-session -t {session_name}")
         db = get_db()
-        finetune = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        finetune = (
+            db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        )
         finetune.state = 0
         db.commit()
 

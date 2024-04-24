@@ -31,7 +31,11 @@
           href={`/data/details?pool_id=${pool.id}`}
           class="text-blue-600 hover:underline">查看详情</a
         >
-        <VisbilityButton id={pool.id.toString()} asset="pool" interactStyle="link" />
+        <VisbilityButton
+          id={pool.id.toString()}
+          asset="pool"
+          interactStyle="link"
+        />
       </div>
     </div>
   </div>

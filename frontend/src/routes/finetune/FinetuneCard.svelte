@@ -27,20 +27,20 @@
     </div>
     <div class="mt-8">
       {#if entry.state == 0}
-        {t('finetune.training')}
+        {t("finetune.training")}
       {:else if entry.state == 1}
-        {t('finetune.training_completed')}
+        {t("finetune.training_completed")}
       {:else if entry.state == -1}
-        {t('finetune.error')}
+        {t("finetune.error")}
       {:else}
-        {t('finetune.invalid_status_code')}
+        {t("finetune.invalid_status_code")}
       {/if}
     </div>
     <p class="mt-2 text-gray-500">
       {#if entry.description == ""}
-      &nbsp;
+        &nbsp;
       {:else}
-      {entry.description}
+        {entry.description}
       {/if}
     </p>
     <div class="mt-2">

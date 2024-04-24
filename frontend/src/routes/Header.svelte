@@ -13,8 +13,6 @@
   $: {
     $language = selectedLanguage;
     $i18n.changeLanguage(selectedLanguage);
-    // reload the page to take effect
-    // location.reload();
   }
 
   const t = $i18n.t;

@@ -55,22 +55,22 @@
   }
 
   const steps = [
-    t('finetune.model_selection'),
-    t('finetune.data_selection'),
-    t('finetune.evaluation_metrics'),
-    t('finetune.fine_tuning'),
-    t('finetune.device_selection'),
-    t('finetune.project_name'),
-];
+    t("finetune.model_selection"),
+    t("finetune.data_selection"),
+    t("finetune.evaluation_metrics"),
+    t("finetune.fine_tuning"),
+    t("finetune.device_selection"),
+    t("finetune.project_name"),
+  ];
 
-const steps_description = [
-    t('finetune.choose_model'),
-    t('finetune.choose_data'),
-    t('finetune.choose_metrics'),
-    t('finetune.choose_tuning'),
-    t('finetune.choose_device'),
-    t('finetune.input_name'),
-];
+  const steps_description = [
+    t("finetune.choose_model"),
+    t("finetune.choose_data"),
+    t("finetune.choose_metrics"),
+    t("finetune.choose_tuning"),
+    t("finetune.choose_device"),
+    t("finetune.input_name"),
+  ];
 
   let uploading = false;
 
@@ -90,8 +90,8 @@ const steps_description = [
 </script>
 
 <ActionPageTitle
-  title={t('finetune.create_task')}
-  subtitle={t('finetune.management')}
+  title={t("finetune.create_task")}
+  subtitle={t("finetune.management")}
   returnTo="/finetune"
 />
 {#if !uploading}
@@ -155,19 +155,23 @@ const steps_description = [
         <div class={`${current_step == 6 ? "" : "hidden"}`}>
           <div class="m-2 p-2">
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">{t('finetune.task_name')}：</span>
+              <span class="font-semibold text-lg m-2"
+                >{t("finetune.task_name")}：</span
+              >
               <Input
                 class="my-2"
                 bind:value={name}
-                placeholder={t('finetune.enter_task_name')}
+                placeholder={t("finetune.enter_task_name")}
               />
             </div>
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">{t('finetune.task_description')}：</span>
+              <span class="font-semibold text-lg m-2"
+                >{t("finetune.task_description")}：</span
+              >
               <Input
                 class="my-2"
                 bind:value={description}
-                placeholder={t('finetune.enter_task_description')}
+                placeholder={t("finetune.enter_task_description")}
               />
             </div>
           </div>
@@ -178,36 +182,38 @@ const steps_description = [
           <Button
             on:click={(_) => {
               submit_handle();
-            }}>{t('finetune.complete')}</Button
+            }}>{t("finetune.complete")}</Button
           >
         {:else if current_step === 5}
           <Button
             disabled={use_devices.length === 0}
-            on:click={(_) => ++current_step}>{t('finetune.next_step')}</Button
+            on:click={(_) => ++current_step}>{t("finetune.next_step")}</Button
           >
           {#if use_devices.length === 0}
-            <Tooltip>{t('finetune.choose_at_least_one_device')}</Tooltip>
+            <Tooltip>{t("finetune.choose_at_least_one_device")}</Tooltip>
           {/if}
         {:else if current_step == 2}
           <Button
             disabled={selected_dataset_id.length === 0}
-            on:click={(_) => ++current_step}>{t('finetune.next_step')}</Button
+            on:click={(_) => ++current_step}>{t("finetune.next_step")}</Button
           >
         {:else if current_step === 1}
           <Button
             disabled={selected_model_id.length === 0}
-            on:click={(_) => ++current_step}>{t('finetune.next_step')}</Button
+            on:click={(_) => ++current_step}>{t("finetune.next_step")}</Button
           >
         {:else}
-          <Button on:click={(_) => ++current_step}>{t('finetune.next_step')}</Button>
+          <Button on:click={(_) => ++current_step}
+            >{t("finetune.next_step")}</Button
+          >
         {/if}
         <Button
           class={current_step === 1 ? "hidden" : ""}
-          on:click={(_) => --current_step}>{t('finetune.previous_step')}</Button
+          on:click={(_) => --current_step}>{t("finetune.previous_step")}</Button
         >
       </div>
     </div>
   </div>
 {:else}
-  <div>{t('finetune.loading')}</div>
+  <div>{t("finetune.loading")}</div>
 {/if}

@@ -57,8 +57,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod.mirror
-    volumes:
-      - /frontend/node_modules
     depends_on:
       - backend
     develop:

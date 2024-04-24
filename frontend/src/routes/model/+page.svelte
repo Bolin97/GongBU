@@ -48,7 +48,11 @@
             >
               {t("model.deploy")}
             </button>
-            <VisbilityButton id={model.id} asset="openllm" interactStyle="button" />
+            <VisbilityButton
+              id={model.id}
+              asset="openllm"
+              interactStyle="button"
+            />
           </svelte:fragment>
           <svelte:fragment slot="adapter-action" let:adapter>
             <button
@@ -61,7 +65,11 @@
             >
               {t("model.deploy")}
             </button>
-            <VisbilityButton id={adapter.id} asset="adapter" interactStyle="link" />
+            <VisbilityButton
+              id={adapter.id}
+              asset="adapter"
+              interactStyle="link"
+            />
           </svelte:fragment>
         </ModelCard>
       </div>

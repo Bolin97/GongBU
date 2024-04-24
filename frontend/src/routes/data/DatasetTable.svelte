@@ -69,7 +69,11 @@
               delete_modal = true;
             }}>删除数据</button
           >
-          <VisbilityButton id={row.id.toString()} asset="dataset" interactStyle="link" />
+          <VisbilityButton
+            id={row.id.toString()}
+            asset="dataset"
+            interactStyle="link"
+          />
         </TableBodyCell>
       </TableBodyRow>
     {/each}

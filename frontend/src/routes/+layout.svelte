@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, setContext } from "svelte";
   import "../app.css";
-  import Header from "./header.svelte";
-  import Sidebar from "./sidebar.svelte";
+  import Header from "./Header.svelte";
+  import Sidebar from "./Sidebar.svelte";
   import axios from "axios";
   import getI18nStore from "../locales/index";
   import Login from "./Login.svelte";
@@ -16,13 +16,13 @@
   setContext("t", t);
 
   let logged_in = false;
-  let loginCheckPromise: Promise<void>;
+  let loaded = false;
 
   onMount(() => {
     if (localStorage.getItem("access_token")) {
       axios.defaults.headers.common["Authorization"] =
         `Bearer ${localStorage.getItem("access_token")}`;
-      loginCheckPromise = axios
+      axios
         .get(`/api/user/me`)
         .then((res) => {
           logged_in = true;
@@ -32,16 +32,15 @@
           logged_in = false;
           localStorage.removeItem("access_token");
         });
-    } else {
-      loginCheckPromise = Promise.resolve();
     }
+    loaded = true;
   });
 
   let switch_to_signup = false;
 </script>
 
 <Header />
-{#await loginCheckPromise then}
+{#if loaded}
   <div class="w-full h-screen pt-2 flex flex-row">
     {#if logged_in}
       <div>
@@ -67,4 +66,4 @@
       />
     {/if}
   </div>
-{/await}
+{/if}

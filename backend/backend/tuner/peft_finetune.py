@@ -599,9 +599,7 @@ def wrapper(
         )
     except Exception as e:
         db = get_db()
-        entry = (
-            db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
-        )
+        entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
         entry.state = FinetuneState.error.value
         entry.end_time = datetime.utcnow()
         db.commit()
@@ -611,7 +609,7 @@ def wrapper(
             FaultCode.other.value,
             entry.owner,
             False,
-            generate_log_path(TaskType.finetune.value, entry.id)
+            generate_log_path(TaskType.finetune.value, entry.id),
         )
         db.close()
 

@@ -29,11 +29,14 @@
   });
 </script>
 
-<ActionPageTitle title={t('finetune.management')} subtitle={t('finetune.finetune')}>
+<ActionPageTitle
+  title={t("finetune.management")}
+  subtitle={t("finetune.finetune")}
+>
   <svelte:fragment slot="right">
     <Button href="/finetune/tasks">
       <PlusOutline />
-      {t('finetune.create_task')}
+      {t("finetune.create_task")}
     </Button>
   </svelte:fragment>
 </ActionPageTitle>
