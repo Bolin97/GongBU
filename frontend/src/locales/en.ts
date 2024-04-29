@@ -59,6 +59,8 @@ export default {
     complete: "Complete",
     loading: "Loading",
     cancel: "Cancel",
+    train_loss: "Train Loss",
+    eval_loss: "Evaluation Loss",
   },
   fault: {
     message: "Message",

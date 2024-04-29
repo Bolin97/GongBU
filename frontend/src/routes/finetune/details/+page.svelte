@@ -238,14 +238,6 @@
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
     删除后，该任务的所有相关信息将<span class="font-semibold">无法</span>恢复。
   </p>
-  <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    如果希望保存模型，请使用页面上的保存功能。
-  </p>
-  <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    如果该任务的输出文件夹中包含其它文件，它们会被<span class="font-semibold"
-      >一并</span
-    >删除。
-  </p>
   <div class="flex flex-row justify-end p-2 m-2 align-middle items-center">
     我确认要<span class="font-semibold text-red-600">删除</span
     >该任务记录及其相关文件

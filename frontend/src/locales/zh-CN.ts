@@ -77,5 +77,7 @@ export default {
     complete: "完成",
     loading: "加载中",
     cancel: "取消",
+    train_loss: "训练Loss",
+    eval_loss: "评估Loss",
   },
 };

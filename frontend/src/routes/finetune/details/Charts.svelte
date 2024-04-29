@@ -2,7 +2,7 @@
   import axios from "axios";
   import type FinetuneEntry from "../../../class/FinetuneEntry";
   import { UPDATE_VIEW_INTERVAL } from "../../store";
-  import { onDestroy, onMount } from "svelte";
+  import { getContext, onDestroy, onMount } from "svelte";
   import type LoggingRecord from "../../../class/LoggingRecord";
   import type EvalRecord from "../../../class/EvalRecord";
   import Chart from "../../components/Chart.svelte";
@@ -162,24 +162,24 @@
   };
 
   let graphs = [];
-
+  const t: any = getContext("t");
   $: {
     async function update() {
       if (finetuneEntry.eval_step > 0 && finetuneEntry.val_set_size > 0) {
         graphs = [
           {
-            title: "训练loss曲线",
+            title: t("finetune.train_loss"),
             options: options_loss,
           },
           {
-            title: "评估loss曲线",
+            title: t("finetune.eval_loss"),
             options: options_eval_loss,
           },
         ];
       } else {
         graphs = [
           {
-            title: "训练loss曲线",
+            title: t("finetune.train_loss"),
             options: options_loss,
           },
         ];
@@ -206,7 +206,7 @@
     <EvalIndexChart
       name={eval_index}
       displayName={eval_index_full_name[eval_index]}
-      title={`${eval_index_full_name[eval_index]}曲线：`}
+      title={`${eval_index_full_name[eval_index]}`}
       {id}
       state={finetuneEntry.state}
     />
