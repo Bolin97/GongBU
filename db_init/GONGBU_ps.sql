@@ -142,13 +142,6 @@ CREATE TABLE adapters (
     public BOOLEAN NOT NULL
 );
 
-CREATE TABLE signals (
-    id SERIAL PRIMARY KEY, receiver TEXT NOT NULL,
-    signal INT NOT NULL, entry_id INT NOT NULL,
-    owner TEXT NOT NULL,
-    public BOOLEAN NOT NULL
-);
-
 CREATE TABLE users (
     identifier TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL
 );
@@ -181,7 +174,8 @@ CREATE TABLE deployments (
     load_8bit BOOLEAN NOT NULL,
     load_4bit BOOLEAN NOT NULL,
     use_flash_attention BOOLEAN NOT NULL,
-    use_deepspeed BOOLEAN NOT NULl,
+    use_deepspeed BOOLEAN NOT NULL,
+    use_vllm BOOLEAN NOT NULL,
     devices TEXT[] NOT NULL,
     port INT NOT NULL,
     owner TEXT NOT NULL,

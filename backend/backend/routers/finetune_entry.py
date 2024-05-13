@@ -80,6 +80,13 @@ async def delete_files_and_entry(
         db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
     ).first()
     db.delete(entry)
+    related_adapter = db.query(
+        Adapter
+    ).filter(
+        Adapter.ft_entry == id
+    ).first()
+    if related_adapter:
+        db.delete(related_adapter)
     # under entry.output_dir
     # remove all folder follows checkpoint-number
     for folder in os.listdir(entry.output_dir):
@@ -92,5 +99,7 @@ async def delete_files_and_entry(
         file_path = os.path.join(entry.output_dir, file)
         if os.path.exists(file_path):
             os.remove(file_path)
+    
+    
 
     db.commit()

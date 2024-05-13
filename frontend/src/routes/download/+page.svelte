@@ -92,155 +92,228 @@
   }
 </script>
 
-<Modal title="确认删除" bind:open={delete_modal} autoclose>
-  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    确定要删除这个模型的所有记录和文件吗？
-  </p>
-  <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    此操作<span class="font-semibold">无法撤回</span>
-  </p>
-  <svelte:fragment slot="footer">
-    <div class="w-full flex justify-end gap-2">
-      <Button
-        color="red"
-        on:click={() => {
-          axios.delete(`/api/openllm/${delete_modal_id}`);
-          refresh_model_stored();
-          delete_modal = false;
-          delete_modal_id = "";
-        }}>删除</Button
+<div class="w-full">
+  <Modal title={t("download.delete.title")} bind:open={delete_modal} autoclose>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+      {t("download.delete.p1")}
+    </p>
+    <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
+      {t("download.delete.p2")}<span class="font-semibold"
+        >{t("download.delete.p3")}</span
       >
-      <Button color="alternative" on:click={() => (delete_modal = false)}
-        >不</Button
-      >
-    </div>
-  </svelte:fragment>
-</Modal>
+    </p>
+    <svelte:fragment slot="footer">
+      <div class="w-full flex justify-end gap-2">
+        <Button
+          color="red"
+          on:click={() => {
+            axios.delete(`/api/openllm/${delete_modal_id}`);
+            refresh_model_stored();
+            delete_modal = false;
+            delete_modal_id = "";
+          }}>{t("download.delete.delete")}</Button
+        >
+        <Button color="alternative" on:click={() => (delete_modal = false)}
+          >{t("download.delete.no")}</Button
+        >
+      </div>
+    </svelte:fragment>
+  </Modal>
 
-<Modal title="确认删除" bind:open={delete_entry_modal} autoclose>
-  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    确定要删除这个模型的所有记录吗？
-  </p>
-  <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    此操作<span class="font-semibold">无法撤回</span>
-  </p>
-  <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    模型的文件将<span class="font-semibold">不会</span>被删除。
-  </p>
-  <svelte:fragment slot="footer">
-    <div class="w-full flex justify-end gap-2">
-      <Button
-        color="red"
-        on:click={() => {
-          axios.delete(`/api/openllm/entry/${delete_modal_id}`);
-          refresh_model_stored();
-          delete_entry_modal = false;
-          delete_modal_id = "";
-        }}>删除</Button
-      >
-      <Button color="alternative" on:click={() => (delete_modal = false)}
-        >不</Button
-      >
-    </div>
-  </svelte:fragment>
-</Modal>
-
-<div class="pt-2 w-full">
-  <span class="text-2xl pt-1 text-black-400 font-bold"
-    >&nbsp;&nbsp;下载模型</span
+  <Modal
+    title={t("download.delete.title")}
+    bind:open={delete_entry_modal}
+    autoclose
   >
-  <span class="text-1xl pt-2 text-black-400 text-center"
-    >&nbsp;&nbsp;下载模型</span
-  >
-</div>
-
-<hr class="pt-1" />
-
-{#if alerts.length > 1}
-  <div class="w-full mx-2 my-4">
-    <Alert>
-      <button
-        on:click={() => {
-          delete_all_alerts();
-        }}
-        class="flex justify-between items-center"
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+      {t("download.delete.p1")}
+    </p>
+    <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
+      {t("download.delete.p2")}<span class="font-semibold"
+        >{t("download.delete.p3")}</span
       >
-        <span class="font-medium hover:underline"> 关闭所有提醒 </span>
-      </button>
-    </Alert>
+    </p>
+    <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
+      {t("download.delete.p4")}<span class="font-semibold"
+        >{t("download.delete.p5")}</span
+      >{t("download.delete.p6")}
+    </p>
+    <svelte:fragment slot="footer">
+      <div class="w-full flex justify-end gap-2">
+        <Button
+          color="red"
+          on:click={() => {
+            axios.delete(`/api/openllm/entry/${delete_modal_id}`);
+            refresh_model_stored();
+            delete_entry_modal = false;
+            delete_modal_id = "";
+          }}>{t("download.delete.delete")}</Button
+        >
+        <Button color="alternative" on:click={() => (delete_modal = false)}
+          >{t("download.delete.no")}</Button
+        >
+      </div>
+    </svelte:fragment>
+  </Modal>
+
+  <div class="pt-2 w-full">
+    <span class="text-2xl pt-1 text-black-400 font-bold"
+      >&nbsp;&nbsp;{t("download.title")}</span
+    >
+    <span class="text-1xl pt-2 text-black-400 text-center"
+      >&nbsp;&nbsp;{t("download.description")}</span
+    >
   </div>
-{/if}
 
-{#each alerts as alert, index}
-  <div class="w-full mx-2 my-4">
-    <Alert>
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="font-medium">{alert.title}</div>
-          <div>{alert.body}</div>
-        </div>
+  <hr class="pt-1" />
+
+  {#if alerts.length > 1}
+    <div class="w-full mx-2 my-4">
+      <Alert>
         <button
           on:click={() => {
-            delete_alert(index);
+            delete_all_alerts();
           }}
+          class="flex justify-between items-center"
         >
-          <CloseOutline />
+          <span class="font-medium hover:underline">{t("download.alert")}</span>
         </button>
-      </div>
-    </Alert>
+      </Alert>
+    </div>
+  {/if}
+
+  {#each alerts as alert, index}
+    <div class="w-full mx-2 my-4">
+      <Alert>
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="font-medium">{alert.title}</div>
+            <div>{alert.body}</div>
+          </div>
+          <button
+            on:click={() => {
+              delete_alert(index);
+            }}
+          >
+            <CloseOutline />
+          </button>
+        </div>
+      </Alert>
+    </div>
+  {/each}
+
+  <div class="m-2 p-2">
+    <span class="my-2">{t("config.model_list")}</span>
+    <Textarea rows="16" bind:value={$MODEL_LIST} />
   </div>
-{/each}
 
-<div class="m-2 p-2">
-  <span class="my-2">{t("config.model_list")}</span>
-  <Textarea rows="16" bind:value={$MODEL_LIST} />
-</div>
+  {#if error_parsing}
+    <div class="text-red-500">{t("download.list_alert")}</div>
+  {:else}
+    <div class="text-lg font-bold m-2">
+      <span>{t("download.list")}</span>
+    </div>
+    <div class="table w-full my-2">
+      <Table>
+        <TableHead>
+          <TableHeadCell>{t("download.table.model")}</TableHeadCell>
+          <TableHeadCell>{t("download.table.des")}</TableHeadCell>
+          <TableHeadCell>{t("download.table.website")}</TableHeadCell>
+          <TableHeadCell>{t("download.table.options")}</TableHeadCell>
+        </TableHead>
+        <TableBody>
+          {#each model_list as model}
+            <TableBodyRow>
+              <TableBodyCell>{model.model_name}</TableBodyCell>
+              <TableBodyCell>{model.model_description}</TableBodyCell>
+              <TableBodyCell>{model.download_url}</TableBodyCell>
+              <TableBodyCell
+                ><div class="flex flex-row">
+                  <button
+                    on:click={() => {
+                      automatic_download(model);
+                      add_alert(`${model.model_name}${t("download.p1")}`, ``);
+                    }}
+                    class="mx-2 text-blue-600 hover:underline"
+                  >
+                    {t("download.p2")}
+                  </button>
+                  <button
+                    on:click={() => {
+                      write_only_info(model);
+                      add_alert(
+                        `${model.model_name}${t("download.p1")}`,
+                        `${model.download_url}${t("download.p3")}${model.model_name}${t("download.p4")}`,
+                      );
+                    }}
+                    class="mx-2 text-blue-600 hover:underline"
+                  >
+                    {t("download.p5")}
+                  </button>
+                </div></TableBodyCell
+              >
+            </TableBodyRow>
+          {/each}
+        </TableBody>
+      </Table>
+    </div>
+  {/if}
 
-{#if error_parsing}
-  <div class="text-red-500">模型列表无效，请重设。</div>
-{:else}
   <div class="text-lg font-bold m-2">
-    <span>模型列表</span>
+    <span>{t("download.model")}</span>
   </div>
+
   <div class="table w-full my-2">
     <Table>
       <TableHead>
-        <TableHeadCell>模型</TableHeadCell>
-        <TableHeadCell>描述</TableHeadCell>
-        <TableHeadCell>下载地址</TableHeadCell>
-        <TableHeadCell>操作</TableHeadCell>
+        <TableHeadCell>{t("download.table.model")}</TableHeadCell>
+        <TableHeadCell>{t("download.table.des")}</TableHeadCell>
+        <TableHeadCell>{t("download.table.website")}</TableHeadCell>
+        <TableHeadCell>{t("download.table.options")}</TableHeadCell>
+        <TableHeadCell>{t("download.table.state")}</TableHeadCell>
       </TableHead>
       <TableBody>
-        {#each model_list as model}
+        {#each model_stored as model}
           <TableBodyRow>
-            <TableBodyCell>{model.model_name}</TableBodyCell>
-            <TableBodyCell>{model.model_description}</TableBodyCell>
-            <TableBodyCell>{model.download_url}</TableBodyCell>
+            <TableBodyCell
+              ><div class="w-20 whitespace-normal overflow-auto">
+                {model.model_name}
+              </div></TableBodyCell
+            >
+            <TableBodyCell
+              ><div class="w-40 whitespace-normal overflow-auto">
+                {model.model_description}
+              </div></TableBodyCell
+            >
+            <TableBodyCell
+              ><div class="whitespace-normal overflow-auto">
+                {model.remote_path}
+              </div></TableBodyCell
+            >
+            <TableBodyCell
+              ><div class="whitespace-normal overflow-auto">
+                {model.storage_state}
+              </div></TableBodyCell
+            >
             <TableBodyCell
               ><div class="flex flex-row">
                 <button
+                  class="mx-2 text-red-600 hover:underline"
                   on:click={() => {
-                    automatic_download(model);
-                    add_alert(
-                      `模型${model.model_name}信息已写入，模型文件已开始下载。`,
-                      ``,
-                    );
+                    delete_modal_id = model.id;
+                    delete_modal = true;
                   }}
-                  class="mx-2 text-blue-600 hover:underline"
                 >
-                  自动下载
+                  {t("download.delete.p7")}
                 </button>
                 <button
+                  class="mx-2 text-red-600 hover:underline"
                   on:click={() => {
-                    write_only_info(model);
-                    add_alert(
-                      `模型${model.model_name}信息已写入，请手动下载模型文件。`,
-                      `将通过${model.download_url}下载得到的，包含config.json的文件夹重命名为${model.model_name}并放入models文件夹。`,
-                    );
+                    delete_modal_id = model.id;
+                    delete_entry_modal = true;
                   }}
-                  class="mx-2 text-blue-600 hover:underline"
                 >
-                  仅写入信息（手动下载）
+                  {t("download.delete.p8")}
                 </button>
               </div></TableBodyCell
             >
@@ -249,68 +322,4 @@
       </TableBody>
     </Table>
   </div>
-{/if}
-
-<div class="text-lg font-bold m-2">
-  <span>已有模型</span>
-</div>
-
-<div class="table w-full my-2">
-  <Table>
-    <TableHead>
-      <TableHeadCell>模型</TableHeadCell>
-      <TableHeadCell>描述</TableHeadCell>
-      <TableHeadCell>下载地址</TableHeadCell>
-      <TableHeadCell>状态</TableHeadCell>
-      <TableHeadCell>操作</TableHeadCell>
-    </TableHead>
-    <TableBody>
-      {#each model_stored as model}
-        <TableBodyRow>
-          <TableBodyCell
-            ><div class="w-20 whitespace-normal overflow-auto">
-              {model.model_name}
-            </div></TableBodyCell
-          >
-          <TableBodyCell
-            ><div class="w-40 whitespace-normal overflow-auto">
-              {model.model_description}
-            </div></TableBodyCell
-          >
-          <TableBodyCell
-            ><div class="whitespace-normal overflow-auto">
-              {model.remote_path}
-            </div></TableBodyCell
-          >
-          <TableBodyCell
-            ><div class="whitespace-normal overflow-auto">
-              {model.storage_state}
-            </div></TableBodyCell
-          >
-          <TableBodyCell
-            ><div class="flex flex-row">
-              <button
-                class="mx-2 text-red-600 hover:underline"
-                on:click={() => {
-                  delete_modal_id = model.id;
-                  delete_modal = true;
-                }}
-              >
-                删除记录和模型文件
-              </button>
-              <button
-                class="mx-2 text-red-600 hover:underline"
-                on:click={() => {
-                  delete_modal_id = model.id;
-                  delete_entry_modal = true;
-                }}
-              >
-                仅删除记录
-              </button>
-            </div></TableBodyCell
-          >
-        </TableBodyRow>
-      {/each}
-    </TableBody>
-  </Table>
 </div>

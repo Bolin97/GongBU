@@ -13,23 +13,27 @@
       <div class="tracking-wide text-sm text-blue-600 font-semibold">
         {deployment.name}
       </div>
-      <p class="mt-2 text-gray-500">{deployment.description}</p>
+      <div>
+        <p class="mt-2 text-gray-500">{deployment.description}</p>
+      </div>
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">State: </span>
+        <span class="text-gray-900 font-bold">{t("deployment.detail.state")}</span>
         <span class="text-gray-600">
           {#if deployment.state == 0}
-            {t("delpoyment.stopped")}
+            {t("deployment.stopped")}
           {:else if deployment.state == 1}
-            {t("delpoyment.starting")}
+            {t("deployment.starting")}
           {:else if deployment.state == 2}
-            {t("delpoyment.running")}
+            {t("deployment.running")}
+          {:else if deployment.state == -1}
+            {t("deployment.error")}
           {/if}
         </span>
       </div>
       <div class="mt-2">
         <a
           href={`/deployment/details?deployment_id=${deployment.id}`}
-          class="text-blue-600 hover:underline">详细信息</a
+          class="text-blue-600 hover:underline">{t("deployment.detail.title")}</a
         >
       </div>
     </div>

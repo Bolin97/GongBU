@@ -27,6 +27,9 @@
   import DeploymentParam from "../../components/params/DeploymentParam.svelte";
   import { default_deployment_request_params } from "../../../class/DeploymentRequestParams";
   import axios from "axios";
+  import { getContext } from "svelte";
+
+  const t: any = getContext("t");
 
   let current_step = 1;
   let selected_model_id: string = "";
@@ -44,22 +47,21 @@
   }
 
   const steps = [
-    "模型选择",
-    "数据选择",
-    "评估指标",
-    "参数选择",
-    "设备选择",
-    "项目名称",
-  ];
+    t("eval.steps.model_selection"), 
+    t("eval.steps.data_selection"), 
+    t("eval.steps.evaluation_metrics"), 
+    t("eval.steps.params_selection"), 
+    t("eval.steps.device_selection"), 
+    t("eval.steps.project_name"), 
+  ]
 
   const steps_description = [
-    "选择合适的开源大模型",
-    "选择已上传到数据池的数据",
-    "选择评估指标",
-    "选择平台支持的微调方法并配置参数",
-    "选择可支持微调的本地设备",
-    "确定微调输出路径",
-    "输入项目名称与描述",
+    t("eval.steps.choose_model"), 
+    t("eval.steps.choose_data"), 
+    t("eval.steps.choose_metrics"), 
+    t("eval.steps.choose_params"), 
+    t("eval.steps.choose_device"), 
+    t("eval.steps.input_name")
   ];
 
   let uploading = false;
@@ -107,8 +109,8 @@
 </script>
 
 <ActionPageTitle
-  title="评估任务"
-  subtitle="评估任务的创建与管理"
+  title={t("eval.task.title")}
+  subtitle={t("eval.task.subtitle")}
   returnTo="/eval"
 />
 {#if !uploading}
@@ -164,9 +166,9 @@
             entries={[
               {
                 var_name: "val_set_size",
-                description: "验证集大小",
+                description: t("eval.eval_size"),
                 param_type: ParamType.slider,
-                name: "验证集大小",
+                name: t("eval.eval_size"),
                 constrains: [
                   { min: 0 },
                   { max: 1 },
@@ -175,7 +177,7 @@
                 ],
               },
             ]}
-            title="验证集大小"
+            title={t("eval.eval_size")}
             bind:params={val_set_size_params}
           />
         </div>
@@ -185,7 +187,7 @@
         <div class={`${current_step == 4 ? "" : "hidden"}`}>
           <DeploymentParam
             bind:deploymentParams={deploy_request_params}
-            no_port
+            hideParams={["port", "use_vllm"]}
           />
         </div>
         <div class={`${current_step == 5 ? "" : "hidden"}`}>
@@ -197,35 +199,36 @@
         <div class={`${current_step == 6 ? "" : "hidden"}`}>
           <div class="m-2 p-2">
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">任务名称：</span>
+              <span class="font-semibold text-lg m-2">{t("eval.input.task_name")}</span>
               <Input
                 class="my-2"
                 bind:value={name}
-                placeholder="在此输入任务名称"
+                placeholder={t("eval.input.enter_task_name")}
               />
             </div>
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">任务描述：</span>
+              <span class="font-semibold text-lg m-2">{t("eval.input.task_description")}</span>
               <Input
                 class="my-2"
                 bind:value={description}
-                placeholder="在此输入任务描述"
+                placeholder={t("eval.input.enter_task_description")}
               />
             </div>
           </div>
         </div>
       </div>
+
       <div class="flex flex-row-reverse gap-5 m-2">
         {#if current_step === 6}
           <Button
             on:click={(_) => {
               submit_handle();
-            }}>完成</Button
+            }}>{t("eval.task.complete")}</Button
           >
         {:else if current_step === 5}
           <Button
             disabled={use_devices.length === 0}
-            on:click={(_) => ++current_step}>下一步</Button
+            on:click={(_) => ++current_step}>{t("eval.task.next_step")}</Button
           >
           {#if use_devices.length === 0}
             <Tooltip>至少选择一个设备</Tooltip>
@@ -233,20 +236,20 @@
         {:else if current_step == 2}
           <Button
             disabled={selected_dataset_id.length === 0}
-            on:click={(_) => ++current_step}>下一步</Button
+            on:click={(_) => ++current_step}>{t("eval.task.next_step")}</Button
           >
         {:else if current_step === 1}
           <Button
             disabled={selected_model_id.length === 0 &&
               selected_adapter_id.length === 0}
-            on:click={(_) => ++current_step}>下一步</Button
+            on:click={(_) => ++current_step}>{t("eval.task.next_step")}</Button
           >
         {:else}
-          <Button on:click={(_) => ++current_step}>下一步</Button>
+          <Button on:click={(_) => ++current_step}>{t("eval.task.next_step")}</Button>
         {/if}
         <Button
           class={current_step === 1 ? "hidden" : ""}
-          on:click={(_) => --current_step}>{"上一步"}</Button
+          on:click={(_) => --current_step}>{t("eval.task.previous_step")}</Button
         >
       </div>
     </div>

@@ -213,6 +213,7 @@ class Adapter(Base):
     __tablename__ = "adapters"
     id = Column(Integer, primary_key=True)
     adapter_name = Column(String, nullable=False)
+    ft_entry = Column(Integer, nullable=True)
     base_model_name = Column(String, nullable=False)
     adapter_description = Column(String, nullable=False)
     local_path = Column(String)
@@ -238,6 +239,7 @@ class Deployment(Base):
     port = Column(Integer, nullable=False)
     devices = Column(ARRAY(String, dimensions=1), nullable=False)
     owner = Column(String, nullable=False)
+    use_vllm = Column(Boolean, nullable=False)
     public = Column(Boolean, nullable=False)
 
 

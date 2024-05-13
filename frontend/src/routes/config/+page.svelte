@@ -9,9 +9,9 @@
 </script>
 
 <div class="pt-2 w-full">
-  <span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;设置</span>
+  <span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;{t("config.title")}</span>
   <span class="text-1xl pt-2 text-black-400 text-center"
-    >&nbsp;&nbsp;配置系统参数</span
+    >&nbsp;&nbsp;{t("config.description")}</span
   >
 </div>
 

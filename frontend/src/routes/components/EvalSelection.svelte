@@ -1,36 +1,37 @@
 <script lang="ts">
   export let indexes: Array<string>;
-
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
   const presets = [
     {
       name: "Accuracy",
       value: "A",
-      description: "预测正确的样本数/样本数总数",
+      description: t("components.eval_metrics_description.acc_des"),
     },
     {
       name: "Recall",
       value: "R",
-      description: "基于召回率判断两个句子的相似程度",
+      description: t("components.eval_metrics_description.recall_des"),
     },
     {
       name: "F1-Score",
       value: "F",
-      description: "Accuracy和Recall的调和指标",
+      description: t("components.eval_metrics_description.f1score_des"),
     },
     {
       name: "Precision",
       value: "P",
-      description: "评估生成文本中与参考文本匹配的内容所占的比例。",
+      description: t("components.eval_metrics_description.pre_des"),
     },
     {
       name: "BLEU",
       value: "B",
-      description: "基于准确率判断两个句子的相似程度",
+      description: t("components.eval_metrics_description.bleu_des"),
     },
     {
       name: "Distinct-2",
       value: "D",
-      description: "反映文本生成的多样性",
+      description: t("components.eval_metrics_description.distinct_des"),
     },
   ];
 </script>

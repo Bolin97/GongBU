@@ -1,10 +1,10 @@
 # LLMCraft
 
-🚀 LLMCraft is a comprehensive, all-in-one, no-code finetuning platform for large language models. Once deployed, there is no need to write any code to finetune a model, and the platform can be used by anyone with a web browser. The platform is built on top of the Transformers, Peft, etc. and is designed to be easy to use for non-technical users.
+🚀 LLMCraft is a comprehensive, all-in-one, no-code, local finetuning platform for large language models. Once deployed, there is no need to write any code to finetune a model, and the platform can be used by anyone with a web browser. The platform is built on top of the Transformers, Peft, etc. and is designed to be easy to use for non-technical users.
 
 📈 You can easily finetune, evaluate, and deploy models with the platform. 
 
-📦 Currently, by default, the platform should be started with docker-compose in a linux system with nvidia-docker. However, by installing the required dependencies, with correct configurations, the platform can be run locally.
+📦 Currently, by default, the platform should be started with docker-compose in a linux system with nvidia-docker. However, by installing the required dependencies, with correct configurations, the platform can be run natively.
 
 ## 📦 Recommended Way of Installation
 
@@ -71,7 +71,7 @@ FOR ANY LOSS OR DAMAGE, THE DEVELOPER IS NOT RESPONSIBLE, AS IS STATED IN THE MI
 
 This project uses plain text to transfer data between the client and the server, which includes the username, password, and dataset. The password is hashed before being stored in the database, but the dataset is stored in plain text.
 
-If you need to use the platform in open networks, please secure the database and secure the connections with SSL manually, this is not what we can provide. However, so long as SSL is enabled and the database is secured, equipped with other measures that are implemented by us, the platform should be secure.
+If you need to use the platform in open networks, please secure the database and secure the connections with SSL manually, this is not what we can provide (by changing the nginx config under the proxy folder, all requests in production goes through nginx). However, so long as SSL is enabled and the database is secured, equipped with other measures that are implemented by us, the platform should be secure.
 
 ### 📜 License Issues
 

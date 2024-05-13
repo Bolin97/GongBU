@@ -80,7 +80,7 @@ def run(evaluation_id: int):
 
     def get_generated_output(data_point):
         prompt = generate_prompt(data_point, ds_type, for_infer=True)
-        return llmw.simple_text_generation(
+        return llmw.simple_generation(
             prompt, len(generate_prompt(data_point, ds_type, for_infer=False))
         )
 

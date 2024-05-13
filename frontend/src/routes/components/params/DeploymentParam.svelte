@@ -8,9 +8,9 @@
   import ParamGroup from "./ParamGroup.svelte";
   import type { DeploymentRequestParams } from "../../../class/DeploymentRequestParams";
   import { Accordion, AccordionItem } from "flowbite-svelte";
-
+  import { t } from "../../../locales";
   export let deploymentParams: DeploymentRequestParams;
-  export let no_port: boolean = false;
+  export let hideParams: Array<string> = [];
 
   let params = default_deployment_params();
 
@@ -27,18 +27,17 @@
 
 <div>
   <ParamGroup
-    title="部署参数"
-    entries={no_port
-      ? deployment_params
-      : deployment_params.concat(deployment_port)}
+    title={t("components.deployment_params.title")}
+    entries={deployment_params}
+    hideParamNames={hideParams}
     bind:params
   />
   {#if params.bits_and_bytes}
     <Accordion class="m-4">
       <AccordionItem>
-        <span slot="header">量化参数</span>
+        <span slot="header">{t("components.deployment_params.subtitle")}</span>
         <ParamGroup
-          title="部署量化参数"
+          title={t("components.deployment_params.subsubtitle")}
           entries={deployment_quantization_params}
           bind:params
         />

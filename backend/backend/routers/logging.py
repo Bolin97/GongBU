@@ -1,5 +1,6 @@
 from backend.auth import check_access, get_current_identifier
 from backend.db import get_db
+from backend.reduce_size import reduce_size
 from fastapi import APIRouter
 from fastapi.params import Depends
 from sqlalchemy.orm.session import Session
@@ -39,7 +40,9 @@ async def get_logging(
         db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
     ):
         return None
-    return db.query(FtLoggingRecord).filter(FtLoggingRecord.entry_id == id).all()
+    return reduce_size(
+        db.query(FtLoggingRecord).filter(FtLoggingRecord.entry_id == id).all()
+    )
 
 
 @logging_router.get("/eval/{id}")
@@ -52,7 +55,9 @@ async def get_eval(
         db.query(FinetuneEntry).filter(FinetuneEntry.id == id), identifier
     ):
         return None
-    return db.query(FtEvalLossRecord).filter(FtEvalLossRecord.entry_id == id).all()
+    return reduce_size(
+        db.query(FtEvalLossRecord).filter(FtEvalLossRecord.entry_id == id).all()
+    )
 
 
 @logging_router.get("/eval/after/{id}")

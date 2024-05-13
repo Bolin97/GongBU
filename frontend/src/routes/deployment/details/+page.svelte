@@ -12,11 +12,13 @@
   import DeviceInfo from "../../components/DeviceInfo.svelte";
   import WrappedIframe from "./WrappedIframe.svelte";
   import { goto } from "$app/navigation";
+  import type DatasetEntry from "../../../class/DatasetEntry";
   const t: any = getContext("t");
   const deployment_id = $page.url.searchParams.get("deployment_id");
   let deployment_entry: Deployment = null;
   let base_model: OpenllmEntry = null;
   let adapter: Adapter = null;
+  let dataset_entry: DatasetEntry = null;
 
   async function fetchInfo() {
     deployment_entry = (await axios.get(`/api/deployment/${deployment_id}`))
@@ -36,6 +38,7 @@
         )
       ).data;
     }
+    
     stopClicked = false;
     startClicked = false;
   }
@@ -70,12 +73,12 @@
   }
 </script>
 
-<Modal title="确认删除" bind:open={delete_modal} autoclose>
+<Modal title={t("deployment.detail.title")} bind:open={delete_modal} autoclose>
   <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    确认要删除吗？
+    {t("deployment.detail.delete.p1")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    删除后，该任务的所有相关信息将<span class="font-semibold">无法</span>恢复。
+    {t("deployment.detail.delete.p2")}<span class="font-semibold">{t("deployment.detail.delete.p3")}</span>{t("deployment.detail.delete.p4")}
   </p>
   <svelte:fragment slot="footer">
     <div class="w-full flex justify-end gap-2">
@@ -83,23 +86,23 @@
         color="red"
         on:click={() => {
           delete_entry_handle();
-        }}>删除</Button
+        }}>{t("deployment.detail.delete.yes")}</Button
       >
-      <Button color="alternative">不</Button>
+      <Button color="alternative">{t("deployment.detail.delete.no")}</Button>
     </div>
   </svelte:fragment>
 </Modal>
 
 {#if base_model != null && deployment_entry != null}
   <div>
-    <ActionPageTitle returnTo="/deployment" title="详细信息">
+    <ActionPageTitle returnTo="/deployment" title={t("deployment.detail.title")}>
       <svelte:fragment slot="right">
         <div class="flex gap-2">
-          {#if deployment_entry.state == 2 && !stopClicked}
-            <Button color="blue" on:click={handleStop}>停止</Button>
+          {#if (deployment_entry.state == 2 || deployment_entry.state == -1) && !stopClicked}
+            <Button color="blue" on:click={handleStop}>{t("deployment.detail.stop")}</Button>
           {/if}
           {#if deployment_entry.state == 0 && !startClicked}
-            <Button on:click={handleStart} color="green">启动</Button>
+            <Button on:click={handleStart} color="green">{t("deployment.detail.start")}</Button>
           {/if}
           <Button
             color="red"
@@ -107,7 +110,7 @@
               delete_modal = true;
             }}
           >
-            删除
+            {t("deployment.detail.delete.yes")}
           </Button>
         </div>
       </svelte:fragment>
@@ -122,28 +125,21 @@
           </div>
           <p class="mt-2 text-gray-500">{deployment_entry.description}</p>
           <div class="mt-2">
-            <span class="text-gray-900 font-bold">State: </span>
+            <span class="text-gray-900 font-bold">{t("deployment.detail.state")}</span>
             <span class="text-gray-600">
               {#if deployment_entry.state == 0}
-                {t("delpoyment.stopped")}
+                {t("deployment.stopped")}
               {:else if deployment_entry.state == 1}
-                {t("delpoyment.starting")}
+                {t("deployment.starting")}
               {:else if deployment_entry.state == 2}
-                {t("delpoyment.running")}
+                {t("deployment.running")}
               {/if}
             </span>
           </div>
           <Hr />
           <div class="mt-2">
-            <span class="text-gray-900 font-bold">Gradio Link: </span>
+            <span class="text-gray-900 font-bold">{t("deployment.detail.gradio_link")}</span>
             <div class="text-sm">
-              <p>
-                {t("deployment.gradio_url_prefix") +
-                  `/net/${deployment_entry.port}/`}
-              </p>
-              <p class="my-2">
-                {t("deployment.or")}
-              </p>
               <p>
                 <a
                   href={`/net/${deployment_entry.port}/`}
@@ -157,12 +153,12 @@
           </div>
           <Hr />
           <div class="mt-2">
-            <span class="text-gray-900 font-bold">Model: </span>
+            <span class="text-gray-900 font-bold">{t("deployment.detail.model")}</span>
             <ModelCard modelId={base_model.id} baseModelNoCursorChange />
           </div>
           {#if adapter != null}
             <div class="mt-2">
-              <span class="text-gray-900 font-bold">Adapter Name: </span>
+              <span class="text-gray-900 font-bold">{t("deployment.detail.adapter")}</span>
               <span class="text-gray-600"
                 >{adapter ? adapter.adapter_name : "N/A"}</span
               >
@@ -170,22 +166,28 @@
           {/if}
           <Hr />
           <div class="mt-2">
-            <div>
-              <span class="text-gray-900 font-bold">Deepspeed: </span>
+            <!-- <div>
+              <span class="text-gray-900 font-bold">{t("deployment.detail.deepspeed")} </span>
               <span class="text-gray-600"
                 >{deployment_entry.use_deepspeed ? "Yes" : "No"}</span
               >
             </div>
             <div>
-              <span class="text-gray-900 font-bold">Flash Attention: </span>
+              <span class="text-gray-900 font-bold">{t("deployment.detail.flash_attention")}</span>
               <span class="text-gray-600"
                 >{deployment_entry.use_flash_attention ? "Yes" : "No"}</span
+              >
+            </div> -->
+            <div>
+              <span class="text-gray-900 font-bold">{t("deployment.detail.vllm")}</span>
+              <span class="text-gray-600"
+                >{deployment_entry.use_vllm ? "Yes" : "No"}</span
               >
             </div>
           </div>
           <Hr />
           <div class="mt-2">
-            <span class="text-gray-900 font-bold">Device</span>
+            <span class="text-gray-900 font-bold">{t("deployment.detail.device")}</span>
             <div>
               <DeviceInfo showDevices={deployment_entry.devices} />
             </div>

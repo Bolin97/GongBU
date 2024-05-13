@@ -15,3 +15,4 @@ from .adapter import adapter_router
 from .deployment import deployment_router
 from .eval import eval_router
 from .visibility import visibility_router
+from .dataset_sift import dataset_sift_router

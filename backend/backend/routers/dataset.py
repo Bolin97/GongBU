@@ -1,6 +1,6 @@
 from backend.db import gen_db
 from fastapi import APIRouter, UploadFile
-from backend.service import submit_finetune_dataset
+from backend.service import submit_finetune_dataset_file
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from backend.models import *
@@ -22,7 +22,7 @@ async def upload_finetune(
 ):
     # submit_finetune_dataset(pool_id, name, description, kind, file.file)
     th = Thread(
-        target=submit_finetune_dataset,
+        target=submit_finetune_dataset_file,
         args=(pool_id, name, description, kind, file.file, identifier),
     )
     th.start()

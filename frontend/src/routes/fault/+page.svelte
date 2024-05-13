@@ -55,6 +55,14 @@
   }
 </script>
 
+<div class="pt-2 w-full">
+  <span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;{t("fault.title")}</span>
+  <span class="text-1xl pt-2 text-black-400 text-center"
+    >&nbsp;&nbsp;{t("fault.description")}</span
+  >
+</div>
+<hr class="pt-1" />
+
 <div class="overflow-x-auto">
   <div>
     <TaggedSearchbar bind:tags />

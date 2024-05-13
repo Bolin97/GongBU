@@ -7,6 +7,8 @@
     type ChooseFromConstrain,
     parse_cons,
   } from "./Params";
+  import { Tooltip } from 'flowbite-svelte';
+  import { InfoCircleOutline } from "flowbite-svelte-icons";
 
   export let entry: ParamEntry;
   export let params: any;
@@ -23,13 +25,17 @@
 
 <div class="p-2 w-full">
   <div class="flex flex-row w-full justify-between">
-    <div>
+    <div class="flex flex-row">
       <div class="mb-2 text-base text-black">
         {entry.name}
       </div>
-
-      <div class="text-gray-600 mb-2 text-sm">
-        {entry.description}
+      <div class="m-1">
+        <InfoCircleOutline
+          id={entry.var_name}
+          size="sm"
+          class="text-primary-500 dark:text-primary-400"
+        />
+        <Tooltip triggeredBy="#{entry.var_name}">{entry.description}</Tooltip>
       </div>
     </div>
 

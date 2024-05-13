@@ -183,3 +183,5 @@ python-jose==3.3.0
 passlib==1.7.4
 passlib[bcrypt]==1.7.4
 poetry-core==1.9.0
+faiss-gpu==1.7.2
+sentence_transformers==2.7.0

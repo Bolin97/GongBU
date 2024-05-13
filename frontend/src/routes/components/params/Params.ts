@@ -4,6 +4,9 @@ import BoolParam from "./BoolParam.svelte";
 import SelectParam from "./SelectParam.svelte";
 import RadioParam from "./RadioParam.svelte";
 import MultiSelection from "./MultiSelection.svelte";
+// import { getContext } from "svelte";
+// const t: any = getContext("t");
+import { t } from "../../../locales";
 
 export interface Constrain {}
 
@@ -79,23 +82,23 @@ export function parse_cons(cons: Array<Constrain>) {
 export const lora_specific_params: Array<ParamEntry> = [
   {
     var_name: "lora_r",
-    name: "lora的秩",
+    name: t("finetune.finetune_params.lora_params.lora_r"),
     param_type: ParamType.number_box,
-    description: "lora方法超参数",
+    description: t("finetune.finetune_params.lora_params.lora_r_des"),
     constrains: [{ min: 0 }, { values: [4, 8, 16, 32] }],
   },
   {
     var_name: "lora_alpha",
-    name: "lora对模型效果的贡献度",
+    name: t("finetune.finetune_params.lora_params.lora_alpha"),
     param_type: ParamType.slider,
-    description: "lora方法超参数",
+    description: t("finetune.finetune_params.lora_params.lora_alpha_des"),
     constrains: [{ min: 0 }, { max: 128 }],
   },
   {
     var_name: "lora_dropout",
-    name: "dropout",
+    name: t("finetune.finetune_params.lora_params.lora_dropout"),
     param_type: ParamType.slider,
-    description: "dropout",
+    description: t("finetune.finetune_params.lora_params.lora_dropout_des"),
     constrains: [{ max: 1.0 }, { step: 0.001 }],
   },
 ];
@@ -103,9 +106,9 @@ export const lora_specific_params: Array<ParamEntry> = [
 export const lora_quantization_params: Array<ParamEntry> = [
   {
     var_name: "load_xbit",
-    name: "量化bit",
+    name: t("finetune.finetune_params.qlora_params.bit"),
     param_type: ParamType.radio,
-    description: "量化的参数",
+    description: t("finetune.finetune_params.qlora_params.bit_des"),
     constrains: [{ values: [4, 8] }],
   },
 ];
@@ -113,44 +116,44 @@ export const lora_quantization_params: Array<ParamEntry> = [
 export const lora_quantization_advanced: Array<ParamEntry> = [
   {
     var_name: "llm_int8_threshold",
-    name: "llm_int8阈值",
+    name: t("finetune.finetune_params.qlora_params.q_int8"),
     param_type: ParamType.slider,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_int8_des"),
     constrains: [{ min: 0.0 }, { max: 10.0 }],
   },
   {
     var_name: "llm_int8_enable_fp32_cpu_offload",
-    name: "允许使用CPU进行fp32的卸载",
+    name: t("finetune.finetune_params.qlora_params.q_cpu_offload"),
     param_type: ParamType.bool,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_cpu_offload_des"),
     constrains: [],
   },
   {
     var_name: "llm_int8_has_fp16_weight",
-    name: "使用fp16旬行LLM.int8()",
+    name: t("finetune.finetune_params.qlora_params.q_fp16_int8"),
     param_type: ParamType.bool,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_fp16_int_des"),
     constrains: [],
   },
   {
     var_name: "bnb_4bit_compute_dtype",
-    name: "设置计算类型",
+    name: t("finetune.finetune_params.qlora_params.q_compute_type"),
     param_type: ParamType.select,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_compute_type_des"),
     constrains: [{ values: ["None", "fp4", "nf4"] }],
   },
   {
     var_name: "bnb_4bit_quant_type",
-    name: "设置量化类型",
+    name: t("finetune.finetune_params.qlora_params.q_type"),
     param_type: ParamType.select,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_type_des"),
     constrains: [{ values: ["fp4", "nf4"] }],
   },
   {
     var_name: "bnb_4bit_use_double_quant",
-    name: "是否开启二次量化",
+    name: t("finetune.finetune_params.qlora_params.q_quad"),
     param_type: ParamType.bool,
-    description: "高级量化参数",
+    description: t("finetune.finetune_params.qlora_params.q_quad_des"),
     constrains: [],
   },
 ];
@@ -158,8 +161,8 @@ export const lora_quantization_advanced: Array<ParamEntry> = [
 export const num_virt_tokens_param: Array<ParamEntry> = [
   {
     var_name: "num_virtual_tokens",
-    name: "虚拟token个数",
-    description: "虚拟token个数",
+    name: t("finetune.finetune_params.p_params.tokens_number"),
+    description: t("finetune.finetune_params.qlora_params.tokens_number_des"),
     param_type: ParamType.slider,
     constrains: [{ min: 0 }, { max: 128 }],
   },
@@ -168,79 +171,79 @@ export const num_virt_tokens_param: Array<ParamEntry> = [
 export const training_params: Array<ParamEntry> = [
   {
     var_name: "batch_size",
-    name: "单次训练数据样本个数",
+    name: t("finetune.finetune_params.train_params.batch_size"),
     param_type: ParamType.number_box,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.batch_size_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "micro_batch_size",
-    name: "每次流水并行的训练样本个数",
+    name: t("finetune.finetune_params.train_params.micro_batch_size"),
     param_type: ParamType.number_box,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.micro_batch_size_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "num_epochs",
-    name: "训练迭代次数",
+    name: t("finetune.finetune_params.train_params.epochs"),
     param_type: ParamType.number_box,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.epochs_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "logging_step",
-    name: "报告间隔",
+    name: t("finetune.finetune_params.train_params.log_steps"),
     param_type: ParamType.number_box,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.log_steps_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "cutoff_len",
-    name: "文本最大长度",
+    name: t("finetune.finetune_params.train_params.cut_off_len"),
     param_type: ParamType.number_box,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.cut_off_len_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "eval_step",
-    name: "评估步数间隔",
+    name: t("finetune.finetune_params.train_params.eval_steps"),
     param_type: ParamType.number_box,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.eval_steps_des"),
     constrains: [{ min: 0 }],
   },
   {
     var_name: "val_set_size",
-    name: "评估数据集的大小",
+    name: t("finetune.finetune_params.train_params.eval_data_size"),
     param_type: ParamType.slider,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.eval_data_size"),
     constrains: [{ min: 0 }, { max: 1 }, { step: 0.001 }],
   },
   {
     var_name: "use_gradient_checkpointing",
-    name: "是否使用梯度检查点",
+    name: t("finetune.finetune_params.train_params.checkpoint"),
     param_type: ParamType.bool,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.checkpoint_des"),
     constrains: [],
   },
   {
     var_name: "zero_optimization",
-    name: "是否使用zero优化",
+    name: t("finetune.finetune_params.train_params.zero_opt"),
     param_type: ParamType.bool,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.zero_opt_des"),
     constrains: [],
   },
   {
     var_name: "zero_stage",
-    name: "zero优化阶段",
+    name: t("finetune.finetune_params.train_params.zero_stage"),
     param_type: ParamType.radio,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.zero_stage_des"),
     constrains: [{ values: [1, 2, 3] }],
   },
   {
     var_name: "zero_offload",
-    name: "是否使用zero卸载",
+    name: t("finetune.finetune_params.train_params.zero_offload"),
     param_type: ParamType.bool,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.zero_offload_des"),
     constrains: [],
   },
 ];
@@ -248,16 +251,16 @@ export const training_params: Array<ParamEntry> = [
 export const training_advanced: Array<ParamEntry> = [
   {
     var_name: "learning_rate",
-    name: "学习率",
+    name: t("finetune.finetune_params.train_params.learn_rate"),
     param_type: ParamType.slider,
-    description: "训练超参数",
+    description: t("finetune.finetune_params.train_params.learn_rate_des"),
     constrains: [{ min: 0.0 }, { max: 0.01 }, { step: 0.00001 }],
   },
   {
     var_name: "save_step",
-    name: "保存步数间隔",
+    name: t("finetune.finetune_params.train_params.save_steps"),
     param_type: ParamType.number_box,
-    description: "高级训练参数",
+    description: t("finetune.finetune_params.train_params.save_steps_des"),
     constrains: [{ min: 0 }],
   },
 ];
@@ -296,40 +299,34 @@ export function default_finetune_params() {
     use_flash_attention: false,
   };
 }
-// export interface DeploymentRequestParams {
-//     "model_or_adpater_id": number,
-//     "deploy_base_model": boolean,
-//     "bits_and_bytes": true,
-//     "load_8bit": true,
-//     "load_4bit": true,
-//     "use_flash_attention": true,
-//     "use_deepspeed": true,
-//     "devices": [
-//       "string"
-//     ],
-//     "port": 0
-// }
 
 export const deployment_params: Array<ParamEntry> = [
+  // {
+  //   var_name: "bits_and_bytes",
+  //   name: t("components.deployment_params.bits_and_bytes"),
+  //   param_type: ParamType.bool,
+  //   description: t("components.deployment_params.description"),
+  //   constrains: [],
+  // },
+  // {
+  //   var_name: "use_flash_attention",
+  //   name: t("components.deployment_params.use_flash_attention"),
+  //   param_type: ParamType.bool,
+  //   description: t("components.deployment_params.description"),
+  //   constrains: [],
+  // },
+  // {
+  //   var_name: "use_deepspeed",
+  //   name: t("components.deployment_params.use_deepspeed"),
+  //   param_type: ParamType.bool,
+  //   description: t("components.deployment_params.description"),
+  //   constrains: [],
+  // },
   {
-    var_name: "bits_and_bytes",
-    name: "是否使用bits_and_bytes",
+    var_name: "use_vllm",
+    name: t("components.deployment_params.use_vllm"),
     param_type: ParamType.bool,
-    description: "部署参数",
-    constrains: [],
-  },
-  {
-    var_name: "use_flash_attention",
-    name: "是否使用flash attention",
-    param_type: ParamType.bool,
-    description: "部署参数",
-    constrains: [],
-  },
-  {
-    var_name: "use_deepspeed",
-    name: "是否使用deepspeed",
-    param_type: ParamType.bool,
-    description: "部署参数",
+    description: t("components.deployment_params.description"),
     constrains: [],
   },
 ];
@@ -337,9 +334,9 @@ export const deployment_params: Array<ParamEntry> = [
 export const deployment_port: Array<ParamEntry> = [
   {
     var_name: "port",
-    name: "端口",
+    name: t("deployment.task.port"),
     param_type: ParamType.number_box,
-    description: "部署参数",
+    description: t("components.deployment_params.description"),
     constrains: [
       { min: 1000 },
       { max: 65535 },
@@ -351,9 +348,9 @@ export const deployment_port: Array<ParamEntry> = [
 export const deployment_quantization_params: Array<ParamEntry> = [
   {
     var_name: "load_xbit",
-    name: "量化bit",
+    name: t("deployment.task.quan_bit"),
     param_type: ParamType.radio,
-    description: "部署参数",
+    description: t("components.deployment_params.description"),
     constrains: [{ values: [4, 8] }],
   },
 ];
@@ -365,5 +362,6 @@ export function default_deployment_params() {
     use_flash_attention: false,
     use_deepspeed: false,
     port: 8760,
+    use_vllm: false,
   };
 }

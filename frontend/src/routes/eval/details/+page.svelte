@@ -15,6 +15,7 @@
   const eval_id = $page.url.searchParams.get("eval_id");
   let eval_entry: EvalEntry = null;
   let adapter_name: string = null;
+  let dataset_entry: DatasetEntry = null;
 
   async function fetchInfo() {
     eval_entry = (await axios.get(`/api/eval/${eval_id}`)).data;
@@ -31,6 +32,10 @@
           .data as OpenllmEntry
       ).id;
     }
+    dataset_entry = (
+      await axios.get(`/api/dataset_entry/${eval_entry.dataset_id}`)
+    ).data as DatasetEntry;
+    console.log(dataset_entry)
   }
   let updater: any;
   onMount(async () => {
@@ -45,7 +50,6 @@
   let base_model = null;
   async function delete_entry_handle() {
     await axios.delete(`/api/eval/${eval_id}`);
-
     goto("/eval");
   }
 
@@ -56,16 +60,19 @@
           value: value,
         }))
       : [];
+  $: console.log(eval_results)
   import { eval_index_full_name } from "../../shared";
+  import type DatasetEntry from "../../../class/DatasetEntry";
+  import EvalProgress from "../EvalProgress.svelte";
 </script>
 
-<Modal title="Confirm Deletion" bind:open={delete_modal} autoclose>
+<Modal title={t("eval.delete.title")} bind:open={delete_modal} autoclose>
   <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    Are you sure you want to delete?
+    {t("eval.delete.p1")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    After deletion, all related information of this task will be <span
-      class="font-semibold">irrecoverable</span
+    {t("eval.delete.p2")}<span
+      class="font-semibold">{t("eval.delete.p3")}</span
     >.
   </p>
   <svelte:fragment slot="footer">
@@ -76,8 +83,8 @@
   </svelte:fragment>
 </Modal>
 
-{#if eval_entry != null && base_model != null}
-  <ActionPageTitle returnTo="/eval" title="Detailed Information">
+{#if eval_entry != null && base_model != null && dataset_entry != null}
+  <ActionPageTitle returnTo="/eval" title={t("eval.detail.title")}>
     <svelte:fragment slot="right">
       <div class="flex gap-2">
         <Button
@@ -86,7 +93,7 @@
             delete_modal = true;
           }}
         >
-          Delete
+          {t("eval.detail.delete.delete")}
         </Button>
       </div>
     </svelte:fragment>
@@ -98,42 +105,68 @@
       </div>
       <p class="mt-2 text-gray-500">{eval_entry.description}</p>
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">State: </span>
+        <span class="text-gray-900 font-bold">{t("eval.detail.state")}</span>
         <span class="text-gray-600">
-          {eval_entry.state}
+          {#if eval_entry.state == 0}
+            {t("eval.detail.loading_model")}
+          {:else if eval_entry.state == 1}
+            {t("eval.detail.starting")}
+          {:else if eval_entry.state == 2}
+            {t("eval.detail.generating")}
+          {:else if eval_entry.state == 3}
+            {t("eval.detail.evaluating")}
+          {:else if eval_entry.state == 4}
+            {t("eval.detail.done")}
+          {:else if eval_entry.state == -1}
+            {t("eval.error")}
+          {/if}
         </span>
       </div>
+      {#if eval_entry.state == 2}
+      <div class="my-2 mb-6">
+        <EvalProgress id={eval_id} />
+      </div>
+      {/if}
       <div class="mt-2">
         <ModelCard modelId={base_model} baseModelNoCursorChange />
         {#if !eval_entry.deploy_base_model}
-          <span class="text-gray-900 font-bold">Adapter: </span>
+          <span class="text-gray-900 font-bold">{t("eval.detail.adapter")}</span>
           <span class="text-gray-600">{adapter_name}</span>
         {/if}
       </div>
       <hr class="my-2" />
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">Dataset ID: </span>
-        <span class="text-gray-600">{eval_entry.dataset_id}</span>
+        <span class="text-gray-900 font-bold">{t("eval.detail.dataset_name")}</span>
+        <span class="text-gray-600">{dataset_entry.name}</span>
       </div>
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">Bits and Bytes: </span>
+        <span class="text-gray-900 font-bold">{t("eval.detail.dataset_des")}</span>
+        <span class="text-gray-600">{dataset_entry.description}</span>
+      </div>
+      <div class="mt-2">
+        <span class="text-gray-900 font-bold">{t("eval.detail.dataset_size")} </span>
+        <span class="text-gray-600">{dataset_entry.size}</span>
+      </div>
+      <hr class="my-2" />
+      <div class="mt-2">
+        <span class="text-gray-900 font-bold">{t("eval.detail.bits_and_bytes")}</span>
         <span class="text-gray-600"
           >{eval_entry.bits_and_bytes ? "Yes" : "No"}</span
         >
       </div>
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">Val Set Size: </span>
+        <span class="text-gray-900 font-bold">{t("eval.detail.val_set_size")}</span>
         <span class="text-gray-600">{eval_entry.val_set_size}</span>
       </div>
       <div class="mt-2">
-        <span class="text-gray-900 font-bold">Use Deepspeed: </span>
+        <span class="text-gray-900 font-bold">{t("eval.detail.use_deepspeed")}</span>
         <span class="text-gray-600"
           >{eval_entry.use_deepspeed ? "Yes" : "No"}</span
         >
       </div>
     </div>
     <div class="p-4 w-1/3">
-      {#if eval_entry.state == 3 && eval_results != null && eval_results != undefined}
+      {#if eval_entry.state == 4 && eval_results != null && eval_results != undefined}
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
           {#each eval_results as result}
             <div

@@ -28,10 +28,10 @@ services:
       - ./models:/models
       - ./finetune_output:/finetune_output
       - ./bert-base-chinese:/backend/bert-base-chinese
-      - ./ext:/backend/ext
       - ./logs:/logs
       - /dev/shm:/dev/shm
       - ./sign_up_token.txt:/backend/backend/sign_up_token.txt
+      - ./m3e-base:/backend/m3e-base
     depends_on:
       - db
     environment:
@@ -41,6 +41,7 @@ services:
       - LOG_PATH=/logs
       - FINETUNE_OUTPUT=/finetune_output
       - DISABLE_IB_P2P=1
+      - EMBEDDING_PATH=/backend/m3e-base
     deploy:
       resources:
         reservations:

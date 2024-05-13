@@ -8,6 +8,7 @@ export interface DeploymentRequestParams {
   use_deepspeed: boolean;
   devices: string[];
   port: number;
+  use_vllm: boolean;
 }
 
 export function default_deployment_request_params(): DeploymentRequestParams {
@@ -21,5 +22,6 @@ export function default_deployment_request_params(): DeploymentRequestParams {
     use_deepspeed: false,
     devices: [],
     port: 0,
+    use_vllm: false
   };
 }

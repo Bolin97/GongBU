@@ -44,7 +44,11 @@
     storage_state: "",
     storage_date: "",
     display_name: "",
+    owner: "",
+    public: false,
   };
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
 
   $: {
     if (current_step == 2) {
@@ -71,13 +75,17 @@
     current_step = 2;
   }
 
-  const steps = ["模型选择", "设备选择", "参数选择", "任务名称"];
+  const steps = [
+    t("deployment.task.steps.model"), 
+    t("deployment.task.steps.device"), 
+    t("deployment.task.steps.params"), 
+    t("deployment.task.steps.name")];
 
   const steps_description = [
-    "选择合适的模型",
-    "选择可支持微调的本地设备",
-    "选择部署参数",
-    "输入项目名称与描述",
+    t("deployment.task.steps.model_des"), 
+    t("deployment.task.steps.device_des"), 
+    t("deployment.task.steps.params_des"), 
+    t("deployment.task.steps.name_des")
   ];
 
   let uploading = false;
@@ -105,9 +113,9 @@
 </script>
 
 <ActionPageTitle
-  title="微调任务"
-  subtitle="微调任务的创建与管理"
-  returnTo="/finetune"
+  title={t("deployment.task.title")}
+  subtitle={t("deployment.task.des")}
+  returnTo="/deployment"
 />
 {#if !uploading}
   <div class="w-full flex flex-row p-1 m-2 mt-4">
@@ -168,19 +176,19 @@
         <div class={`${current_step == 4 ? "" : "hidden"}`}>
           <div class="m-2 p-2">
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">任务名称：</span>
+              <span class="font-semibold text-lg m-2">{t("deployment.task.task_name")}</span>
               <Input
                 class="my-2"
                 bind:value={name}
-                placeholder="在此输入任务名称"
+                placeholder={t("deployment.task.enter_task_name")}
               />
             </div>
             <div class="my-4">
-              <span class="font-semibold text-lg m-2">任务描述：</span>
+              <span class="font-semibold text-lg m-2">{t("deployment.task.task_description")}</span>
               <Input
                 class="my-2"
                 bind:value={description}
-                placeholder="在此输入任务描述"
+                placeholder={t("deployment.task.enter_task_description")}
               />
             </div>
           </div>
@@ -191,25 +199,25 @@
           <Button
             on:click={(_) => {
               submit_handle();
-            }}>完成</Button
+            }}>{t("deployment.task.complete")}</Button
           >
         {:else if current_step == 1}
           <Button
             disabled={selected_adapter_id.length == 0 &&
               selected_model_id.length == 0}
-            on:click={(_) => ++current_step}>下一步</Button
+            on:click={(_) => ++current_step}>{t("deployment.task.next_step")}</Button
           >
         {:else if current_step == 2}
           <Button
             disabled={use_devices.length == 0}
-            on:click={(_) => ++current_step}>下一步</Button
+            on:click={(_) => ++current_step}>{t("deployment.task.next_step")}</Button
           >
         {:else}
-          <Button on:click={(_) => ++current_step}>下一步</Button>
+          <Button on:click={(_) => ++current_step}>{t("deployment.task.next_step")}</Button>
         {/if}
         <Button
           class={current_step === 1 ? "hidden" : ""}
-          on:click={(_) => --current_step}>{"上一步"}</Button
+          on:click={(_) => --current_step}>{t("deployment.task.previous_step")}</Button
         >
       </div>
     </div>

@@ -82,3 +82,19 @@ async def get_progress(id: int, db: Session = Depends(gen_db)):
     return (
         db.query(EvaluationProgress).filter(EvaluationProgress.entry_id == id).first()
     )
+
+@eval_router.put("/stop/{id}")
+async def stop(id: int, db: Session = Depends(gen_db), identifier=Depends(get_current_identifier)):
+    eval_mgr.stop(id)
+    
+@eval_router.delete("/{id}")
+async def delete(
+    id: int, identifier=Depends(get_current_identifier), db: Session = Depends(gen_db)
+):
+    eval_mgr.stop(id)
+    entry = (
+        accessible(db.query(Evaluation), identifier).filter(Evaluation.id == id).first()
+    )
+    db.delete(entry)
+    db.commit()
+    return entry.id

@@ -1,4 +1,4 @@
-<script>
+<script lang='ts'>
   import "../app.css";
   import { DarkMode } from "flowbite-svelte";
   import { page } from "$app/stores";
@@ -8,17 +8,20 @@
     SidebarItem,
     SidebarWrapper,
   } from "flowbite-svelte";
+  import { getContext } from "svelte";
   import { MailBoxOutline } from "flowbite-svelte-icons";
   $: activeUrl = $page.url.pathname;
+  const t: any = getContext("t");
+  // let sidebar = t("sidebar")
   let sidebar = [
-    "模型广场",
-    "微调管理",
-    "数据管理",
-    "模型评估",
-    "部署管理",
-    "模型下载",
-    "错误记录",
-    "设置",
+    t("sidebar.model_squre"),
+    t("sidebar.finetune_manager"),
+    t("sidebar.data_manager"),
+    t("sidebar.model_eval"),
+    t("sidebar.deployment_manager"),
+    t("sidebar.model_download"),
+    t("sidebar.error_log"),
+    t("sidebar.settings"),
   ];
   let route = [
     "/model",

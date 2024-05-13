@@ -16,6 +16,8 @@
   import Uploader from "../Uploader.svelte";
   import { onMount } from "svelte";
   import ActionPageTitle from "../../components/ActionPageTitle.svelte";
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
   let current_step = 1;
   let name = "";
   let description = "";
@@ -48,11 +50,10 @@
 
   let stage_empty: boolean;
 
-  const steps = ["基本信息", "上传数据"];
+  const steps = [t("data.task.steps.infor"), t("data.task.steps.upload")];
 
   const steps_description = [
-    "填写所创建数据池的基本信息",
-    "选择需要上传的数据",
+    t("data.task.steps.infor_des"), t("data.task.steps.upload_des")
   ];
 
   let next_modal = false;
@@ -79,10 +80,10 @@
 {#if !loading}
   <Modal title="暂存区中仍有未提交的数据" bind:open={next_modal} autoclose>
     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-      确认已创建完成吗？暂存区中仍有未提交的数据。
+      {t("data.task.p1")}
     </p>
     <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-      暂存区的数据将<span class="font-semibold">不会</span>被保存。
+      {t("data.task.p2")}<span class="font-semibold">{t("data.task.p3")}</span>{t("data.task.p4")}
     </p>
     <svelte:fragment slot="footer">
       <div class="w-full flex justify-end gap-2">
@@ -90,17 +91,17 @@
           color="red"
           on:click={() => {
             goto(`/data`);
-          }}>是的</Button
+          }}>{t("data.task.yes")}</Button
         >
-        <Button color="alternative">不</Button>
+        <Button color="alternative">{t("data.task.no")}</Button>
       </div>
     </svelte:fragment>
   </Modal>
 
   <ActionPageTitle
     returnTo="/data"
-    title="创建数据池"
-    subtitle="按照提示步骤创建数据池"
+    title={t("data.task.title")}
+    subtitle={t("data.task.description")}
   />
   <div class="w-full flex flex-row p-1 m-2 mt-4">
     <div>
@@ -153,7 +154,7 @@
             <Button
               on:click={(_) => {
                 next_handle();
-              }}>完成</Button
+              }}>{t("data.task.complete")}</Button
             >
           {:else}
             <Button
@@ -161,7 +162,7 @@
               on:click={async (_) => {
                 await create_pool_handle();
                 ++current_step;
-              }}>创建数据池</Button
+              }}>{t("data.task.title")}</Button
             >
           {/if}
         </div>

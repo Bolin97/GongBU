@@ -26,7 +26,6 @@
   import ModelSelection from "../../components/ModelSelection.svelte";
   import DeviceSelection from "../../components/DeviceSelection.svelte";
   import { getContext } from "svelte";
-
   const t: any = getContext("t");
 
   let current_step = 1;

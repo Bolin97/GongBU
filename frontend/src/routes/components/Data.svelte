@@ -1,7 +1,7 @@
 <script lang="ts">
   import axios from "axios";
   import { Select, Label } from "flowbite-svelte";
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import type PoolEntry from "../../class/PoolEntry";
   import type DatasetEntry from "../../class/DatasetEntry";
   interface ValueNamePair {
@@ -11,6 +11,7 @@
 
   let selectedPool: string;
   export let selectedSet: string;
+  const t: any = getContext("t");
 
   let pool_options = [] as Array<ValueNamePair>;
   onMount(async () => {
@@ -43,23 +44,23 @@
 <div class="m-4">
   <div class="m-4 my-8">
     <Label>
-      选择数据池：
+      {t("components.data.data_pool_selector")}
       <Select
         class="mt-2"
         items={pool_options}
         bind:value={selectedPool}
-        placeholder="选择数据池"
+        placeholder={t("components.data.data_pool_des")}
       />
     </Label>
   </div>
   <div class={`m-4 my-8 ${loading ? "hidden" : ""}`}>
     <Label>
-      选择数据集：
+      {t("components.data.data_set_selector")}
       <Select
         class="mt-2"
         items={sets}
         bind:value={selectedSet}
-        placeholder="选择数据集"
+        placeholder={t("components.data.data_set_des")}
       />
     </Label>
   </div>

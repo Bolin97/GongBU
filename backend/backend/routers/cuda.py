@@ -6,8 +6,6 @@ cuda_router = APIRouter()
 
 @cuda_router.get("/{device_id}")
 async def device_info(device_id: int):
-    # 初始化NVML库
-    nvmlInit()
     # 获取设备
     handle = nvmlDeviceGetHandleByIndex(device_id)
     # 获取设备的利用率
@@ -21,17 +19,11 @@ async def device_info(device_id: int):
         "memory_utilization": 100 * memory_info.used / memory_info.total,
     }
 
-    # 关闭NVML库
-    nvmlShutdown()
-
     return ret
 
 
 @cuda_router.get("")
 async def avaliable_device():
-    # 初始化NVML库
-    nvmlInit()
-
     device_count = nvmlDeviceGetCount()
     device_info = []
 
@@ -53,8 +45,5 @@ async def avaliable_device():
                 "memory_utilization": 100 * memory_info.used / memory_info.total,
             }
         )
-
-        # 关闭NVML库
-    nvmlShutdown()
 
     return device_info

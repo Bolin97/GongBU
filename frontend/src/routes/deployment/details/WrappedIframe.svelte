@@ -4,6 +4,8 @@
   export let avaliable: boolean;
 
   let iframe: HTMLIFrameElement;
+    import { getContext } from "svelte";
+  const t: any = getContext("t");
 </script>
 
 {#if avaliable}
@@ -11,6 +13,6 @@
   ></iframe>
 {:else}
   <div class="text-center">
-    <p>Deployment is not available</p>
+    <p>{t("deployment.detail.p1")}</p>
   </div>
 {/if}

@@ -26,6 +26,8 @@ locales = {
         "download_options": "本脚本将开始下载",
         "bert_model": "本项目使用了bert-base-model-chinese，它将从该链接下载 https://huggingface.co/google-bert/bert-base-chinese",
         "manually_download_bert_model": "你需要手动下载bert-base-model-chinese，并将其放在 本项目根目录/bert-base-chinese/ config.json及其它文件应在该目录下",
+        "m3e_embd": "本项目使用了m3e-base模型作为embeddings，它将从该链接下载 https://huggingface.co/moka-ai/m3e-base",
+        "manually_download_m3e_embd": "你需要手动下载m3e-base模型，并将其放在 本项目根目录/m3e-base/ config.json及其它文件应在该目录下",
     },
     "en": {
         "license_warning": """
@@ -45,6 +47,8 @@ But other resources, especially, but not only models and datasets, should be use
         "download_options": "This script will start downloading",
         "bert_model": "This app uses bert-base-model-chinese, it will be downloaded from https://huggingface.co/google-bert/bert-base-chinese",
         "manually_download_bert_model": "You need to download bert-base-model-chinese manually, and put it in the root_directory_of_this_project/bert-base-chinese/ make sure that the config.json and other files are in the same directory.",
+        "m3e_embd": "This app uses m3e-base model for sentence embedding, it will be downloaded from https://huggingface.co/moka-ai/m3e-base",
+        "manually_download_m3e_embd": "You need to download m3e-base model manually, and put it in the root_directory_of_this_project/m3e-base/ make sure that the config.json and other files are in the same directory.",
     },
 }
 
@@ -124,6 +128,33 @@ else:
     os.system("rm -rf ../bert-base-chinese")
     os.system(
         "cd .. && git clone https://huggingface.co/google-bert/bert-base-chinese.git"
+    )
+
+print()
+
+rich.print(locales[language]["m3e_embd"])
+
+questions = [
+    inquirer.List(
+        "m3e_embd",
+        message=locales[language]["download_options"],
+        choices=[locales[language]["ok"], locales[language]["download_manually"]],
+        default=locales[language]["ok"],
+    ),
+]
+    
+answers = inquirer.prompt(questions)
+
+if answers["m3e_embd"] == locales[language]["download_manually"]:
+    rich.print(
+        locales[language]["manually_download_m3e_embd"]
+    )
+else:
+    os.system("mkdir -p ../m3e-base")
+    os.system("cd ../m3e-base && git init && git lfs install")
+    os.system("rm -rf ../m3e-base")
+    os.system(
+        "cd .. && git clone https://huggingface.co/moka-ai/m3e-base.git"
     )
 
 print("Download complete.")

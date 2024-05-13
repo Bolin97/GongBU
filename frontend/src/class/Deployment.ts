@@ -12,5 +12,6 @@ export default interface Deployment {
   deploy_base_model: boolean;
   load_8bit: boolean;
   use_flash_attention: boolean;
+  use_vllm: boolean;
   port: number;
 }

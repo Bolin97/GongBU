@@ -103,7 +103,7 @@ from transformers import (
     BitsAndBytesConfig,
 )  # noqa: F402
 from accelerate import Accelerator
-
+from trl import SFTTrainer
 from dataclasses import dataclass, field
 
 # from simpletuning.constants import *
@@ -152,7 +152,6 @@ def get_device_map(devices: list[int] | str, base_model: str):
     #         no_split_module_classes=type(model)._no_split_modules
     #     )
     #     return device_map
-
     # Now we use CUDA_VISIBLE_DEVICES to control the device, so device_map is always auto
     return "auto"
 
@@ -343,18 +342,24 @@ def get_dataset(
 
     val_size = 0 if val_size == 0 else max(int(val_size * len(data["train"])), 2)
 
+    text_train_data = None
+    text_val_data = None
+
     if val_size > 0:
         train_val = data["train"].train_test_split(
             test_size=val_size, shuffle=True, seed=42
         )
         callback.set_eval_dataset(train_val["test"])
         train_val["test"].to_json(os.path.join(output_dir, "eval_dataset.json"))
+        text_train_data = train_val["train"].shuffle()
+        text_val_data = train_val["test"].shuffle()
         train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
         val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
     else:
         train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
+        text_train_data = data["train"].shuffle()
         val_data = None
-    return train_data, val_data
+    return train_data, val_data, text_train_data, text_val_data
 
 
 def train(
@@ -465,7 +470,7 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
-    train_data, val_data = get_dataset(
+    train_data, val_data, _, _ = get_dataset(
         dataset_type,
         dataset,
         val_set_size,
@@ -506,6 +511,7 @@ def train(
             else get_deepspeed_config(zero_stage, zero_offload)
         ),
     )
+    
 
     trainer = transformers.Trainer(
         model=model,
@@ -516,6 +522,16 @@ def train(
         args=training_args,
         data_collator=data_collator,
     )
+    # trainer = SFTTrainer(
+    #     model=model,
+    #     tokenizer=tokenizer,
+    #     args=training_args,
+    #     data_collator=data_collator,
+    #     train_dataset=train_data,
+    #     eval_dataset=val_data,
+    #     callbacks=[report_callback],
+    #     formatting_func=lambda x: [generate_prompt(x, dataset_type)],
+    # )
     # Currently pytorch requires python <= 3.10
     if (
         torch.__version__ >= "2"
@@ -597,6 +613,51 @@ def wrapper(
             zero_stage=entry.zero_stage,
             zero_offload=entry.zero_offload,
         )
+    except RuntimeError as e:
+        if "cuda out of memory" in str(e).lower():
+            db = get_db()
+            entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            entry.state = FinetuneState.error.value
+            entry.end_time = datetime.utcnow()
+            db.commit()
+            submit_fault(
+                [TaskType.finetune.value, str(finetune_id)],
+                str(e),
+                FaultCode.cuda_oom,
+                entry.owner,
+                False,
+                generate_log_path(TaskType.finetune.value, entry.id),
+            )
+            db.close()
+        elif "rtx 4000 series" in str(e).lower():
+            db = get_db()
+            entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            entry.state = FinetuneState.error.value
+            entry.end_time = datetime.utcnow()
+            db.commit()
+            submit_fault(
+                [TaskType.finetune.value, str(finetune_id)],
+                str(e),
+                FaultCode.nccl_issue,
+                entry.owner,
+                False,
+                generate_log_path(TaskType.finetune.value, entry.id),
+            )
+            db.close()
+        else:
+            db = get_db()
+            entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+            entry.state = FinetuneState.error.value
+            entry.end_time = datetime.utcnow()
+            db.commit()
+            submit_fault(
+                [TaskType.finetune.value, str(finetune_id)],
+                str(e),
+                FaultCode.other.value,
+                entry.owner,
+                False,
+                generate_log_path(TaskType.finetune.value, entry.id),
+            )
     except Exception as e:
         db = get_db()
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()

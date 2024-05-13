@@ -34,7 +34,7 @@ RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.
 
 RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]"
 RUN /micromamba/bin/micromamba run -n backend pip install torch
-RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.37.2
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
 RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0
 # RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3
@@ -46,6 +46,12 @@ RUN /micromamba/bin/micromamba run -n backend pip install mpi4py
 # Reduces tons of work
 # When this version is released, just use the new version
 RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2
+
+RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
+RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0
+RUN /micromamba/bin/micromamba run -n backend pip install trl==0.7.11
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
 
 WORKDIR /backend
 

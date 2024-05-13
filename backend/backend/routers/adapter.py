@@ -29,3 +29,16 @@ async def get(
     identifier: str = Depends(get_current_identifier),
 ):
     return accessible(db.query(Adapter).filter(Adapter.id == id), identifier).first()
+
+@adapter_router.delete("/{id}")
+async def delete(
+    id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    adapter = accessible(db.query(Adapter).filter(Adapter.id == id), identifier).first()
+    if adapter.owner != identifier:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    db.delete(adapter)
+    db.commit()
+    return adapter

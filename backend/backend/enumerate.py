@@ -25,6 +25,8 @@ class FaultCode(Enum):
     cuda_oom = 10000
 
     other = 99999
+    
+    nccl_issue = 199999
 
 
 class TaskType(Enum):

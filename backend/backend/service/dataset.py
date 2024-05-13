@@ -7,6 +7,7 @@ from datetime import date
 import json
 from sys import getsizeof
 from sqlalchemy.orm.session import Session
+from typing import AnyStr, Any
 
 # 1 KB
 CHUNKY_BY = 1024
@@ -17,16 +18,10 @@ def submit_finetune_dataset(
     name: str,
     description: str,
     kind: int,
-    file: BinaryIO,
+    content: Any,
     identifier: str,
 ):
     db = get_db()
-    # try both json and jsonl
-    try:
-        content = json.load(file)
-    except:
-        file.seek(0)
-        content = [json.loads(line) for line in file]
     entry = DatasetEntry(
         pool_id=pool_id,
         name=name,
@@ -61,6 +56,23 @@ def submit_finetune_dataset(
     pool.size += 1
     db.commit()
     db.close()
+
+def submit_finetune_dataset_file(
+    pool_id: int,
+    name: str,
+    description: str,
+    kind: int,
+    file: BinaryIO,
+    identifier: str,
+):
+    db = get_db()
+    # try both json and jsonl
+    try:
+        content = json.load(file)
+    except:
+        file.seek(0)
+        content = [json.loads(line) for line in file]
+    submit_finetune_dataset(pool_id, name, description, kind, content, identifier)
 
 
 def fetch_dataset(entry_id: int) -> tuple[list, int]:

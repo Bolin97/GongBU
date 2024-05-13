@@ -4,6 +4,7 @@ import jieba
 from nltk.util import ngrams
 from collections import Counter
 import numpy as np
+from backend.const import NAN_MAGIC
 
 
 def PRF(refs, cands) -> dict[str, float]:
@@ -80,5 +81,7 @@ def evaluate(indexes: list[str], refs: list[str], cands: list[str]) -> dict[str,
 
     if "B" in indexes:
         ret.update(B(refs, cands))
+        
+    ret = {k: v if not np.isnan(v) else NAN_MAGIC for k, v in ret.items()}
 
     return ret

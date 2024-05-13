@@ -15,7 +15,7 @@ def run(task_id: int, params: FinetuneParams):
         devices = list(map(int, params.devices))
     cuda_visible_devices = ",".join(map(str, devices))
 
-    script_file = os.path.join(os.path.dirname(__file__), "peft_finetune.py")
+    script_file = os.path.join(os.path.dirname(__file__), "finetune_script.py")
 
     disable_ib_p2p = os.getenv("DISABLE_IB_P2P", None)
     disable_ib_p2p_command = "NCCL_IB_DISABLE=1 NCCL_P2P_DISABLE=1"

@@ -5,6 +5,8 @@
   import Uploader from "../Uploader.svelte";
   import { goto } from "$app/navigation";
   import axios from "axios";
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
 
   const id = $page.url.searchParams.get("pool_id");
 
@@ -26,12 +28,12 @@
   }
 </script>
 
-<Modal title="确认删除吗" bind:open={delete_modal} autoclose>
+<Modal title={t("data.detail.title_1")} bind:open={delete_modal} autoclose>
   <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    确认要删除吗？
+    {t("data.detail.p1")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    数据将<span class="font-semibold">无法</span>恢复。
+    {t("data.detail.p2")}<span class="font-semibold">{t("data.detail.p3")}</span>{t("data.detail.p4")}
   </p>
   <svelte:fragment slot="footer">
     <div class="w-full flex justify-end gap-2">
@@ -39,19 +41,19 @@
         color="red"
         on:click={() => {
           handle_delete();
-        }}>是的</Button
+        }}>{t("data.detail.yes")}</Button
       >
-      <Button color="alternative">不</Button>
+      <Button color="alternative">{t("data.detail.no")}</Button>
     </div>
   </svelte:fragment>
 </Modal>
 
-<Modal title="暂存区中仍有未提交的数据" bind:open={next_modal} autoclose>
+<Modal title={t("data.detail.title_2")} bind:open={next_modal} autoclose>
   <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    确认要返回吗？暂存区中仍有未提交的数据。
+    {t("data.detail.p5")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    暂存区的数据将<span class="font-semibold">不会</span>被保存。
+    {t("data.detail.p6")}<span class="font-semibold">{t("data.detail.p7")}</span>{t("data.detail.p8")}
   </p>
   <svelte:fragment slot="footer">
     <div class="w-full flex justify-end gap-2">
@@ -59,9 +61,9 @@
         color="red"
         on:click={() => {
           goto(`/data/details?pool_id=${id}`);
-        }}>是的</Button
+        }}>{t("data.detail.yes")}</Button
       >
-      <Button color="alternative">不</Button>
+      <Button color="alternative">{t("data.detail.no")}</Button>
     </div>
   </svelte:fragment>
 </Modal>
@@ -73,11 +75,11 @@
           return_handle();
         }}
       >
-        <AngleLeftOutline size="sm" />返回
+        <AngleLeftOutline size="sm" />{t("components.go_back")}
       </Button>
     </div>
     <span class="text-2xl pt-1 text-black-400 font-bold"
-      >&nbsp;&nbsp;数据池详情</span
+      >&nbsp;&nbsp;{t("data.detail.detail")}</span
     >
   </div>
   <div class="flex flex-row">
@@ -87,7 +89,7 @@
       }}
       color="red"
     >
-      删除此数据池
+      {t("data.detail.delete")}
     </Button>
   </div>
 </div>

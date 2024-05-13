@@ -4,13 +4,14 @@ from fastapi.params import Depends
 from sqlalchemy.orm.session import Session
 from backend.models import *
 from backend.const import EPS
+from backend.reduce_size import reduce_size
 
 ft_eval_index_router = APIRouter()
 
 
 @ft_eval_index_router.get("")
 async def eval_index_get(id: int, ind: str, db: Session = Depends(gen_db)):
-    return (
+    return reduce_size(
         db.query(FtEvalIndexRecord)
         .filter(FtEvalIndexRecord.entry_id == id)
         .filter(FtEvalIndexRecord.name == ind)

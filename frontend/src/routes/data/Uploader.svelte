@@ -24,6 +24,8 @@
   import DatasetTable from "./DatasetTable.svelte";
   import type DatasetEntry from "../../class/DatasetEntry";
   import { onDestroy, onMount } from "svelte";
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
 
   interface SubmissionEntry {
     name: string;
@@ -70,7 +72,11 @@
     submissions = [...submissions, ...files_to_default_entries(files)];
   }
 
-  const stage_table_heads = ["文件名", "数据集名", "描述", "操作"];
+  const stage_table_heads = [
+    t("data.uploader.col_filename"), 
+    t("data.uploader.col_datasetname"), 
+    t("data.uploader.col_des"), 
+    t("data.uploader.col_option")];
 
   let loading = false;
 
@@ -92,39 +98,11 @@
       });
       loadingProgress += 1;
     }
-    // submissions.forEach(async (entry) => {
-    // 	const form = new FormData();
-    // 	form.append("file", entry.file);
-    // 	await axios.post(`/api/dataset/`, form, {
-    // 		params: {
-    // 			name: entry.name,
-    // 			description: entry.description,
-    // 			pool_id: poolId,
-    // 			kind: data_type,
-    // 		}
-    // 	});
-    // 	loadingProgress += 1;
-    // })
-
-    // await Promise.all(
-    // 	submissions.map((entry) => {
-    // 		const form = new FormData();
-    // 		form.append("file", entry.file);
-    // 		return axios.post(`/api/dataset/`, form, {
-    // 			params: {
-    // 				name: entry.name,
-    // 				description: entry.description,
-    // 				pool_id: poolId,
-    // 				kind: data_type,
-    // 			}
-    // 		});
-    // 	})
-    // );
     await fetch_dataset_entries();
     submissions = [];
     loading = false;
   }
-  let fetch_entries_updater: number;
+  let fetch_entries_updater: any;
   onMount(async () => {
     fetch_entries_updater = setInterval(
       fetch_dataset_entries,
@@ -160,7 +138,7 @@
     <div class="m-2">
       <Accordion>
         <AccordionItem open={true}>
-          <span slot="header">数据池详细信息</span>
+          <span slot="header">{t("data.uploader.datapool_detail")}</span>
           <DatasetTable
             datasetEntries={entries}
             on:modified={async (_) => {
@@ -174,7 +152,7 @@
       <div class="m-2">
         <Accordion>
           <AccordionItem open={true}>
-            <span slot="header">暂存区</span>
+            <span slot="header">{t("data.uploader.zone")}</span>
             <div class="flex flex-row justify-end items-center text-black">
               <div>以</div>
               <div class="flex flex-row gap-2 m-4 my-8">
@@ -184,18 +162,18 @@
                   >
                 {/each}
               </div>
-              <span>格式</span>
+              <span>{t("data.uploader.format")}</span>
               <div>
                 <Button
                   class="m-2 text-center"
-                  on:click={(_) => submit_handle()}>提交暂存区的所有文件</Button
+                  on:click={(_) => submit_handle()}>{t("data.uploader.submit")}</Button
                 >
               </div>
             </div>
             <div class="border border-gray-200 text-gray-800 rounded p-2 m-2">
               {#if submissions.length == 0}
                 <div class="w-full text-center">
-                  <span>暂存区内无已上传文件</span>
+                  <span>{t("data.uploader.no_file")}</span>
                 </div>
               {:else}
                 <Table striped={true}>
@@ -211,13 +189,13 @@
                       </TableBodyCell>
                       <TableBodyCell>
                         <Input
-                          placeholder="输入数据集名称"
+                          placeholder={t("data.uploader.enter_name")}
                           bind:value={entry.name}
                         />
                       </TableBodyCell>
                       <TableBodyCell>
                         <Input
-                          placeholder="输入数据集描述"
+                          placeholder={t("data.uploader.enter_des")}
                           bind:value={entry.description}
                         />
                       </TableBodyCell>
@@ -261,9 +239,9 @@
             /></svg
           >
           <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-            <span class="font-semibold">点击</span>或<span class="font-semibold"
-              >拖拽</span
-            >以上传文件至暂存区
+            <span class="font-semibold">{t("data.uploader.click")}</span>{t("data.uploader.or")}<span class="font-semibold"
+              >{t("data.uploader.p1")}</span
+            >{t("data.uploader.p2")}
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-400">JSON</p>
         </Dropzone>

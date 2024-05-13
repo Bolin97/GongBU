@@ -21,6 +21,8 @@
     training_advanced,
   } from "./Params";
   import type { FinetuneRequestParams } from "../../../class/FinetuneRequestParams";
+  import { getContext } from "svelte";
+  const t: any = getContext("t");
   const adapters: Array<
     | "lora"
     | "qlora"
@@ -56,11 +58,12 @@
     finetuneParam.load_4bit = params.load_xbit == 4;
     finetuneParam.load_8bit = params.load_xbit == 8;
   }
+
 </script>
 
 <div>
   <div class="flex flex-row gap-2 m-2 my-10">
-    <span>微调方法选择：</span>
+    <span>{t("finetune.finetune_params.finetune_method_select")}</span>
     {#each adapters as adapter_name}
       <Radio bind:group={adapter} name="method" value={adapter_name}
         ><p class="text-lg">{adapter_name}</p></Radio
@@ -68,18 +71,18 @@
     {/each}
   </div>
   {#if adapter == "lora" || adapter == "qlora" || adapter == "lokr" || adapter == "loha"}
-    <ParamGroup title="lora参数" entries={lora_specific_params} bind:params />
+    <ParamGroup title={t("finetune.finetune_params.lora_params.title")} entries={lora_specific_params} bind:params />
     {#if adapter == "qlora"}
       <ParamGroup
-        title="lora量化参数"
+        title={t("finetune.finetune_params.qlora_params.title")}
         entries={lora_quantization_params}
         bind:params
       />
       <Accordion class="m-4">
         <AccordionItem>
-          <span slot="header">高级</span>
+          <span slot="header">{t("finetune.finetune_params.qlora_params.advanced_options_title")}</span>
           <ParamGroup
-            title="lora量化参数（高级）"
+            title={t("finetune.finetune_params.qlora_params.q_params_ad")}
             entries={lora_quantization_advanced}
             bind:params
           />
@@ -89,17 +92,17 @@
   {/if}
   {#if adapter == "p-tuning" || adapter == "prefix-tuning" || adapter == "prompt-tuning"}
     <ParamGroup
-      title="虚拟token参数"
+      title={t("finetune.finetune_params.p_params.title")}
       entries={num_virt_tokens_param}
       bind:params
     />
   {/if}
-  <ParamGroup title="训练参数" entries={training_params} bind:params />
+  <ParamGroup title={t("finetune.finetune_params.train_params.title")} entries={training_params} bind:params />
   <Accordion class="m-4">
     <AccordionItem>
-      <span slot="header">高级</span>
+      <span slot="header">{t("finetune.finetune_params.train_params.advanced_options_title")}</span>
       <ParamGroup
-        title="训练参数（高级）"
+        title={t("finetune.finetune_params.train_params.train_params_ad")}
         entries={training_advanced}
         bind:params
       />

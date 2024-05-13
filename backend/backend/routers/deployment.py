@@ -21,6 +21,7 @@ class DeploymentParams(BaseModel):
     use_deepspeed: bool
     devices: list[str]
     port: int
+    use_vllm: bool
 
 
 @deployment_router.post("")
@@ -46,6 +47,7 @@ async def deploy(
         use_deepspeed=params.use_deepspeed,
         devices=params.devices,
         port=params.port,
+        use_vllm=params.use_vllm,
     )
     db.add(entry)
     db.commit()

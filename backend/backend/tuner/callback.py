@@ -23,6 +23,7 @@ from tqdm import tqdm
 import os
 import pickle
 from backend.evaluate import evaluate
+from backend.const import NAN_MAGIC
 
 
 class ReportCallback(TrainerCallback):
@@ -89,7 +90,7 @@ class ReportCallback(TrainerCallback):
                 db.add(
                     FtLoggingRecord(
                         entry_id=self.id,
-                        loss=loss,
+                        loss=loss if not np.isnan(loss) else NAN_MAGIC,
                         learning_rate=learning_rate,
                         epoch=epoch,
                         step=step,
@@ -108,7 +109,7 @@ class ReportCallback(TrainerCallback):
             ):
                 loss = last_history["eval_loss"]
                 epoch = last_history["epoch"]
-                db.add(FtEvalLossRecord(loss=loss, epoch=epoch, entry_id=self.id))
+                db.add(FtEvalLossRecord(loss=loss if not np.isnan(loss) else NAN_MAGIC, epoch=epoch, entry_id=self.id))
                 db.commit()
         except:
             pass
@@ -167,6 +168,7 @@ class ReportCallback(TrainerCallback):
         adapter = Adapter(
             adapter_name=self.task_name,
             adapter_description=self.task_description,
+            ft_entry=self.id,
             base_model_name=self.base_model_name,
             local_path=args.output_dir,
             storage_date=datetime.datetime.now(),
@@ -231,7 +233,12 @@ class ReportCallback(TrainerCallback):
 
             for k, v in eval_result.items():
                 db.add(
-                    FtEvalIndexRecord(entry_id=self.id, name=k, epoch=epoch, value=v)
+                    FtEvalIndexRecord(
+                        entry_id=self.id, 
+                        name=k, 
+                        epoch=epoch, 
+                        value=v if not np.isnan(v) else NAN_MAGIC
+                    )
                 )
 
             db.commit()

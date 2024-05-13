@@ -1,23 +1,24 @@
 <script lang="ts">
   import axios from "axios";
-  import { onMount } from "svelte";
+  import { getContext, onMount } from "svelte";
   import DeploymentCard from "./DeploymentCard.svelte";
   import { Button } from "flowbite-svelte";
   import { PlusOutline } from "flowbite-svelte-icons";
   import ActionPageTitle from "../components/ActionPageTitle.svelte";
 
   let deploymemts = [];
+  const t: any = getContext("t");
 
   onMount(async () => {
     deploymemts = (await axios.get(`/api/deployment`)).data;
   });
 </script>
 
-<ActionPageTitle title="部署管理" subtitle="部署">
+<ActionPageTitle title={t("deployment.title")} subtitle={t("deployment.description")}>
   <svelte:fragment slot="right">
     <Button href="/deployment/tasks">
       <PlusOutline />
-      部署
+      {t("deployment.task.button")}
     </Button>
   </svelte:fragment>
 </ActionPageTitle>

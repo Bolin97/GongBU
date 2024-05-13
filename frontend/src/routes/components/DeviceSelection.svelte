@@ -1,12 +1,14 @@
 <script lang="ts">
   import { Checkbox, Label, Progressbar, Radio, Toggle } from "flowbite-svelte";
   import type CudaDeviceEntry from "../../class/CudaDeviceEntry";
-  import { onDestroy, onMount } from "svelte";
   import axios from "axios";
   import { UPDATE_VIEW_INTERVAL } from "../store";
   import { PlusOutline, CheckCircleOutline } from "flowbite-svelte-icons";
+  import { getContext, onDestroy, onMount } from "svelte";
+  const t: any = getContext("t");
   let devices: Array<CudaDeviceEntry> = [];
   export let updaterOn = true;
+
 
   let devices_updater: any;
   onMount(async () => {
@@ -45,14 +47,14 @@
 
 <div class="flex flex-col">
   <div class="flex flex-row justify-between">
-    <span class="text-1xl m-2 mt-4">自动分配</span>
+    <span class="text-1xl m-2 mt-4">{t("finetune.device_params.auto")}</span>
     <Toggle
       on:change={(_) => {
         toggle_auto();
       }}
     />
   </div>
-  <div class="text-1xl m-2 my-4 mt-2">本地设备：</div>
+  <div class="text-1xl m-2 my-4 mt-2">{t("finetune.device_params.local_devices")}</div>
   <div class={`flex flex-col ${auto_dist ? "opacity-50" : ""}`}>
     <div class="m-2 flow-root">
       {#each devices as device}
@@ -73,11 +75,11 @@
 
             <div class="m-2 text-lg">CUDA:{device.device_id}</div>
             <div class="m-2">
-              GPU利用率：{device.gpu_utilization.toFixed(1)}%
+              {t("components.device.GPU_utilization")}{device.gpu_utilization.toFixed(1)}%
               <Progressbar progress={device.gpu_utilization.toFixed(1)} />
             </div>
             <div class="m-2">
-              显存利用率：{device.memory_utilization.toFixed(1)}%
+              {t("components.device.memory_utilization")}{device.memory_utilization.toFixed(1)}%
               <Progressbar progress={device.memory_utilization.toFixed(1)} />
             </div>
           </div>

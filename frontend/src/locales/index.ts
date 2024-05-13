@@ -19,4 +19,6 @@ const supportedLanguages = [
 
 export default () => createI18nStore(i18next);
 
-export { supportedLanguages };
+const t = i18next.t;
+
+export { supportedLanguages, t };
