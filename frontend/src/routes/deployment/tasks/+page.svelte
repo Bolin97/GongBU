@@ -48,6 +48,7 @@
     public: false,
   };
   import { getContext } from "svelte";
+  import type Adapter from "../../../class/Adapter";
   const t: any = getContext("t");
 
   $: {
@@ -57,6 +58,21 @@
       });
     }
   }
+
+  let show_use_vllm = false;
+  $: (async () => {
+    if(selected_adapter_id.length == 0) {
+      show_use_vllm = true;
+      return;
+    }
+    const adapter_info: Adapter = (await axios.get(
+      `/api/adapter/${selected_adapter_id}`
+    )).data
+    const ft_entry = (await axios.get(
+      `/api/finetune_entry/${adapter_info.ft_entry}`
+    )).data;
+    show_use_vllm = ft_entry.adapter_name == "lora";
+  })();
   let deployment_request_params: DeploymentRequestParams =
     default_deployment_request_params();
   $: {
@@ -171,7 +187,10 @@
           />
         </div>
         <div class={`${current_step == 3 ? "" : "hidden"}`}>
-          <Deployment bind:deploymentParams={deployment_request_params} />
+          <Deployment bind:deploymentParams={deployment_request_params}
+          hideParams={
+            show_use_vllm ? [] : ['use_vllm']
+          }/>
         </div>
         <div class={`${current_step == 4 ? "" : "hidden"}`}>
           <div class="m-2 p-2">

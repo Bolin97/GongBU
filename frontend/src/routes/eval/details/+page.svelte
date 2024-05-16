@@ -66,13 +66,13 @@
   import EvalProgress from "../EvalProgress.svelte";
 </script>
 
-<Modal title={t("eval.delete.title")} bind:open={delete_modal} autoclose>
+<Modal title={t("eval.detail.delete.title")} bind:open={delete_modal} autoclose>
   <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    {t("eval.delete.p1")}
+    {t("eval.detail.delete.p1")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    {t("eval.delete.p2")}<span
-      class="font-semibold">{t("eval.delete.p3")}</span
+    {t("eval.detail.delete.p2")}<span
+      class="font-semibold">{t("eval.detail.delete.p3")}</span
     >.
   </p>
   <svelte:fragment slot="footer">

@@ -6,7 +6,6 @@ from backend.enumerate import *
 import os
 from backend.models import *
 
-
 def run(task_id: int, params: FinetuneParams):
     devices = None
     if params.devices[0] == "auto":
@@ -64,6 +63,14 @@ class FinetuneManager:
     def stop(self, finetune_id: int):
         if finetune_id in self.finetunes:
             del self.finetunes[finetune_id]
+        db = get_db()
+        finetune = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
+        if finetune is None:
+            db.close()
+            return
+        finetune.state = FinetuneState.error.value
+        db.commit()
+            
         session_name = f"{TaskType.finetune.value}_task_{finetune_id}"
         os.system(f"tmux send-keys -t {session_name} C-c")
         # then delete the tmux session

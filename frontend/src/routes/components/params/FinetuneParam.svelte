@@ -26,6 +26,7 @@
   const adapters: Array<
     | "lora"
     | "qlora"
+    | "adalora"
     | "p-tuning"
     | "prefix-tuning"
     | "prompt-tuning"
@@ -35,6 +36,7 @@
   > = [
     "lora",
     "qlora",
+    "adalora",
     "p-tuning",
     "prefix-tuning",
     "prompt-tuning",
@@ -70,7 +72,7 @@
       >
     {/each}
   </div>
-  {#if adapter == "lora" || adapter == "qlora" || adapter == "lokr" || adapter == "loha"}
+  {#if adapter == "lora" || adapter == "qlora" || adapter == "adalora" || adapter == "lokr" || adapter == "loha" || adapter == "lomo-lora"}
     <ParamGroup title={t("finetune.finetune_params.lora_params.title")} entries={lora_specific_params} bind:params />
     {#if adapter == "qlora"}
       <ParamGroup

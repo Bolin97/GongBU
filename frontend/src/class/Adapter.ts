@@ -7,4 +7,5 @@ export default interface Adapter {
   storage_date: string;
   owner: string;
   public: boolean;
+  ft_entry: string;
 }

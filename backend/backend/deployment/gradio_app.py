@@ -37,6 +37,10 @@ def run(deployment_id: int):
             .filter(OpenLLM.model_name == adapter.base_model_name)
             .first()
         )
+        if use_vllm and db.query(FinetuneEntry).filter(
+            FinetuneEntry.id == adapter.ft_entry
+        ).first().adapter_name != "lora":
+            raise Exception("VLLM can only be used with LORA adapters")
         llmw = LLMW(base_model.local_path, adapter.local_path, use_vllm=use_vllm, use_deepspeed=use_deepspeed)
     llmw.load()
 
@@ -188,6 +192,22 @@ def run(deployment_id: int):
 def wrapper(deployment_id: int):
     try:
         run(deployment_id)
+    except RuntimeError as e:
+        if "cuda out of memory" in str(e).lower():
+            db = get_db()
+            entry = db.query(Deployment).filter(Deployment.id == deployment_id).first()
+            entry.state = DeploymentState.error.value
+            db.commit()
+            submit_fault(
+                [TaskType.deployment.value, str(deployment_id)],
+                str(e),
+                FaultCode.cuda_oom.value,
+                entry.owner,
+                False,
+                generate_log_path(TaskType.deployment.value, str(deployment_id)),
+            )
+        else:
+            raise e
     except Exception as e:
         db = get_db()
         entry = db.query(Deployment).filter(Deployment.id == deployment_id).first()

@@ -4,6 +4,7 @@ from typing import Any
 from transformers.utils.dummy_pt_objects import StoppingCriteria
 from transformers.generation.stopping_criteria import StoppingCriteriaList
 from vllm import LLM, SamplingParams
+from vllm.lora.request import LoRARequest
 
 class LLMW:
 
@@ -18,6 +19,8 @@ class LLMW:
     loaded: bool
     
     use_vllm: bool
+    vllm_lora_request: Any
+    
     use_deepseed: bool
 
     def __init__(self, base_model_path: str, adapter_path: str, use_vllm: bool = False, use_deepspeed: bool = False):
@@ -26,10 +29,17 @@ class LLMW:
         self.loaded = False
         self.use_vllm = use_vllm
         self.use_deepspeed = use_deepspeed
+        self.vllm_lora_request = None
 
     def load(self):
         if self.use_vllm:
-            self.vllm_model = LLM(self.base_model_path, self.base_model_path)
+            self.vllm_model = LLM(self.base_model_path, self.base_model_path, enable_lora=True)
+            if self.adapter_path is not None and self.adapter_path != "":
+                self.vllm_lora_request = LoRARequest(
+                    "load_adapter",
+                    1,
+                    self.adapter_path,
+                )
             self.loaded = True
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
@@ -43,16 +53,27 @@ class LLMW:
             self.loaded = True
     
     def vllm_simple_generation(self, prompt: str, max_length: int):
-        return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
-            max_tokens=max_length,
-            stop_token_ids=[self.vllm_model.get_tokenizer().eos_token_id]
-        ))[0].outputs[0].text
-
+        if self.vllm_lora_request is None:
+            return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
+                max_tokens=max_length,
+                stop_token_ids=[self.vllm_model.get_tokenizer().eos_token_id]
+            ))[0].outputs[0].text
+        else:
+            return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
+                max_tokens=max_length,
+                stop_token_ids=[self.vllm_model.get_tokenizer().eos_token_id]
+            ), lora_request=self.vllm_lora_request)[0].outputs[0].text
+            
     def vllm_advanced_generation(self, prompt: str, sampling_params: dict):
         sampling_params["stop_token_ids"] = [self.vllm_model.get_tokenizer().eos_token_id]
-        return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
-            **sampling_params
-        ))[0].outputs[0].text
+        if self.vllm_lora_request is None:
+            return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
+                **sampling_params
+            ))[0].outputs[0].text
+        else:
+            return self.vllm_model.generate(prompt, sampling_params=SamplingParams(
+                **sampling_params
+            ), lora_request=self.vllm_lora_request)[0].outputs[0].text
 
     def simple_generation(self, prompt: str, max_length: int):
         if self.use_vllm:

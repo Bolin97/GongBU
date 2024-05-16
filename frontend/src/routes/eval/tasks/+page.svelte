@@ -28,6 +28,7 @@
   import { default_deployment_request_params } from "../../../class/DeploymentRequestParams";
   import axios from "axios";
   import { getContext } from "svelte";
+  import type Adapter from "../../../class/Adapter";
 
   const t: any = getContext("t");
 
@@ -70,6 +71,21 @@
   let val_set_size_params = {
     val_set_size: 1,
   };
+
+  let show_use_vllm = false;
+  $: (async () => {
+    if(selected_adapter_id.length == 0) {
+      show_use_vllm = true;
+      return;
+    }
+    const adapter_info: Adapter = (await axios.get(
+      `/api/adapter/${selected_adapter_id}`
+    )).data
+    const ft_entry = (await axios.get(
+      `/api/finetune_entry/${adapter_info.ft_entry}`
+    )).data;
+    show_use_vllm = ft_entry.adapter_name == "lora";
+  })();
 
   async function submit_handle() {
     uploading = true;
@@ -187,7 +203,9 @@
         <div class={`${current_step == 4 ? "" : "hidden"}`}>
           <DeploymentParam
             bind:deploymentParams={deploy_request_params}
-            hideParams={["port", "use_vllm"]}
+            hideParams={
+              show_use_vllm ? ["port"] : ["port", "use_vllm"]
+            }
           />
         </div>
         <div class={`${current_step == 5 ? "" : "hidden"}`}>

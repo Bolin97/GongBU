@@ -89,16 +89,22 @@ async def delete_files_and_entry(
         db.delete(related_adapter)
     # under entry.output_dir
     # remove all folder follows checkpoint-number
-    for folder in os.listdir(entry.output_dir):
-        if folder.startswith("checkpoint-"):
-            shutil.rmtree(os.path.join(entry.output_dir, folder))
+    try:
+        for folder in os.listdir(entry.output_dir):
+            if folder.startswith("checkpoint-"):
+                shutil.rmtree(os.path.join(entry.output_dir, folder))
 
-    # remove adapter_model.bin adapter_config.json README.md
-    files_to_remove = ["adapter_model.bin", "adapter_config.json", "README.md"]
-    for file in files_to_remove:
-        file_path = os.path.join(entry.output_dir, file)
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        # remove adapter_model.bin adapter_config.json README.md
+        files_to_remove = ["adapter_model.bin", "adapter_config.json", "README.md"]
+        for file in files_to_remove:
+            file_path = os.path.join(entry.output_dir, file)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+    except Exception as e:
+        # just in case
+        print(e)
+        import traceback
+        print(traceback.format_exc())
     
     
 

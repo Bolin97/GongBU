@@ -70,6 +70,8 @@ TRANSFORMERS_MODELS_TO_IA3_TARGET_MODULES_MAPPING = {
     "internlm": ["q_proj", "v_proj", "down_proj"],
     "xverse": ["q_proj", "v_proj", "down_proj"],
     "mistral": ["k_proj", "v_proj", "down_proj"],
+    "internlm": ["q_proj", "v_proj", "down_proj"],
+    "gemma": ["q_proj", "v_proj", "down_proj"],
 }
 TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING = {
     "t5": ["wo"],
@@ -94,6 +96,7 @@ TRANSFORMERS_MODELS_TO_IA3_FEEDFORWARD_MODULES_MAPPING = {
     "internlm": ["down_proj"],
     "xverse": ["down_proj"],
     "mistral": ["down_proj"],
+    "gemma": ["down_proj"],
 }
 from transformers import (
     AutoModelForCausalLM,
@@ -200,7 +203,7 @@ def get_peft_config(
             ],
             task_type="CAUSAL_LM",
         )
-    elif adapter_name == "lora":
+    elif adapter_name == "lora" or adapter_name == "lomo-lora":
         return LoraConfig(
             r=lora_r,
             lora_alpha=lora_alpha,
@@ -334,8 +337,7 @@ def get_dataset(
             user_prompt_len:
         ]  # could be sped up, probably
         return tokenized_full_prompt
-
-    df = DataFrame(dataset)
+    df = DataFrame(dataset).astype(str)
     data = datasets.DatasetDict(
         {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
     )
@@ -470,7 +472,7 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
-    train_data, val_data, _, _ = get_dataset(
+    train_data, val_data, _a, _b= get_dataset(
         dataset_type,
         dataset,
         val_set_size,
@@ -512,38 +514,51 @@ def train(
         ),
     )
     
+    if adapter_name != "lomo-lora":
+        trainer = transformers.Trainer(
+            model=model,
+            tokenizer=tokenizer,
+            train_dataset=train_data,
+            eval_dataset=val_data,
+            callbacks=[report_callback],
+            args=training_args,
+            data_collator=data_collator,
+        )
+        # trainer = SFTTrainer(
+        #     model=model,
+        #     tokenizer=tokenizer,
+        #     args=training_args,
+        #     data_collator=data_collator,
+        #     train_dataset=train_data,
+        #     eval_dataset=val_data,
+        #     callbacks=[report_callback],
+        #     formatting_func=lambda x: [generate_prompt(x, dataset_type)],
+        # )
+        # Currently pytorch requires python <= 3.10
+        if (
+            torch.__version__ >= "2"
+            and sys.platform != "win32"
+            and sys.version_info[0] == 3
+            and sys.version_info[1] <= 10
+        ):
+            model = torch.compile(model)
 
-    trainer = transformers.Trainer(
-        model=model,
-        tokenizer=tokenizer,
-        train_dataset=train_data,
-        eval_dataset=val_data,
-        callbacks=[report_callback],
-        args=training_args,
-        data_collator=data_collator,
-    )
-    # trainer = SFTTrainer(
-    #     model=model,
-    #     tokenizer=tokenizer,
-    #     args=training_args,
-    #     data_collator=data_collator,
-    #     train_dataset=train_data,
-    #     eval_dataset=val_data,
-    #     callbacks=[report_callback],
-    #     formatting_func=lambda x: [generate_prompt(x, dataset_type)],
-    # )
-    # Currently pytorch requires python <= 3.10
-    if (
-        torch.__version__ >= "2"
-        and sys.platform != "win32"
-        and sys.version_info[0] == 3
-        and sys.version_info[1] <= 10
-    ):
-        model = torch.compile(model)
+        trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
-    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+        model.save_pretrained(output_dir)
+    # elif adapter_name == "lomo-lora":
+    #     trainer = LOMOLoRATrainer(
+    #         model=model,
+    #         tokenizer=tokenizer,
+    #         train_dataset=train_data,
+    #         eval_dataset=val_data,
+    #         training_args=training_args,
+    #         data_collator=data_collator,
+    #         callbacks=[report_callback],
+    #     )
+    #     trainer.train()
 
-    model.save_pretrained(output_dir)
+    #     model.save_pretrained(output_dir)
 
 
 from backend.models import *
@@ -659,6 +674,10 @@ def wrapper(
                 generate_log_path(TaskType.finetune.value, entry.id),
             )
     except Exception as e:
+        import traceback
+        print(
+            traceback.format_exc()
+        )
         db = get_db()
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == finetune_id).first()
         entry.state = FinetuneState.error.value

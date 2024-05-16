@@ -52,7 +52,6 @@ RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 -i h
 RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0
 RUN /micromamba/bin/micromamba run -n backend pip install trl==0.7.11
 RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
-
 WORKDIR /backend
 
 # Copy the files

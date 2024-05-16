@@ -218,7 +218,7 @@
     {t("finetune.detail.interrupt.p2")}
   </p>
   <p class="text-base leading-relaxed text-red-600 dark:text-gray-400">
-    {t("finetune.interrupt.p3")}<span class="font-bold">{t("finetune.detail.interrupt.p4")}</span>{t("finetune.detail.interrupt.p5")}
+    {t("finetune.detail.interrupt.p3")}<span class="font-bold">{t("finetune.detail.interrupt.p4")}</span>{t("finetune.detail.interrupt.p5")}
   </p>
   <svelte:fragment slot="footer">
     <div class="w-full flex justify-end gap-2">
