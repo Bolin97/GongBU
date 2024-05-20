@@ -156,6 +156,7 @@ def get_device_map(devices: list[int] | str, base_model: str):
     #     )
     #     return device_map
     # Now we use CUDA_VISIBLE_DEVICES to control the device, so device_map is always auto
+    print(devices)
     return "auto"
 
 
@@ -638,7 +639,7 @@ def wrapper(
             submit_fault(
                 [TaskType.finetune.value, str(finetune_id)],
                 str(e),
-                FaultCode.cuda_oom,
+                FaultCode.cuda_oom.value,
                 entry.owner,
                 False,
                 generate_log_path(TaskType.finetune.value, entry.id),
@@ -653,7 +654,7 @@ def wrapper(
             submit_fault(
                 [TaskType.finetune.value, str(finetune_id)],
                 str(e),
-                FaultCode.nccl_issue,
+                FaultCode.nccl_issue.value,
                 entry.owner,
                 False,
                 generate_log_path(TaskType.finetune.value, entry.id),

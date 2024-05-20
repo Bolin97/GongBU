@@ -189,6 +189,7 @@ class ReportCallback(TrainerCallback):
     ):
         if not self.enabled:
             return
+        db = get_db()
         try:
             if self.eval_dataset is None or len(self.indexes) == 0:
                 return
@@ -222,8 +223,6 @@ class ReportCallback(TrainerCallback):
                     output[0], skip_special_tokens=True
                 ).removeprefix(prompt)
                 return out_text
-
-            db = get_db()
             cands = []
             for each in tqdm(self.eval_dataset):
                 cands.append(get_generated_output(each))
