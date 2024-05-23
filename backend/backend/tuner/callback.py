@@ -22,8 +22,32 @@ from time import time
 from tqdm import tqdm
 import os
 import pickle
+import transformers
+import time
+import json
 from backend.evaluate import evaluate
 from backend.const import NAN_MAGIC
+
+class ExpCallback(transformers.TrainerCallback):
+
+    def __init__(self, output_dir):
+        self.output_dir = output_dir
+        self.custom_start_time = 0
+        self.custom_steps = 0
+        self.custom_log_history = []
+        
+    def on_train_begin(self, args: transformers.TrainingArguments, state: transformers.TrainerState, control: transformers.TrainerControl, **kwargs):
+        self.custom_start_time = time.time()
+        
+    def on_step_end(self, args: transformers.TrainingArguments, state: transformers.TrainerState, control: transformers.TrainerControl, **kwargs):
+        self.custom_steps += 1
+        runtime = time.time() - self.custom_start_time
+        train_samples_per_second = self.custom_steps * args.per_device_train_batch_size / round(runtime, 4)
+        self.custom_log_history.append({"train_samples_per_second": round(train_samples_per_second, 4)})
+
+    def on_train_end(self, args: transformers.TrainingArguments, state: transformers.TrainerState, control: transformers.TrainerControl, **kwargs):
+        with open(os.path.join(self.output_dir, "train_samples_per_second.json"), "w") as f:
+            json.dump(self.custom_log_history, f)
 
 
 class ReportCallback(TrainerCallback):

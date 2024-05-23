@@ -41,7 +41,7 @@ async def read_openllms_pic(model_id: int, db: Session = Depends(gen_db)):
         os.environ.get("MODEL_PATH"), "model_avatars", llm_entry.view_pic
     )
     if not os.path.exists(path):
-        return FileResponse("./logo.webp")
+        return FileResponse("./logo_new.jpg")
     return FileResponse(path)
 
 

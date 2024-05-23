@@ -38,7 +38,7 @@ from peft import (  # noqa: E402
     set_peft_model_state_dict,
 )
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-from backend.tuner.callback import ReportCallback
+from backend.tuner.callback import ReportCallback, ExpCallback
 from backend.tuner.get_deepspeed_config import get_deepspeed_config
 
 # peft IA3的参数
@@ -521,7 +521,7 @@ def train(
             tokenizer=tokenizer,
             train_dataset=train_data,
             eval_dataset=val_data,
-            callbacks=[report_callback],
+            callbacks=[report_callback, ExpCallback(training_args.output_dir)],
             args=training_args,
             data_collator=data_collator,
         )
@@ -545,7 +545,8 @@ def train(
             model = torch.compile(model)
 
         trainer.train(resume_from_checkpoint=resume_from_checkpoint)
-
+        # trainer.save_state()
+        # trainer.save_model(output_dir)
         model.save_pretrained(output_dir)
     # elif adapter_name == "lomo-lora":
     #     trainer = LOMOLoRATrainer(

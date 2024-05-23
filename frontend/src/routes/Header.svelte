@@ -18,9 +18,9 @@
   const t = $i18n.t;
 </script>
 
-<div class="header w-full h-14 justify-between bg-gray-000 flex">
-  <div class="left w-100 h-full text-center pt-2 px-2 flex">
-    <img src="/logo.webp" alt="" width="70" />
+<div class="header w-full h-16 justify-between bg-gray-000 flex">
+  <div class="left w-100 h-5/6 text-center pt-2 px-2 flex">
+    <img src="/logo_new.jpg" alt="" width="60"/>
     <span class="logo text-3xl pt-1 text-black-400 border-blue-400 font-bold"
       >&nbsp;&nbsp;{t("root.title")}</span
     >
@@ -28,7 +28,7 @@
 			>&nbsp;&nbsp;{t("root.subtitle")}</span
 		> -->
   </div>
-  <div class="right w-100 h-2/3 text-center pt-2 px-2 flex">
+  <div class="right w-100 h-2/3 text-center pt-4 px-2 flex">
     <div>
       <select
         bind:value={selectedLanguage}
