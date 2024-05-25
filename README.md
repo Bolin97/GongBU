@@ -1,4 +1,5 @@
-# LLMCraft
+# 工部/GongBU
+![logo](https://github.com/Bolin97/GongBU/blob/main/frontend/static/logo_new.jpg)
 
 🚀 LLMCraft is a comprehensive, all-in-one, no-code, local finetuning platform for large language models. Once deployed, there is no need to write any code to finetune a model, and the platform can be used by anyone with a web browser. The platform is built on top of the Transformers, Peft, etc. and is designed to be easy to use for non-technical users.
 
