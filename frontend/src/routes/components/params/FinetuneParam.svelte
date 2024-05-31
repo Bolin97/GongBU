@@ -72,7 +72,7 @@
       >
     {/each}
   </div>
-  {#if adapter == "lora" || adapter == "qlora" || adapter == "adalora" || adapter == "lokr" || adapter == "loha" || adapter == "lomo-lora"}
+  {#if adapter == "lora" || adapter == "qlora" || adapter == "adalora" || adapter == "lokr" || adapter == "loha"}
     <ParamGroup title={t("finetune.finetune_params.lora_params.title")} entries={lora_specific_params} bind:params />
     {#if adapter == "qlora"}
       <ParamGroup

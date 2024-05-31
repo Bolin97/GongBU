@@ -11,10 +11,10 @@ from backend.service.dataset import submit_finetune_dataset
 from backend.auth import accessible, get_current_identifier
 from threading import Thread
 
-dataset_sift_router = APIRouter()
+dataset_filter_router = APIRouter()
 
-@dataset_sift_router.post("/kmeans")
-async def kmeans_sift_router(
+@dataset_filter_router.post("/kmeans")
+async def kmeans_filter_router(
     pool_id: int,
     name: str,
     description: str,
@@ -23,11 +23,12 @@ async def kmeans_sift_router(
     db: Session = Depends(get_db),
     identifier: str = Depends(get_current_identifier),
 ):
-    # if not accessible(
-    #     db.query(DatasetEntry).filter(DatasetEntry.id == source_entry_id).first(),
-    #     identifier,
-    # ):
-    #     raise HTTPException(status_code=403, detail="Forbidden")
+    
+    if not accessible(
+        db.query(DatasetEntry).filter(DatasetEntry.id == source_entry_id),
+        identifier,
+    ):
+        raise HTTPException(status_code=403, detail="Forbidden")
     def work():
         db = get_db()
         kind = db.query(DatasetEntry).filter(DatasetEntry.id == source_entry_id).first().type

@@ -28,7 +28,7 @@
     $: validForSumbit = name.length > 0 && selectedDatasetId !== null && reduce_to_percentage > 0 && reduce_to_percentage < 1;
 
     async function submit() {
-        await axios.post(`/api/dataset_sift/kmeans`, {}, {
+        await axios.post(`/api/filter/kmeans`, {}, {
             params: {
                 pool_id: poolId,
                 name: name,
@@ -41,16 +41,16 @@
     }
 </script>
 
-<ActionPageTitle returnTo={"/data"} title={t("data.sift.title")}/>
+<ActionPageTitle returnTo={"/data"} title={t("data.filter.title")}/>
 
 <div class="m-2 p-2">
-    <span>{t("data.sift.p1")}</span>
+    <span>{t("data.filter.p1")}</span>
     <DatasetTable datasetEntries={entries} noOperation={true} on:modified={async (_) => {
         await fetch_dataset_entries();
     }} selectable={true} bind:selectedDatasetId={selectedDatasetId}/>
 </div>
 <div class="m-2 p-2">
-<span>{t("data.sift.p2")}</span>
+<span>{t("data.filter.p2")}</span>
 <div class="w-full flex flex-row">
     <div class="w-7/12 flex-row">
         <div class="relative w-full mx-2">
@@ -87,7 +87,7 @@
 </div>
 
 <div class="m-2 p-2">
-<span>{t("data.sift.name")}</span>
+<span>{t("data.filter.name")}</span>
 <input
     type="text"
     aria-describedby="helper-text-explanation"
@@ -97,7 +97,7 @@
 </div>
 
 <div class="m-2 p-2">
-<span>{t("data.sift.des")}</span>
+<span>{t("data.filter.des")}</span>
 <input
     type="text"
     aria-describedby="helper-text-explanation"
@@ -111,6 +111,6 @@
         on:click={submit}
         disabled={!validForSumbit}
     >
-        {t("data.sift.begin")}
+        {t("data.filter.begin")}
     </Button>
 </div>

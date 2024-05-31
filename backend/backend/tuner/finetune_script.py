@@ -272,6 +272,7 @@ def get_model_and_tokenizer(
     else:
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
+            device_map=device_map,
             trust_remote_code=True,
         )
         tokenizer = AutoTokenizer.from_pretrained(
@@ -447,26 +448,30 @@ def train(
     model, tokenizer = get_model_and_tokenizer(
         base_model, device_map, bnb_config, zero_optimization, zero_stage, zero_offload
     )
+    
+    use_peft = adapter_name != "lomo"
 
-    model = get_peft_model(
-        model,
-        get_peft_config(
+    if use_peft:
+        model = get_peft_model(
             model,
-            bnb_config,
-            adapter_name,
-            lora_r,
-            lora_alpha,
-            lora_dropout,
-            num_virtual_tokens,
-        ),
-    )
+            get_peft_config(
+                model,
+                bnb_config,
+                adapter_name,
+                lora_r,
+                lora_alpha,
+                lora_dropout,
+                num_virtual_tokens,
+            ),
+        )
 
     if bits_and_bytes:
         model = prepare_model_for_kbit_training(
             model, use_gradient_checkpointing=use_gradient_checkpointing
         )
 
-    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
+    if use_peft:
+        model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
@@ -514,8 +519,39 @@ def train(
             else get_deepspeed_config(zero_stage, zero_offload)
         ),
     )
-    
-    if adapter_name != "lomo-lora":
+    if adapter_name == "lomo":
+        # manually train the model with pytorch
+        
+        from tqdm import tqdm
+        from lomo_optim import Lomo
+        
+        optimizer = Lomo(model, lr=learning_rate)
+        fuse_update = optimizer.fuse_update()
+        
+        for e in tqdm(range(num_epochs)):
+            for step in tqdm(range(len(train_data))):
+                model.train()
+                batch = train_data[step]
+                batch = {k: v.to(model.device) for k, v in batch.items()}
+                outputs = model(**batch)
+                fuse_update(outputs.loss)
+                global_step = e * len(train_data) + step
+                if global_step % logging_step == 0:
+                    print(f"step {global_step}, loss {outputs.loss.item()}")
+                
+        
+        # trainer = transformers.Trainer(
+        #     model=model,
+        #     tokenizer=tokenizer,
+        #     train_dataset=train_data,
+        #     eval_dataset=val_data,
+        #     callbacks=[report_callback, ExpCallback(training_args.output_dir)],
+        #     args=training_args,
+        #     optimizers=(Lomo(model, lr=learning_rate), None),
+        #     data_collator=data_collator,
+        # )
+        pass
+    else:
         trainer = transformers.Trainer(
             model=model,
             tokenizer=tokenizer,

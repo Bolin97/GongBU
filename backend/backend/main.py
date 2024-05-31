@@ -74,7 +74,7 @@ app.include_router(logging_router, prefix="/logging", tags=["logging"])
 
 app.include_router(ft_eval_index_router, prefix="/eval_index", tags=["eval_index"])
 
-app.include_router(file_router, prefix="/file", tags=["file"])
+# app.include_router(file_router, prefix="/file", tags=["file"])
 
 app.include_router(user_router, prefix="/user", tags=["user"])
 
@@ -84,7 +84,7 @@ app.include_router(eval_router, prefix="/eval", tags=["eval"])
 
 app.include_router(visibility_router, prefix="/visibility", tags=["visibility"])
 
-app.include_router(dataset_sift_router, prefix="/dataset_sift", tags=["dataset_sift"])
+app.include_router(dataset_filter_router, prefix="/filter", tags=["dataset_filter"])
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")

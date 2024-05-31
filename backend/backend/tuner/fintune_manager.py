@@ -21,10 +21,9 @@ def run(task_id: int, params: FinetuneParams):
 
     command = f"""
 {"" if disable_ib_p2p is None else disable_ib_p2p_command} CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend accelerate launch --main_process_port {29500 + task_id} {script_file} --finetune_id {task_id}
+    """ if params.zero_optimization else f"""
+{"" if disable_ib_p2p is None else disable_ib_p2p_command} CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --finetune_id {task_id}
     """
-#      if params.zero_optimization else f"""
-# {"" if disable_ib_p2p is None else disable_ib_p2p_command} CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend accelerate launch --main_process_port {29500 + task_id} {script_file} --finetune_id {task_id}
-#     """
     session_name = f"{TaskType.finetune.value}_task_{task_id}"
     os.system(
         f"tmux new-session -d -s {session_name} '{command}'; tmux send-keys -t {session_name} exit"

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm.session import Session
 from backend.models import *
-from sqlalchemy import or_, and_, any_, all_
+from sqlalchemy import desc, or_, and_, any_, all_
 from sqlalchemy import text
 
 fault_router = APIRouter()
@@ -30,7 +30,9 @@ async def get_faults(
     #     query = query.filter(Fault.time >= param.start_time)
     # if param.end_time and len(param.end_time) > 0:
     #     query = query.filter(Fault.time <= param.end_time)
-    return query.limit(param.limit).all()
+    return query.order_by(
+            desc(Fault.id)  # Change this line
+        ).limit(param.limit).all()
 
 
 @fault_router.get("/log/{fault_id}")
@@ -42,3 +44,15 @@ async def get_fault_log(
     if not check_access(db.query(Fault).filter(Fault.id == fault_id), identifier):
         return None
     return db.query(FaultLog).filter(FaultLog.fault_id == fault_id).first()
+
+@fault_router.delete("/{fault_id}")
+async def delete_fault(
+    fault_id: int,
+    db: Session = Depends(gen_db),
+    identifier: str = Depends(get_current_identifier),
+):
+    if not owns(db.query(Fault).filter(Fault.id == fault_id), identifier):
+        return None
+    db.query(Fault).filter(Fault.id == fault_id).delete()
+    db.commit()
+    return

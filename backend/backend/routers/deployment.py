@@ -1,7 +1,7 @@
 from backend.db import gen_db
 from backend.enumerate import DeploymentState
 from backend.models import Deployment
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from backend.deployment.deployment_manager import depl_mgr
 from fastapi.params import Depends
 from pydantic import BaseModel
@@ -55,13 +55,17 @@ async def deploy(
 
 
 @deployment_router.put("/start/{id}")
-async def start(id: int, identifier=Depends(get_current_identifier)):
+async def start(id: int, db: Session=Depends(gen_db), identifier=Depends(get_current_identifier)):
+    if not owns(db.query(Deployment).filter(Deployment.id == id), identifier):
+        raise HTTPException(status_code=403, detail="Forbidden")
     depl_mgr.start(id)
     return
 
 
 @deployment_router.put("/stop/{id}")
-async def stop(id: int, identifier=Depends(get_current_identifier)):
+async def stop(id: int, db: Session=Depends(gen_db), identifier=Depends(get_current_identifier)):
+    if not owns(db.query(Deployment).filter(Deployment.id == id), identifier):
+        raise HTTPException(status_code=403, detail="Forbidden")
     depl_mgr.stop(id)
     return
 

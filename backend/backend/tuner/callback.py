@@ -83,11 +83,11 @@ class ReportCallback(TrainerCallback):
             or int(os.environ.get("LOCAL_RANK")) == 0
         ):
             self.enabled = True
-        self.identifier = identifier
-        self.public = public
-        self.task_name = task_name
-        self.task_description = task_description
-        self.base_model_name = base_model_name
+            self.identifier = identifier
+            self.public = public
+            self.task_name = task_name
+            self.task_description = task_description
+            self.base_model_name = base_model_name
 
     def set_eval_dataset(self, ds: Any):
         self.eval_dataset = ds

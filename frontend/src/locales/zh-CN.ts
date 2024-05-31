@@ -337,8 +337,8 @@ export default {
         p5: "被保存。"
       },
       delete:{
-        title: "确认删除",
-        delete: "删除",
+        title: "删除",
+        delete: "确认删除",
         p1: "确认要删除吗？",
         p2: "删除后，该任务的所有相关信息将",
         p3: "无法",
@@ -359,7 +359,7 @@ export default {
       title: "查看详情",
       detail: "数据池详情",
       delete: "删除此数据池",
-      sift: "自动筛选",
+      filter: "自动筛选",
       create_on: "创建时间：",
       size: "数据量：",
       title_1: "确认删除吗",
@@ -429,7 +429,7 @@ export default {
       des: "数据池描述",
       enter_des: "请输入数据池描述"
     },
-    sift:{
+    filter:{
       title: "数据筛选",
       p1: "原始数据集：",
       p2: "保留比例：",

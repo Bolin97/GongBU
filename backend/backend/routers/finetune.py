@@ -90,5 +90,7 @@ async def stop(
     db: Session = Depends(gen_db),
     identifier: str = Depends(get_current_identifier),
 ):
+    if db.query(FinetuneEntry).filter(FinetuneEntry.id == id).first().owner != identifier:
+        return None
     ft_mgr.stop(id)
     return None

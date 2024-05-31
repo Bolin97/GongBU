@@ -218,7 +218,7 @@ export default {
       title: "Details",
       detail: "Data Pool Details",
       delete: "Delete this data pool",
-      sift: "Sifting",
+      filter: "Filtering",
       create_on: "Creation Time:",
       size: "Data Volume:",
       title_1: "Confirm Deletion?",
@@ -288,13 +288,13 @@ export default {
       des: "Data Pool Description",
       enter_des: "Please enter the data pool description"
     },
-    sift: {
-      title: "Data Sifting",
+    filter: {
+      title: "Data Filtering",
       p1: "Original Dataset:",
       p2: "Retention Ratio:",
       name: "New Dataset Name:",
       des: "New Dataset Description:",
-      begin: "Start Sifting"
+      begin: "Start Filtering"
     }
   },
   fault: {

@@ -288,9 +288,9 @@
             on:click={(_) => {
               delete_modal = true;
             }}
-            class={`${finetune_entry.state != 0 ? "" : "hidden"}`}
             color="red"
-          >
+            >
+            <!-- class={`${finetune_entry.state != 0 ? "" : "hidden"}`} -->
           {t("finetune.detail.delete.title")}
           </Button>
         </div>
