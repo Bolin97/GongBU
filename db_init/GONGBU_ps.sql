@@ -25,7 +25,7 @@ CREATE TABLE finetune_entries (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
-  display_name TEXT NOT NULL
+  display_name TEXT NOT NULL,
   model_id TEXT NOT NULL,
   dataset_id TEXT NOT NULL,
   devices TEXT[] NOT NULL,
