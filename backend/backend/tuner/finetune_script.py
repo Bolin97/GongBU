@@ -234,7 +234,6 @@ def get_peft_config(
             r=lora_r,
             alpha=lora_alpha,
             target_modules=target_modules,
-            bias="none",
             task_type="CAUSAL_LM",
         )
     elif adapter_name == "loha":
@@ -242,7 +241,6 @@ def get_peft_config(
             r=lora_r,
             alpha=lora_alpha,
             target_modules=target_modules,
-            bias="none",
             task_type="CAUSAL_LM",
         )
     else:
