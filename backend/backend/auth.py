@@ -37,13 +37,14 @@ async def get_current_identifier(token: str = Depends(oauth2_scheme)):
         )
 
 
-SIGN_UP_TOKEN_PATH = os.path.join(os.path.dirname(__file__), "sign_up_token.txt")
+SIGN_UP_TOKEN_PATH = os.path.join(os.path.dirname(__file__), "sign_up_token", "sign_up_token.txt")
 
 import hashlib
 import random
 
 
 def generate_sign_up_token():
+    os.makedirs(os.path.dirname(SIGN_UP_TOKEN_PATH), exist_ok=True)
     with open(SIGN_UP_TOKEN_PATH, "w") as f:
         f.write(
             hashlib.md5(
