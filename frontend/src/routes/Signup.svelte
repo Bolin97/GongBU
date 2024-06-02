@@ -7,6 +7,7 @@
   let signUpToken = "";
   let signingUp = false;
   let signUpTokenRequired = true;
+  let passwordConfirm = "";
   const t: any = getContext("t");
   const dispatch = createEventDispatcher();
 
@@ -16,6 +17,21 @@
   });
 
   async function signUpHandle() {
+    if (identifier === "" || password === "") {
+      alert(t("root.username_password_required"));
+      return;
+    }
+
+    if (signUpTokenRequired && signUpToken === "") {
+      alert(t("root.sign_up_token_required"));
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      alert(t("root.password_not_match"));
+      return;
+    }
+
     try {
       signingUp = true;
       const signUpForm = new FormData();
@@ -28,6 +44,7 @@
       if (response.data.success) {
         signingUp = false;
         alert(t("root.signup_successful"));
+        dispatch("switch");
       } else {
         signingUp = false;
         alert(t("root.signup_failed"));
@@ -61,6 +78,17 @@
           type="password"
           id="password"
           bind:value={password}
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
+      <div class="mb-6">
+        <label for="passwordConfirm" class="block text-gray-700 text-sm font-bold mb-2"
+          >{t("root.password_confirm")}</label
+        >
+        <input
+          type="password"
+          id="passwordConfirm"
+          bind:value={passwordConfirm}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />
       </div>

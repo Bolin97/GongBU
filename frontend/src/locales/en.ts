@@ -9,6 +9,11 @@ export default {
     sign_up: "Sign Up",
     switch_to_login: "Switch to Login",
     switch_to_signup: "Switch to Sign Up",
+    signup_failed: "Sign up failed, please check your sign up token.",
+    signup_successful: "Sign up success, please login.",
+    sign_up_token_required: "Sign up token is required.",
+    password_not_match: "Password and confirm password not match.",
+    password_confirm: "Confirm Password",
   },
   sidebar: {
     model_squre: "model",

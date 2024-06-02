@@ -1,5 +1,3 @@
-import { error } from "@sveltejs/kit";
-
 export default {
   root: {
     login: "登陆",
@@ -11,6 +9,11 @@ export default {
     sign_up: "注册",
     switch_to_login: "切换到登陆页",
     switch_to_signup: "切换到注册页",
+    signup_failed: "注册失败，请检查注册验证Token。",
+    signup_successful: "注册成功，请登陆。",
+    sign_up_token_required: "注册验证Token是必需的。",
+    password_not_match: "密码与确认密码不匹配。",
+    password_confirm: "确认密码",
   },
   model: {
     deploy: "部署",
