@@ -31,7 +31,7 @@ async def add_user(
     hashed_password = bcrypt.hash(password)
     db.add(User(identifier=identifier, password=hashed_password))
     db.commit()
-    return user
+    return {"success": True, "message": "user_created"}
 
 
 @user_router.get("/signup-token-required")
