@@ -25,7 +25,7 @@
         signUpForm.append("sign_up_token", signUpToken);
       }
       const response = await axios.post(`/api/user`, signUpForm);
-      if (response.data.success) {
+      if (response.data) {
         signingUp = false;
         alert(t("root.signup_successful"));
       } else {
