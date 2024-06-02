@@ -47,11 +47,12 @@ RUN /micromamba/bin/micromamba run -n backend pip install mpi4py
 # When this version is released, just use the new version
 RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2
 
-RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
+RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools
+RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0
 RUN /micromamba/bin/micromamba run -n backend pip install trl==0.7.11
 RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
+RUN /micromamba/bin/micromamba run -n backend pip install bcrypt==4.0.1
 WORKDIR /backend
 
 # Copy the files
