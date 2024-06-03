@@ -127,6 +127,7 @@ CREATE TABLE open_llms (
     local_store BOOLEAN NOT NULL, 
     storage_state TEXT, 
     storage_date DATE,
+    display_name TEXT,
     owner TEXT NOT NULL,
     public BOOLEAN NOT NULL
 );
