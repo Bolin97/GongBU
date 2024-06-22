@@ -162,7 +162,7 @@
               </span>
             </svelte:fragment>
             <p
-              class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400"
+              class="mb-1 text-base font-normal text-gray-500 dark:text-gray-400"
             >
               {steps_description[i]}
             </p>

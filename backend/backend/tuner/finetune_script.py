@@ -462,6 +462,7 @@ def train(
                 num_virtual_tokens,
             ),
         )
+        model.print_trainable_parameters()
 
     if bits_and_bytes:
         model = prepare_model_for_kbit_training(

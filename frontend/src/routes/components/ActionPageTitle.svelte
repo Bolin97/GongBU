@@ -8,15 +8,15 @@
   export let subtitle: string | "" = "";
 </script>
 
-<div class="flex flex-row justify-between">
-  <div class="flex">
+<div class="flex flex-row justify-between ">
+  <div class="flex ">
     {#if returnTo != "" && returnTo != null && returnTo != undefined && returnTo.length > 0}
       <GoBack {returnTo} />
     {/if}
     <span class="text-2xl pt-1 text-black-400 font-bold"
       >&nbsp;&nbsp;{title}</span
     >
-    <span class="text-1xl pt-2 text-black-400 text-center"
+    <span class="text-1xl pt-3 text-black-400 text-center"
       >&nbsp;&nbsp;{subtitle}</span
     >
     <slot name="left" />
@@ -25,4 +25,4 @@
     <slot name="right" />
   </div>
 </div>
-<hr class="mt-2 mb-4" />
+<hr class="mt-2 mb-1" />

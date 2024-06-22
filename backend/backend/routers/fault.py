@@ -1,11 +1,16 @@
 from backend.auth import check_access, get_current_identifier, accessible, owns
 from backend.db import gen_db
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, FastAPI
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm.session import Session
 from backend.models import *
 from sqlalchemy import desc, or_, and_, any_, all_
 from sqlalchemy import text
+from wordcloud import WordCloud  
+from io import BytesIO  
+import matplotlib.pyplot as plt  
+from PIL import Image
 
 fault_router = APIRouter()
 
@@ -56,3 +61,28 @@ async def delete_fault(
     db.query(Fault).filter(Fault.id == fault_id).delete()
     db.commit()
     return
+
+@fault_router.get("/wordcloud")
+async def get_fault_wordcloud(
+    db: Session = Depends(gen_db),
+    # identifier: str = Depends(get_current_identifier),
+):
+    # faults = accessible(db.query(Fault), identifier)
+    faults = db.query(Fault)
+
+    cloudword = ""
+    for fault in faults:
+        cloudword += fault.message
+    wordcloud = WordCloud(background_color="white", width=800, height=600, max_words=200).generate(cloudword)
+    fig, ax = plt.subplots(figsize=(8, 6), subplot_kw={"xticks": [], "yticks": []})
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis("off")
+  
+    buf = BytesIO()  
+    fig.savefig(buf, format="png", bbox_inches='tight')
+    buf.seek(0)
+    headers = {
+        "Content-Type": "image/png",
+    }
+    return StreamingResponse(buf, headers=headers) 
+  

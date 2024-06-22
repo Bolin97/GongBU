@@ -1,4 +1,5 @@
 import { writable, type Writable } from "svelte/store";
+import { default_model_list } from "./shared";
 
 export function persist(key, value) {
   const isBrowser = typeof window !== "undefined";
@@ -17,7 +18,8 @@ export function persist(key, value) {
 
 export let MODEL_LIST: Writable<string> = persist(
   "model_list",
-  import.meta.env.VITE_MODEL_LIST || "[]",
+  // import.meta.env.VITE_MODEL_LIST || JSON.stringify(default_model_list),
+  JSON.stringify(default_model_list).replace(/\n/g, '')
 );
 
 // milliseconds

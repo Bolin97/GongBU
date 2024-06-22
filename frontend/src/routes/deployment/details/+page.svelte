@@ -94,7 +94,6 @@
 </Modal>
 
 {#if base_model != null && deployment_entry != null}
-  <div>
     <ActionPageTitle returnTo="/deployment" title={t("deployment.detail.title")}>
       <svelte:fragment slot="right">
         <div class="flex gap-2">
@@ -201,5 +200,4 @@
         />
       </div>
     </div>
-  </div>
 {/if}

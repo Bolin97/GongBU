@@ -3,7 +3,7 @@ export default {
     login: "Login",
     username: "Username",
     password: "Password",
-    title: "GONGBU - LLMCraft",
+    title: "GongBU | Finetuning LLMs easily",
     login_failed: "Login failed, please check your username and password.",
     sign_up_token: "Sign Up Token",
     sign_up: "Sign Up",
@@ -11,14 +11,14 @@ export default {
     switch_to_signup: "Switch to Sign Up",
   },
   sidebar: {
-    model_squre: "model",
-    finetune_manager: "finetune",
-    data_manager: "data",
-    model_eval: "eval",
-    deployment_manager: "deployment",
-    model_download: "model download",
-    error_log: "error log",
-    settings: "settings",
+    model_squre: "LLM Market",
+    finetune_manager: "Fine-tune",
+    data_manager: "Data Manage",
+    model_eval: "Evaluation",
+    deployment_manager: "Deployment",
+    model_download: "LLM Download",
+    error_log: "Error Logs",
+    settings: "Settings",
   },
   model: {
     deploy: "Deploy",
@@ -33,8 +33,8 @@ export default {
     },
     go_back: "Go back",
     visibility_button: {
-      hide: "Hide",
-      publicize: "Publicize",
+      hide: "Private",
+      publicize: "Public",
     },
     data: {
       data_pool_selector: "data pool:",
@@ -51,8 +51,10 @@ export default {
       distinct_des: "Reflecting the diversity of text generation"      
     },
     device: {
-      GPU_utilization: "GPU utilization:",
-      memory_utilization: "Memory utilization:",
+      // GPU_utilization: "GPU utilization:",
+      // memory_utilization: "Memory utilization:",
+      GPU_utilization: "GPU Utilization:",
+      memory_utilization: "GPU Memory:",
     },
     deployment_params: {  
       title: "Deployment Parameters",  
@@ -218,7 +220,7 @@ export default {
       title: "Details",
       detail: "Data Pool Details",
       delete: "Delete this data pool",
-      filter: "Filtering",
+      filter: "Selecting",
       create_on: "Creation Time:",
       size: "Data Volume:",
       title_1: "Confirm Deletion?",
@@ -289,12 +291,12 @@ export default {
       enter_des: "Please enter the data pool description"
     },
     filter: {
-      title: "Data Filtering",
+      title: "Data Selection",
       p1: "Original Dataset:",
       p2: "Retention Ratio:",
       name: "New Dataset Name:",
       des: "New Dataset Description:",
-      begin: "Start Filtering"
+      begin: "Start Selecting"
     }
   },
   fault: {
@@ -312,6 +314,8 @@ export default {
     management: "Fine-tuning Management",
     finetune: "Fine-tuning",
     create_task: "Create Fine-tuning Task",
+    wordcloud: "WordCloud",
+    close: "close"
   },
   config: {
     log_out: "Log out",
@@ -340,7 +344,7 @@ export default {
         device: "Device Selection",  
         params: "Parameter Selection",  
         name: "Task Name",  
-        model_des: "Select an appropriate model",  
+        model_des: "Select a base or fine-tuned model by click the Adapters below card",  
         device_des: "Select a local device that supports fine-tuning",  
         params_des: "Select deployment parameters",  
         name_des: "Enter the project name and description"  
@@ -424,7 +428,7 @@ export default {
       params_selection: "Parameter Selection",  
       device_selection: "Device Selection",  
       project_name: "Project Name",  
-      choose_model: "Select a suitable open-source large model",  
+      choose_model: "Select a base or fine-tuned model by click the Adapters below card",  
       choose_data: "Select data uploaded to the data pool",  
       choose_metrics: "Select evaluation metrics",  
       choose_params: "Select configurable parameters for evaluation",  
@@ -444,12 +448,19 @@ export default {
     description: "Download large models by editing the configuration file",  
     alert: "Close All Alerts",  
     list: "Model List",  
-    list_alert: "Invalid model list, please reset.",  
+    list_alert: "Invalid model list, please reset.",
     p1: "Information has been written, and the model file download has started.",  
     p2: "Automatic Download",  
     p3: "Rename the downloaded folder containing config.json to",  
     p4: "and place it in the models folder.",  
-    p5: "Write information only (manual download)",  
+    p5: "Write information only (manual download)",
+    add: "Add model from git repository",
+    add_button: "add",
+    model_display_name: "model name",
+    model_name: "model name",
+    source: "source",
+    model_description: "description",
+    download_url: "download url",
     delete: {  
       title: "delete",  
       p1: "Are you sure you want to delete all records and files for this model?",  
