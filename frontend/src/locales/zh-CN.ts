@@ -128,6 +128,7 @@ export default {
       state: "进度：",
       model: "模型：",
       gradio_link: "Gradio 链接：",
+      openai_link: "OpenAI 风格 API 链接：",
       adapter: "微调方法：",
       deepspeed: "是否使用Deepspeed：",
       flash_attention: "是否使用Flash Attention: ",
@@ -460,6 +461,8 @@ export default {
     source: "来源",
     model_description: "模型描述",
     download_url: "下载地址/git仓库",
+    avatar_url: "模型缩略图地址",
+    delete_from_list: "从模型列表中删除",
     delete: {
       title: "确认删除",
       p1: "确定要删除这个模型的所有记录和文件吗？",

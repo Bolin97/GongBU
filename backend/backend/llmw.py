@@ -1,3 +1,5 @@
+import time
+from pydantic import BaseModel
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Any
@@ -5,10 +7,38 @@ from transformers.utils.dummy_pt_objects import StoppingCriteria
 from transformers.generation.stopping_criteria import StoppingCriteriaList
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
+from typing import *
+
+class OpenAIChatCompletionRequest(BaseModel):
+    messages: List[Union[str, Dict[str, str]]]
+    model: str
+    frequency_penalty: Optional[float] = 0.0
+    logit_bias: Optional[Dict[str, float]] = None
+    logprobs: Optional[bool] = False
+    top_logprobs: Optional[int] = None
+    max_tokens: Optional[int] = None
+    n: Optional[int] = 1
+    presence_penalty: Optional[float] = 0.0
+    response_format: Optional[dict] = None
+    seed: Optional[int] = None
+    service_tier: Optional[str] = None
+    stop: Optional[Union[str, List[str]]] = None
+    stream: Optional[bool] = False
+    stream_options: Optional[dict] = None
+    temperature: Optional[float] = 1.0
+    top_p: Optional[float] = 1.0
+    tools: Optional[List[dict]] = None
+    tool_choice: Optional[dict] = None
+    parallel_tool_calls: Optional[bool] = True
+    user: Optional[str] = None
+    function_call: Optional[Union[str, dict]] = None
+    functions: Optional[List[dict]] = None
+    
+from typing import *
 
 class LLMW:
 
-    model: Any
+    model: AutoModelForCausalLM
     tokenizer: AutoTokenizer
 
     base_model_path: str
@@ -22,6 +52,21 @@ class LLMW:
     vllm_lora_request: Any
     
     use_deepseed: bool
+    
+    def construct_prompt(self, messages: List[Any]) -> str:
+        tokenizer = self.tokenizer if not self.use_vllm else self.vllm_model.get_tokenizer()
+        result = []
+        for message in messages:
+            if isinstance(message, str):
+                result.append(message)
+            elif isinstance(message, dict):
+                if "role" in message:
+                    result.append(
+                        f"{message['role']}" + tokenizer.eos_token + f"{message['content']}"
+                    )
+            else:
+                result.append(str(message))
+        return tokenizer.eos_token.join(result)
 
     def __init__(self, base_model_path: str, adapter_path: str, use_vllm: bool = False, use_deepspeed: bool = False):
         self.base_model_path = base_model_path
@@ -106,9 +151,9 @@ class LLMW:
 
     def transformers_advanced_text_generation(self, prompt: str, 
         max_length: int = 20, 
-        max_new_tokens: int = None,
+        max_new_tokens: int = 20,
         min_length: int = 0,
-        min_new_tokens: int = None,
+        min_new_tokens: int = 0,
         early_stopping: str = False,
         max_time: float = None,
         do_sample: bool = False, 
@@ -160,3 +205,143 @@ class LLMW:
             output[0], skip_special_tokens=True
         ).removeprefix(prompt)
         return out_text
+
+    def openai_chat_completion(self, request: OpenAIChatCompletionRequest):
+        if self.use_vllm:
+            return self.vllm_openai_chat_completion(request)
+        else:
+            return self.transformers_openai_chat_completion(request)
+
+    def transformers_openai_chat_completion(
+        self,
+        request: OpenAIChatCompletionRequest,
+    ):
+        tokenizer = self.tokenizer
+        model = self.model
+        
+        # Construct generate_args from request
+        generate_args = {
+            "do_sample": True,
+            "temperature": request.temperature if request.temperature is not None else 1.0,
+            "top_p": request.top_p if request.top_p is not None else 1.0,
+            "max_length": request.max_tokens if request.max_tokens is not None else 128,
+            "num_return_sequences": request.n if request.n is not None else 1,
+        }
+
+        # Adjust generate_args based on conditions
+        if any(k in generate_args for k in ['top_p', 'top_k', 'temperature']) and 'do_sample' not in generate_args:
+            generate_args['do_sample'] = True
+            generate_args.pop('temperature', None) if generate_args.get('temperature', 1.0) == 0 else None
+            generate_args.pop('top_p', None) if generate_args.get('top_p', 1.0) == 1.0 else None
+            generate_args.setdefault('top_k', 0)
+
+        # Extract prompts and handle echo
+        prompt = self.construct_prompt(request.messages)
+        echo = generate_args.pop('echo', False)
+        n = generate_args.pop('n', 1)
+
+        # Remove keys not needed for model generation
+        for key in ['model', 'prompt', 'n', 'best_of', 'presence_penalty', 'frequency_penalty', 'logit_bias']:
+            generate_args.pop(key, None)
+
+        # Tokenize prompts
+        prompt_tokens_count = 0
+        # for prompt in prompts:
+        #     input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+        #     input_ids = input_ids.to("cuda")
+        #     prompt_tokens_count += input_ids.size(1)
+        #     inputs.append(input_ids)
+        input_ids = tokenizer.encode(prompt, return_tensors="pt")
+        input_ids = input_ids.to("cuda")
+        prompt_tokens_count = len(input_ids)
+        
+
+        class StopOnTokens(StoppingCriteria):
+            def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+                for stop_id in [tokenizer.eos_token_id]:
+                    if input_ids[0][-1] == stop_id:
+                        return True
+                return False
+
+        # Generate and decode responses
+        choices = []
+        completion_tokens_count = 0
+        for i in range(n):
+            output_ids = model.generate(input_ids, stopping_criteria=StoppingCriteriaList([StopOnTokens()]), **generate_args)[0]
+            completion_tokens_count += len(output_ids)
+            text = tokenizer.decode(output_ids, skip_special_tokens=True)
+            if not echo or echo is None:
+                text = text.removeprefix(prompt)
+            choices.append({'text': text, 'index': i})
+
+        # Construct response object
+        response = {
+            "created": int(time.time()),
+            "model": request.model,
+            "choices": choices,
+            "usage": {
+                "prompt_tokens": prompt_tokens_count,
+                "completion_tokens": completion_tokens_count,
+                "total_tokens": prompt_tokens_count + completion_tokens_count
+            }
+        }
+
+        return response
+
+    def vllm_openai_chat_completion(
+        self,
+        request: OpenAIChatCompletionRequest,
+    ):
+        tokenizer = self.vllm_model.get_tokenizer()
+        sample_params = SamplingParams(
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            stop_token_ids=[tokenizer.eos_token_id],
+            do_sample=True,
+            num_return_sequences=request.n,
+            best_of=request.best_of,
+            presence_penalty=request.presence_penalty,
+            frequency_penalty=request.frequency_penalty,
+            logit_bias=request.logit_bias,
+            # echo=request.echo,      
+        )
+        
+        # Extract prompts and handle echo
+        prompt = self.construct_prompt(request.messages)
+        n = request.n
+        
+        # Tokenize prompts
+        prompt_tokens_count = 0
+        input_ids = tokenizer.encode(prompt, return_tensors="pt")
+        input_ids = input_ids.to("cuda")
+        prompt_tokens_count = len(input_ids)
+        
+        
+        # Generate and decode responses
+        choices = []
+        completion_tokens_count = 0
+        for i in range(n):
+            output_ids = self.vllm_model.generate(
+                input_ids, sampling_params=sample_params,
+                lora_request=self.vllm_lora_request
+            )[0].outputs[0].text
+            completion_tokens_count += len(output_ids)
+            text = tokenizer.decode(output_ids, skip_special_tokens=True)
+            if not request.echo or request.echo is None:
+                text = text.removeprefix(prompt)
+            choices.append({'text': text, 'index': i})
+        
+        # Construct response object
+        response = {
+            "created": int(time.time()),
+            "model": request.model,
+            "choices": choices,
+            "usage": {
+                "prompt_tokens": prompt_tokens_count,
+                "completion_tokens": completion_tokens_count,
+                "total_tokens": prompt_tokens_count + completion_tokens_count
+            }
+        }
+        
+        return response

@@ -359,6 +359,7 @@ export default {
       state: "State:",
       model: "Model:",
       gradio_link: "Gradio Link:",
+      openai_link: "Openai-style API Link:",
       adapter: "Adapter Name: ",
       deepspeed: "Deepspeed:",
       flash_attention: "Flash Attention: ",
@@ -378,7 +379,7 @@ export default {
     stopped: "Stopped",  
     starting: "Starting",  
     running: "Running",
-    error: "Eroor",
+    error: "Error",
   },
   eval: {
     title: "Evaluation",
@@ -461,6 +462,8 @@ export default {
     source: "source",
     model_description: "description",
     download_url: "download url",
+    avatar_url: "model avatar url",
+    delete_from_list: "Delete from the list",
     delete: {  
       title: "delete",  
       p1: "Are you sure you want to delete all records and files for this model?",  

@@ -10,11 +10,11 @@
 </script>
 
 {#if avaliable}
-  <iframe bind:this={iframe} title={link} src={link} class="w-full overflow-visible" allowfullscreen scrolling="auto"
+  <iframe bind:this={iframe} title={link} src={link} class="w-full h-full"
   >
   </iframe>
 {:else}
-  <div class="text-center">
+  <div class="text-center h-full">
     <p>{t("deployment.detail.p1")}</p>
   </div>
 {/if}

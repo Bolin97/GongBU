@@ -8,46 +8,11 @@ from backend.enumerate import DeploymentState
 from backend.service.fault import *
 from backend.enumerate import *
 from vllm import SamplingParams
+from backend.deployment.openai_router import create_openai_router
 
+from fastapi import APIRouter, FastAPI, Request, Response
 
-def run(deployment_id: int):
-    db = get_db()
-
-    entry = db.query(Deployment).filter(Deployment.id == deployment_id).first()
-
-    deploy_base_model = entry.deploy_base_model
-    model_or_adapter_id = entry.model_or_adapter_id
-    bits_and_bytes = entry.bits_and_bytes
-    load_8bit = entry.load_8bit
-    load_4bit = entry.load_4bit
-    use_flash_attention = entry.use_flash_attention
-    use_deepspeed = entry.use_deepspeed
-    devices = entry.devices
-    use_vllm = entry.use_vllm
-    port = entry.port
-
-    llmw = None
-    if deploy_base_model:
-        model = db.query(OpenLLM).filter(OpenLLM.id == model_or_adapter_id).first()
-        llmw = LLMW(model.local_path, None, use_vllm=use_vllm, use_deepspeed=use_deepspeed)
-    else:
-        adapter = db.query(Adapter).filter(Adapter.id == model_or_adapter_id).first()
-        base_model = (
-            db.query(OpenLLM)
-            .filter(OpenLLM.model_name == adapter.base_model_name)
-            .first()
-        )
-        if use_vllm and db.query(FinetuneEntry).filter(
-            FinetuneEntry.id == adapter.ft_entry
-        ).first().adapter_name != "lora":
-            raise Exception("VLLM can only be used with LORA adapters")
-        llmw = LLMW(base_model.local_path, adapter.local_path, use_vllm=use_vllm, use_deepspeed=use_deepspeed)
-    llmw.load()
-
-    entry.state = DeploymentState.running.value
-    db.commit()
-    db.close()
-
+def run(llmw: LLMW, use_vllm: bool, port: int):
     def transformers_simple_generate(prompt: str, max_length: int) -> str:
         return llmw.transformers_simple_text_generation(prompt, max_length)
     
@@ -117,7 +82,7 @@ def run(deployment_id: int):
             gr.Slider(minimum=1, maximum=512, value=20, label="max_length"),  # Set default number
             gr.Slider(minimum=0, maximum=512, value=20, label="max_new_tokens"),  # Set default number
             gr.Slider(minimum=0, maximum=512, value=0, label="min_length"),  # Set default number
-            gr.Slider(minimum=0, maximum=512, value=None, label="min_new_tokens"),  # Set default number
+            gr.Slider(minimum=0, maximum=512, value=0, label="min_new_tokens"),  # Set default number
             gr.Checkbox(value=False, label="do_sample"),  # Set default checkbox
             gr.Slider(minimum=1, maximum=512, value=1, label="num_beams"),  # Set default number
             gr.Slider(minimum=1, maximum=512, value=1, label="num_beam_groups"),  # Set default number
@@ -152,7 +117,7 @@ def run(deployment_id: int):
             gr.Slider(minimum=0.0, maximum=1.0, value=1.0, label="top_p"),  # Set default number
             gr.Slider(minimum=-1, maximum=512, value=-1, label="top_k"),  # Set default number
             gr.Slider(minimum=0.0, maximum=1.0, value=0.0, label="min_p"),  # Set default number
-            gr.Slider(minimum=0, maximum=512, value=None, label="seed"),  # Set default number
+            gr.Slider(minimum=0, maximum=512, value=42, label="seed"),  # Set default number
             gr.Checkbox(value=False, label="use_beam_search"),  # Set default checkbox
             gr.Slider(minimum=0.0, maximum=1.0, value=1.0, label="length_penalty"),  # Set default number
             gr.Slider(minimum=1, maximum=512, value=16, label="max_tokens"),  # Set default number
@@ -183,15 +148,75 @@ def run(deployment_id: int):
             "Simple Text Generation",
             "Advanced Text Generation"
         ]
-
-    gr.TabbedInterface(valid_ifaces, ifaces_name).launch(
-        share=False, server_port=port, server_name="0.0.0.0", root_path=f"/net/{port}/"
-    )
+        
+    openai_router = create_openai_router(llmw, use_vllm)
+    
+    gr_iface = gr.TabbedInterface(valid_ifaces, ifaces_name)
+    
+    app = FastAPI()
+    
+    app.include_router(openai_router, prefix="/openai")
+    app = gr.mount_gradio_app(app, gr_iface, path="/")
+    
+    # @app.middleware("http")
+    # async def token_verification(request: Request, call_next):
+    #     if "/v1/chat/completions" not in request.url.path:
+    #         response = await call_next(request)
+    #         return response
+    #     token = request.headers.get("Authorization")
+    #     if token is None or token != "Bearer " + llmw.token:
+    #         token = request.query_params.get("token")
+        
+    #     if token != llmw.token:
+    #         return Response("Unauthorized", status_code=401)
+    #     else:
+    #         response = await call_next(request)
+    #         return response
+    
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=port, root_path=f"/net/{port}/")
 
 
 def wrapper(deployment_id: int):
+    db = get_db()
+
+    entry = db.query(Deployment).filter(Deployment.id == deployment_id).first()
+
+    deploy_base_model = entry.deploy_base_model
+    model_or_adapter_id = entry.model_or_adapter_id
+    bits_and_bytes = entry.bits_and_bytes
+    load_8bit = entry.load_8bit
+    load_4bit = entry.load_4bit
+    use_flash_attention = entry.use_flash_attention
+    use_deepspeed = entry.use_deepspeed
+    devices = entry.devices
+    use_vllm = entry.use_vllm
+    port = entry.port
+
+    llmw = None
+    if deploy_base_model:
+        model = db.query(OpenLLM).filter(OpenLLM.id == model_or_adapter_id).first()
+        llmw = LLMW(model.local_path, None, use_vllm=use_vllm, use_deepspeed=use_deepspeed)
+    else:
+        adapter = db.query(Adapter).filter(Adapter.id == model_or_adapter_id).first()
+        base_model = (
+            db.query(OpenLLM)
+            .filter(OpenLLM.model_name == adapter.base_model_name)
+            .first()
+        )
+        if use_vllm and db.query(FinetuneEntry).filter(
+            FinetuneEntry.id == adapter.ft_entry
+        ).first().adapter_name != "lora":
+            raise Exception("VLLM can only be used with LORA adapters")
+        llmw = LLMW(base_model.local_path, adapter.local_path, use_vllm=use_vllm, use_deepspeed=use_deepspeed)
+    llmw.load()
+
+    entry.state = DeploymentState.running.value
+    db.commit()
+    db.close()
     try:
-        run(deployment_id)
+        run(llmw, use_vllm, port)
     except RuntimeError as e:
         if "cuda out of memory" in str(e).lower():
             db = get_db()
@@ -221,6 +246,7 @@ def wrapper(deployment_id: int):
             False,
             generate_log_path(TaskType.deployment.value, str(deployment_id)),
         )
+        
 
 
 if __name__ == "__main__":

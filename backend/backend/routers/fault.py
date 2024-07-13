@@ -70,9 +70,9 @@ async def get_fault_wordcloud(
     # faults = accessible(db.query(Fault), identifier)
     faults = db.query(Fault)
 
-    cloudword = ""
-    for fault in faults:
-        cloudword += fault.message
+    cloudword_list = [fault.message for fault in faults]
+    cloudword = "".join(cloudword_list)
+
     wordcloud = WordCloud(background_color="white", width=800, height=600, max_words=200).generate(cloudword)
     fig, ax = plt.subplots(figsize=(8, 6), subplot_kw={"xticks": [], "yticks": []})
     ax.imshow(wordcloud, interpolation='bilinear')

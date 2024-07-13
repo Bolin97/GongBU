@@ -34,6 +34,7 @@ RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspee
 # RUN /micromamba/bin/micromamba run -n backend pip install git+https://github.com/huggingface/transformers
 RUN /micromamba/bin/micromamba run -n backend pip install torch -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install transformers_stream_generator -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 # RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 

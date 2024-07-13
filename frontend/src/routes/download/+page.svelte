@@ -262,6 +262,15 @@
         bind:value={download_url}
       />
     </div>
+    <div class="mt-2 mx-2">
+      <span class="font-semibold text-lg m-2"
+        >{t("download.avatar_url")}：</span
+      >
+      <Input
+        class="my-2"
+        bind:value={avatar_url}
+      />
+    </div>
     <div class="flex m-1 justify-center">
       <Button class="my-2" on:click={add_model}>
         {t("download.add_button")}
@@ -312,6 +321,19 @@
                   >
                     {t("download.p5")}
                   </button>
+
+                  <button
+                    on:click={() => {
+                      model_list = model_list.filter(
+                        (item) => item.model_name !== model.model_name,
+                      );
+                      $MODEL_LIST = JSON.stringify(model_list);
+                    }}
+                    class="mx-2 text-red-600 hover:underline"
+                  >
+                    {t("download.delete_from_list")}
+                  </button>
+                
                 </div></TableBodyCell
               >
             </TableBodyRow>

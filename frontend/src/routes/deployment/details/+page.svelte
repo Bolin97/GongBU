@@ -132,6 +132,8 @@
                 {t("deployment.starting")}
               {:else if deployment_entry.state == 2}
                 {t("deployment.running")}
+              {:else}
+                {t("deployment.error")}
               {/if}
             </span>
           </div>
@@ -147,6 +149,18 @@
                 >
                   {window.location.origin + `/net/${deployment_entry.port}/`}
                 </a>
+              </p>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span class="text-gray-900 font-bold">{t("deployment.detail.openai_link")}</span>
+            <div class="text-sm">
+              <p>
+                <span
+                  class="text-blue-600 hover:underline"
+                >
+                  {window.location.origin + `/net/${deployment_entry.port}/openai/v1/chat/completions`}
+                </span>
               </p>
             </div>
           </div>
@@ -193,7 +207,7 @@
           </div>
         </div>
       </div>
-      <div class="w-1/2">
+      <div class="w-1/2 min-h-full">
         <WrappedIframe
           link={`/net/${deployment_entry.port}/`}
           avaliable={deployment_entry.state == 2}
