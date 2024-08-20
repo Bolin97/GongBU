@@ -20,7 +20,8 @@
 
 <div class="header w-full h-16 justify-between bg-gray-000 flex">
   <div class="left w-100 h-5/6 text-center pt-2 px-2 flex">
-    <img src="/logo_new.jpg" alt="" width="60"/>
+    <!-- <img src="/logo.jpg" alt="" width="8%" height="8%"/> -->
+    <img src="/logo.jpg" alt=""/>
     <span class="logo text-3xl pt-1 text-black-400 border-blue-400 font-bold"
       >&nbsp;&nbsp;{t("root.title")}</span
     >

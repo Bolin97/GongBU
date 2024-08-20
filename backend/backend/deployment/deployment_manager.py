@@ -38,7 +38,7 @@ class DeploymentManager:
             devices = list(map(int, deployment.devices))
         cuda_visible_devices = ",".join(map(str, devices))
 
-        script_file = os.path.join(os.path.dirname(__file__), "gradio_app.py")
+        script_file = os.path.join(os.path.dirname(__file__), "app.py")
         command = f"""
 CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --deployment_id {deployment_id}
             """

@@ -4,15 +4,17 @@
   export let avaliable: boolean;
 
   let iframe: HTMLIFrameElement;
-    import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   const t: any = getContext("t");
+
 </script>
 
 {#if avaliable}
-  <iframe bind:this={iframe} title={link} src={link} class="w-full h-[75vh]"
-  ></iframe>
+  <iframe bind:this={iframe} title={link} src={link} class="w-full h-full"
+  >
+  </iframe>
 {:else}
-  <div class="text-center">
+  <div class="text-center h-full">
     <p>{t("deployment.detail.p1")}</p>
   </div>
 {/if}

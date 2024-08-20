@@ -89,7 +89,7 @@ def download_model(
     db.close()
 
 
-def write_info(info: ModelListItem, identifier: str):
+def write_info(info: ModelListItem, identifier: str=Depends(get_current_identifier)):
     # create model_avatars folder if not exists
     if not os.path.exists(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars")):
         os.makedirs(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars"))
@@ -139,7 +139,7 @@ def write_info(info: ModelListItem, identifier: str):
 async def create_openllm_download(
     info: ModelListItem, identifier: str = Depends(get_current_identifier)
 ):
-    entry_id = write_info(info)
+    entry_id = write_info(info, identifier)
     # Download Model in a new thread
     th = Thread(target=download_model, args=(info, entry_id, identifier))
     th.start()

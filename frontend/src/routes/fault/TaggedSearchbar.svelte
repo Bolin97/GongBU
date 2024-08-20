@@ -14,6 +14,6 @@
 <input
   type="text"
   bind:value
-  class="w-1/3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-300"
+  class="w-full border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-300"
   placeholder={t("fault.search_placeholder")}
 />

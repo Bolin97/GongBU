@@ -18,8 +18,6 @@ def generate_prompt(data_point, dataset_type: int, for_infer=False):
 ### Response:
 {data_point["output"] if not for_infer else ""}"""
     elif dataset_type == 1:
-        # raw input-and-output
-        if "input" in data_point and len(data_point["input"]) > 0:
-            return data_point["input"] + data_point["output"] if not for_infer else data_point["input"]
-
-        # NOT VALID
+        keys = data_point.keys()
+        return "".join([data_point[k] for k in keys])
+    # NOT VALID

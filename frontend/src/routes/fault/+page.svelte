@@ -5,7 +5,7 @@
   import toFormatted from "../../utils/ConvertDatetimeString";
   import TaggedSearchbar from "./TaggedSearchbar.svelte";
   import { SearchOutline } from "flowbite-svelte-icons";
-  import { Badge, Button } from "flowbite-svelte";
+  import { Badge, Button, Modal } from "flowbite-svelte";
   const t: any = getContext("t");
 
   interface SearchParams {
@@ -24,6 +24,7 @@
   }
 
   let faults = [] as Fault[];
+  let stop_modal = false;
 
   let searchParams: SearchParams = {
     tags: [],
@@ -55,6 +56,23 @@
   }
 </script>
 
+<Modal title={t("fault.wordcloud")} bind:open={stop_modal} autoclose>
+  <div class="">
+    <img
+      class="h-full w-full object-scale-down"
+      src={`/api/fault/wordcloud`}
+      alt=""
+    />
+  </div>
+
+  <svelte:fragment slot="footer">
+    <div class="w-full flex justify-end gap-2">
+
+      <Button color="alternative">{t("fault.close")}</Button>
+    </div>
+  </svelte:fragment>
+</Modal>
+
 <div class="pt-2 w-full">
   <span class="text-2xl pt-1 text-black-400 font-bold">&nbsp;&nbsp;{t("fault.title")}</span>
   <span class="text-1xl pt-2 text-black-400 text-center"
@@ -64,13 +82,26 @@
 <hr class="pt-1" />
 
 <div class="overflow-x-auto">
-  <div>
-    <TaggedSearchbar bind:tags />
+  <div class="flex flex-row justify-between">
+    <div class="flex w-full">    
+      <div class="flex py-2 w-1/2 m-1">
+        <TaggedSearchbar bind:tags />
+      </div>
+      <div class="flex m-1">
+        <Button class="my-2" on:click={handleSearch}>
+          <SearchOutline size="sm" />
+          {t("fault.search")}
+        </Button>
+      </div>
+    </div>
+    <div class="flex m-1">
+      <Button class="my-2" color="green" on:click={(_) => {
+        stop_modal = true;
+      }}>
+        {t("fault.wordcloud")}
+      </Button>
+    </div>
   </div>
-  <Button class="my-2" on:click={handleSearch}>
-    <SearchOutline size="sm" />
-    {t("fault.search")}
-  </Button>
   <table class="table-auto border-collapse w-full h-full">
     <thead>
       <tr

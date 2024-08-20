@@ -51,9 +51,7 @@
       <hr class="m-1" />
       <div class="m-1">
         <div>{t("components.device.memory_utilization")}</div>
-        <div>
-          {device_mapper[deviceId]?.memory_utilization?.toFixed(1)}%
-        </div>
+        <div>{device_mapper[deviceId]?.memory_utilization?.toFixed(1)}%</div>
         <Progressbar
           progress={device_mapper[deviceId]?.memory_utilization?.toFixed(1)}
         />

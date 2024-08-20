@@ -330,7 +330,7 @@
             {/if}
           </div>
         </div>
-        <Hr />
+        <hr />
         <div class="grid gap-2 m-4 grid-cols-1 lg:grid-cols-2">
           <div>
             <Label for="first_name" class="mb-2">
@@ -341,7 +341,7 @@
         {#each groups.filter((g) => {
           return !g.advanced;
         }) as group}
-          <Hr />
+          <hr />
           <div class="m-1">
             <span class="text-1xl pt-1 text-black-400 font-bold"
               >{group.title}</span
@@ -357,16 +357,16 @@
             </div>
           </div>
         {/each}
-        <Hr />
+        <hr/>
         <div class="m-1">
           <span class="text-1xl pt-1 text-black-400 font-bold"
             >{t("finetune.detail.device")}</span
           >
-          <div class="gap-2 m-1 grid grid-cols-1 lg:grid-cols-2">
+          <div class="gap-2 m-1 grid grid-cols-1 lg:grid-cols-3">
             <DeviceInfo showDevices={finetune_entry.devices} />
           </div>
         </div>
-        <Hr />
+        <hr />
         <div class="m-1">
           <span class="text-1xl pt-1 text-black-400 font-bold">{t("finetune.detail.data")}</span>
           <div class="m-1">
@@ -376,7 +376,7 @@
             </div>
           </div>
         </div>
-        <Hr />
+        <hr />
         <div class="m-1">
           <span class="text-1xl pt-1 text-black-400 font-bold">{t("finetune.detail.save_path")}</span>
           <div class="flex flex-row gap-2 m-1">
@@ -398,7 +398,7 @@
                 <div class="grid grid-cols-1 gap-2 m-2">
                   {#each group.params as param}
                     <div>
-                      <Label for="first_name" class="mb-2">
+                      <Label for="first_name" class="mb-2 ">
                         {param.name}: {param.value}
                       </Label>
                     </div>
@@ -408,7 +408,7 @@
               {#if index != groups.reduce((acc, g) => {
                   return acc + (g.advanced ? 1 : 0);
                 }, 0) - 1}
-                <Hr />
+                <hr />
               {/if}
             {/each}
           </AccordionItem>

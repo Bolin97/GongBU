@@ -41,6 +41,7 @@
   </svelte:fragment>
 </ActionPageTitle>
 
+<!-- <hr class="pt-1" /> -->
 <div class="grid grid-cols-3">
   {#each entries as entry}
     <div class="mx-4 my-2">

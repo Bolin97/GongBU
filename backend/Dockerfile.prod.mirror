@@ -30,13 +30,10 @@ RUN /micromamba/bin/micromamba run -n backend pip install scipy==1.11.4 -i https
 RUN /micromamba/bin/micromamba run -n backend pip install mkl-service==2.4.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host=pypi.tuna.tsinghua.edu.cn
 RUN /micromamba/bin/micromamba run -n backend pip install bert-score --no-deps
 RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host=pypi.tuna.tsinghua.edu.cn
-RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]" -i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host=pypi.tuna.tsinghua.edu.cn
-# RUN /micromamba/bin/micromamba run -n backend pip install git+https://github.com/huggingface/transformers
 RUN /micromamba/bin/micromamba run -n backend pip install torch -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-# RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.44.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install deepspeed==0.14.5 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install peft==0.12.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 RUN apt-get -y install libopenmpi-dev
@@ -45,14 +42,15 @@ RUN /micromamba/bin/micromamba run -n backend pip install mpi4py -i https://pypi
 # Use the gradio from source because latest version supports detecting root_path
 # Reduces tons of work
 # When this version is released, just use the new version
-RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2
+RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
+RUN apt-get install cmake -y
 RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
+RUN /micromamba/bin/micromamba run -n backend pip3 install vllm==0.2.5 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install trl==0.7.11 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2 -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip install bcrypt==4.0.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install trl==0.9.6 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install wordcloud==1.8.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install galore_torch==1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 WORKDIR /backend
 
 # Copy the files
@@ -63,4 +61,4 @@ WORKDIR /backend
 RUN /micromamba/bin/micromamba run -n backend pip install -e .
 
 RUN mkdir /logs
-CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0 --workers 4
+CMD /micromamba/bin/micromamba run -n backend uvicorn backend.main:app --host 0.0.0.0

@@ -74,8 +74,6 @@ app.include_router(logging_router, prefix="/logging", tags=["logging"])
 
 app.include_router(ft_eval_index_router, prefix="/eval_index", tags=["eval_index"])
 
-# app.include_router(file_router, prefix="/file", tags=["file"])
-
 app.include_router(user_router, prefix="/user", tags=["user"])
 
 app.include_router(deployment_router, prefix="/deployment", tags=["deployment"])

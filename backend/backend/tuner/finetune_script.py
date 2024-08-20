@@ -38,7 +38,7 @@ from peft import (  # noqa: E402
     set_peft_model_state_dict,
 )
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-from backend.tuner.callback import ReportCallback, ExpCallback
+from backend.tuner.callback import ReportCallback
 from backend.tuner.get_deepspeed_config import get_deepspeed_config
 
 # peft IA3的参数
@@ -104,16 +104,13 @@ from transformers import (
     LlamaTokenizer,
     AutoModel,
     BitsAndBytesConfig,
-)  # noqa: F402
+)
 from accelerate import Accelerator
 from trl import SFTTrainer
 from dataclasses import dataclass, field
-
-# from simpletuning.constants import *
 import bitsandbytes as bnb
 
 
-# 得到模型的linear层
 def get_target(bnb_config: Optional[BitsAndBytesConfig], named_modules) -> List[str]:
     # Determine the correct linear layer class based on the value of `args.bits`
     if bnb_config is not None and bnb_config.load_in_4bit:
@@ -129,34 +126,15 @@ def get_target(bnb_config: Optional[BitsAndBytesConfig], named_modules) -> List[
         if isinstance(module, cls):
             # If yes, split the name of the module into its component parts and add the first or last part to the set
             names = name.split(".")
-            # 只保留最后的名称，前缀不保留
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
 
     # Remove 'lm_head' from the set if present (needed for 16-bit)
     if "lm_head" in lora_module_names:
         lora_module_names.remove("lm_head")
-
-    # Convert the set into a list and return it
     return list(lora_module_names)
 
 
 def get_device_map(devices: list[int] | str, base_model: str):
-    # if devices == "auto":
-    #     return "auto"
-    # else:
-    #     distribution = {
-    #         each: int(torch.cuda.get_device_properties(each).total_memory - torch.cuda.memory_allocated(each) - torch.cuda.memory_reserved(each)) * 0.8 - 5 * (10 ** 9)
-    #         for each in devices
-    #     }
-    #     distribution.update({"cpu": psutil.virtual_memory().available})
-    #     device_map = infer_auto_device_map(
-    #         model,
-    #         distribution,
-    #         no_split_module_classes=type(model)._no_split_modules
-    #     )
-    #     return device_map
-    # Now we use CUDA_VISIBLE_DEVICES to control the device, so device_map is always auto
-    print(devices)
     return "auto"
 
 
@@ -329,13 +307,13 @@ def get_dataset(
         full_prompt = generate_prompt(data_point, dataset_type)
         tokenized_full_prompt = tokenize(full_prompt)
         user_prompt = generate_prompt({**data_point, "output": ""}, dataset_type)
-        tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
+        tokenized_user_prompt = tokenize(user_prompt, add_eos_token=True)
         user_prompt_len = len(tokenized_user_prompt["input_ids"])
         tokenized_full_prompt["labels"] = [
             -100
         ] * user_prompt_len + tokenized_full_prompt["labels"][
             user_prompt_len:
-        ]  # could be sped up, probably
+        ]
         return tokenized_full_prompt
     df = DataFrame(dataset).astype(str)
     data = datasets.DatasetDict(
@@ -420,6 +398,7 @@ def train(
     zero_optimization: bool = True,  # 是否使用zero优化
     zero_stage: int = 2,  # zero优化的阶段
     zero_offload: bool = False,  # 是否使用zero卸载
+    eval_indexes: list[str] | None = None
 ):
     torch.cuda.empty_cache()
 
@@ -447,7 +426,12 @@ def train(
         base_model, device_map, bnb_config, zero_optimization, zero_stage, zero_offload
     )
     
-    use_peft = adapter_name != "lomo"
+    optim_dict = {
+        "lomo": "lomo",
+        "lomo-ada": "adalomo",
+        "galore": "galore_adamw",
+    }
+    use_peft = not adapter_name in optim_dict.keys()
 
     if use_peft:
         model = get_peft_model(
@@ -462,6 +446,7 @@ def train(
                 num_virtual_tokens,
             ),
         )
+        model.print_trainable_parameters()
 
     if bits_and_bytes:
         model = prepare_model_for_kbit_training(
@@ -489,6 +474,17 @@ def train(
     data_collator = transformers.DataCollatorForSeq2Seq(
         tokenizer, model=model, return_tensors="pt", padding=True, pad_to_multiple_of=16
     )
+    
+    
+    optim = "adamw_torch" if not adapter_name in optim_dict.keys() else optim_dict[adapter_name]
+    if optim.startswith("galore"):
+        galore_params = {
+            "optim_target_modules": [r".*.attn.*", r".*.mlp.*"],
+            "optim_args": "rank=128, update_proj_gap=100, scale=0.1",
+        }
+    else:
+        galore_params = {}
+
 
     training_args = transformers.TrainingArguments(
         per_device_train_batch_size=micro_batch_size,
@@ -500,7 +496,7 @@ def train(
         fp16=False,
         bf16=True,
         logging_steps=logging_step,
-        optim="adamw_torch",
+        optim=optim,
         evaluation_strategy="steps" if val_set_size > 0 else "no",
         save_strategy="steps",
         eval_steps=eval_step if val_set_size > 0 else None,
@@ -516,85 +512,30 @@ def train(
             if not zero_optimization
             else get_deepspeed_config(zero_stage, zero_offload)
         ),
+        **galore_params,
     )
-    if adapter_name == "lomo":
-        # manually train the model with pytorch
-        
-        from tqdm import tqdm
-        from lomo_optim import Lomo
-        
-        optimizer = Lomo(model, lr=learning_rate)
-        fuse_update = optimizer.fuse_update()
-        
-        for e in tqdm(range(num_epochs)):
-            for step in tqdm(range(len(train_data))):
-                model.train()
-                batch = train_data[step]
-                batch = {k: v.to(model.device) for k, v in batch.items()}
-                outputs = model(**batch)
-                fuse_update(outputs.loss)
-                global_step = e * len(train_data) + step
-                if global_step % logging_step == 0:
-                    print(f"step {global_step}, loss {outputs.loss.item()}")
-                
-        
-        # trainer = transformers.Trainer(
-        #     model=model,
-        #     tokenizer=tokenizer,
-        #     train_dataset=train_data,
-        #     eval_dataset=val_data,
-        #     callbacks=[report_callback, ExpCallback(training_args.output_dir)],
-        #     args=training_args,
-        #     optimizers=(Lomo(model, lr=learning_rate), None),
-        #     data_collator=data_collator,
-        # )
-        pass
-    else:
-        trainer = transformers.Trainer(
-            model=model,
-            tokenizer=tokenizer,
-            train_dataset=train_data,
-            eval_dataset=val_data,
-            callbacks=[report_callback, ExpCallback(training_args.output_dir)],
-            args=training_args,
-            data_collator=data_collator,
-        )
-        # trainer = SFTTrainer(
-        #     model=model,
-        #     tokenizer=tokenizer,
-        #     args=training_args,
-        #     data_collator=data_collator,
-        #     train_dataset=train_data,
-        #     eval_dataset=val_data,
-        #     callbacks=[report_callback],
-        #     formatting_func=lambda x: [generate_prompt(x, dataset_type)],
-        # )
-        # Currently pytorch requires python <= 3.10
-        if (
-            torch.__version__ >= "2"
-            and sys.platform != "win32"
-            and sys.version_info[0] == 3
-            and sys.version_info[1] <= 10
-        ):
-            model = torch.compile(model)
+    # from backend.tuner.metrics import get_compute_metrics_func
+    # compute_metrics = get_compute_metrics_func(eval_indexes, tokenizer)
+    trainer = transformers.Trainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=train_data,
+        eval_dataset=val_data,
+        callbacks=[report_callback],
+        args=training_args,
+        data_collator=data_collator,
+    )
+    # Currently pytorch requires python <= 3.10
+    if (
+        torch.__version__ >= "2"
+        and sys.platform != "win32"
+        and sys.version_info[0] == 3
+        and sys.version_info[1] <= 10
+    ):
+        model = torch.compile(model)
 
-        trainer.train(resume_from_checkpoint=resume_from_checkpoint)
-        # trainer.save_state()
-        # trainer.save_model(output_dir)
-        model.save_pretrained(output_dir)
-    # elif adapter_name == "lomo-lora":
-    #     trainer = LOMOLoRATrainer(
-    #         model=model,
-    #         tokenizer=tokenizer,
-    #         train_dataset=train_data,
-    #         eval_dataset=val_data,
-    #         training_args=training_args,
-    #         data_collator=data_collator,
-    #         callbacks=[report_callback],
-    #     )
-    #     trainer.train()
-
-    #     model.save_pretrained(output_dir)
+    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+    model.save_pretrained(output_dir)
 
 
 from backend.models import *
@@ -663,6 +604,7 @@ def wrapper(
             zero_optimization=entry.zero_optimization,
             zero_stage=entry.zero_stage,
             zero_offload=entry.zero_offload,
+            eval_indexes=entry.eval_indexes,
         )
     except RuntimeError as e:
         if "cuda out of memory" in str(e).lower():

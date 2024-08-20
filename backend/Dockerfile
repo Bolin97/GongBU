@@ -3,7 +3,7 @@ FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
 RUN apt-get update
 RUN apt-get install -y apt-utils
 # Install wget
-RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim tmux
+RUN apt-get install -y git git-lfs wget curl postgresql-client net-tools iputils-ping vim tmux libaio-dev
 
 # micromamba
 COPY ./dep/linux_mb.tar.bz2 /conf/linux_mb.tar.bz2
@@ -32,10 +32,11 @@ RUN /micromamba/bin/micromamba run -n backend pip install --no-deps bert-score
 
 RUN /micromamba/bin/micromamba run -n backend pip install -r /conf/requirements.txt
 
-RUN /micromamba/bin/micromamba run -n backend pip install "transformers[deepspeed]"
 RUN /micromamba/bin/micromamba run -n backend pip install torch
-RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
-RUN /micromamba/bin/micromamba run -n backend pip install peft==0.9.0
+RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.44.0
+RUN /micromamba/bin/micromamba run -n backend pip install peft==0.12.0
+RUN /micromamba/bin/micromamba run -n backend pip install deepspeed==0.14.5
+RUN /micromamba/bin/micromamba run -n backend pip install accelerate==0.33.0
 # RUN /micromamba/bin/micromamba run -n backend pip install flash-attn==2.5.6 --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install protobuf==4.25.3
 
@@ -48,11 +49,19 @@ RUN /micromamba/bin/micromamba run -n backend pip install mpi4py
 RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2
 
 RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools
+<<<<<<< HEAD
 RUN /micromamba/bin/micromamba run -n backend pip3 install -vvv vllm==0.4.2 --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0
 RUN /micromamba/bin/micromamba run -n backend pip install trl==0.7.11
 RUN /micromamba/bin/micromamba run -n backend pip install transformers==4.38.2
 RUN /micromamba/bin/micromamba run -n backend pip install bcrypt==4.0.1
+=======
+RUN /micromamba/bin/micromamba run -n backend pip3 install vllm==0.2.5
+RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0
+RUN /micromamba/bin/micromamba run -n backend pip install trl==0.9.6
+RUN /micromamba/bin/micromamba run -n backend pip install wordcloud==1.8.1
+RUN /micromamba/bin/micromamba run -n backend pip install galore_torch==1.0
+>>>>>>> some
 WORKDIR /backend
 
 # Copy the files

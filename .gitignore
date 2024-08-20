@@ -33,3 +33,5 @@ bunfig.toml
 bun.lockb
 package-lock.json
 sign_up_token.txt
+sign_up_token
+m3e-base

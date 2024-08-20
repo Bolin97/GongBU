@@ -20,6 +20,7 @@
   } from "flowbite-svelte";
   import axios from "axios";
   import { CloseOutline } from "flowbite-svelte-icons";
+  import { default_model_list } from "../shared";
   const t: any = getContext("t");
   let error_parsing = false;
 
@@ -32,25 +33,47 @@
     avatar_url: string | null | undefined;
   }
 
-  let model_list: ModelListItem[] = [];
+  let model_display_name: string = '';
+  const source: string = 'git';
+  let model_description: string = '';
+  let download_url: string ='';
+  let avatar_url: string =''
+  let model_list: ModelListItem[] = default_model_list;
 
-  $: {
-    error_parsing = false;
-    try {
-      model_list = JSON.parse($MODEL_LIST);
-      //check if every element in the model_list is a Model
-      const valid = Object.keys(new ModelListItem()).every((key) => {
-        return model_list.every((model) => {
-          return key in model;
-        });
-      });
-      if (!valid) {
-        error_parsing = true;
-      }
-    } catch (e) {
-      error_parsing = true;
-    }
+  async function add_model(){
+    const parts = download_url.split('/');
+    const extract_name = parts[parts.length - 1].replace('.git', '');
+    const newModel: ModelListItem = {
+        model_display_name: model_display_name,
+        model_name: extract_name,
+        source: source,
+        model_description: model_description,
+        download_url: download_url,
+        avatar_url: avatar_url
+    };
+    model_list = [...model_list, newModel]
+    model_display_name = '';
+    model_description = '';
+    download_url = '';
   }
+
+  // $: {
+  // error_parsing = false;
+  // try {
+  //   model_list = JSON.parse($MODEL_LIST);
+  //   //check if every element in the model_list is a Model
+  //   const valid = Object.keys(new ModelListItem()).every((key) => {
+  //     return model_list.every((model) => {
+  //       return key in model;
+  //     });
+  //   });
+  //   if (!valid) {
+  //     error_parsing = true;
+  //   }
+  // } catch (e) {
+  //   error_parsing = true;
+  // }
+  // }
 
   let model_stored = [] as Array<OpenllmEntry>;
   async function refresh_model_stored() {
@@ -202,9 +225,57 @@
     </div>
   {/each}
 
-  <div class="m-2 p-2">
+  <!-- <div class="m-2 p-2">
     <span class="my-2">{t("config.model_list")}</span>
-    <Textarea rows="16" bind:value={$MODEL_LIST} />
+    <Textarea rows="5" bind:value={$MODEL_LIST} />
+  </div> -->
+  <div class="text-lg font-bold m-2">
+    <span>{t("download.add")}:</span>
+  </div>
+  <div class="border border-gray-300 rounded-md">
+    <div class="flex flex-row mt-2">
+      <div class="w-1/4 mx-2">
+        <span class="font-semibold text-lg m-2"
+          >{t("download.model_display_name")}：</span
+        >
+        <Input
+          class=""
+          bind:value={model_display_name}
+        />
+      </div>
+      <div class="w-full mx-2">
+        <span class="font-semibold text-lg m-2"
+          >{t("download.model_description")}：</span
+        >
+        <Input
+          class=""
+          bind:value={model_description}
+        />
+      </div>
+    </div>
+    <div class="mt-2 mx-2">
+      <span class="font-semibold text-lg m-2"
+        >{t("download.download_url")}：</span
+      >
+      <Input
+        class="my-2"
+        bind:value={download_url}
+      />
+    </div>
+    <div class="mt-2 mx-2">
+      <span class="font-semibold text-lg m-2"
+        >{t("download.avatar_url")}：</span
+      >
+      <Input
+        class="my-2"
+        bind:value={avatar_url}
+      />
+    </div>
+    <div class="flex m-1 justify-center">
+      <Button class="my-2" on:click={add_model}>
+        {t("download.add_button")}
+      </Button>
+    </div>
   </div>
 
   {#if error_parsing}
@@ -214,18 +285,18 @@
       <span>{t("download.list")}</span>
     </div>
     <div class="table w-full my-2">
-      <Table>
-        <TableHead>
+      <Table >
+        <TableHead >
           <TableHeadCell>{t("download.table.model")}</TableHeadCell>
-          <TableHeadCell>{t("download.table.des")}</TableHeadCell>
+          <!-- <TableHeadCell>{t("download.table.des")}</TableHeadCell> -->
           <TableHeadCell>{t("download.table.website")}</TableHeadCell>
           <TableHeadCell>{t("download.table.options")}</TableHeadCell>
         </TableHead>
-        <TableBody>
+        <TableBody >
           {#each model_list as model}
             <TableBodyRow>
               <TableBodyCell>{model.model_name}</TableBodyCell>
-              <TableBodyCell>{model.model_description}</TableBodyCell>
+              <!-- <TableBodyCell>{model.model_description}</TableBodyCell> -->
               <TableBodyCell>{model.download_url}</TableBodyCell>
               <TableBodyCell
                 ><div class="flex flex-row">
@@ -250,6 +321,19 @@
                   >
                     {t("download.p5")}
                   </button>
+
+                  <button
+                    on:click={() => {
+                      model_list = model_list.filter(
+                        (item) => item.model_name !== model.model_name,
+                      );
+                      $MODEL_LIST = JSON.stringify(model_list);
+                    }}
+                    class="mx-2 text-red-600 hover:underline"
+                  >
+                    {t("download.delete_from_list")}
+                  </button>
+                
                 </div></TableBodyCell
               >
             </TableBodyRow>
