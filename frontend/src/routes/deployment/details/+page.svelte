@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { Button, Hr, Modal } from "flowbite-svelte";
+  import { Button, Hr, Modal, Tooltip } from "flowbite-svelte";
   import ActionPageTitle from "../../components/ActionPageTitle.svelte";
   import type Deployment from "../../../class/Deployment";
   import { getContext, onDestroy, onMount } from "svelte";
@@ -41,6 +41,20 @@
     
     stopClicked = false;
     startClicked = false;
+  }
+  let showTooltip = false;
+  let tooltipText = 'Copied!';
+  async function copyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(window.location.origin + `/net/${deployment_entry.port}/openai/v1/chat/completions`);
+      showTooltip = true;
+      setTimeout(() => {
+        showTooltip = false;
+      }, 2000);
+      console.log('Text copied to clipboard');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   }
   let updater: any;
   onMount(async () => {
@@ -154,14 +168,24 @@
           </div>
           <div class="mt-2">
             <span class="text-gray-900 font-bold">{t("deployment.detail.openai_link")}</span>
-            <div class="text-sm">
-              <p>
-                <span
-                  class="text-blue-600 hover:underline"
-                >
-                  {window.location.origin + `/net/${deployment_entry.port}/openai/v1/chat/completions`}
-                </span>
-              </p>
+            <div class="flex flex-row">
+              <div class="text-sm">
+                <p>
+                  <span
+                    class="text-blue-600 hover:underline"
+                  >
+                    {window.location.origin + `/net/${deployment_entry.port}/openai/v1/chat/completions`}
+                  </span>
+                  
+                </p>
+              </div>
+              <div class="ml-2 flex items-center">
+                <svg id=click on:click={copyToClipboard} class="w-6 h-6 text-gray-800 dark:text-white cursor-pointer" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" d="M18 3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1V9a4 4 0 0 0-4-4h-3a1.99 1.99 0 0 0-1 .267V5a2 2 0 0 1 2-2h7Z" clip-rule="evenodd"/>
+                  <path fill-rule="evenodd" d="M8 7.054V11H4.2a2 2 0 0 1 .281-.432l2.46-2.87A2 2 0 0 1 8 7.054ZM10 7v4a2 2 0 0 1-2 2H4v6a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z" clip-rule="evenodd"/>
+                </svg>
+                <Tooltip trigger="click" triggeredBy="#click" open={showTooltip} placement="top">{tooltipText}</Tooltip>
+              </div>
             </div>
           </div>
           <Hr />

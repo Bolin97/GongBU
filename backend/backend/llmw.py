@@ -9,6 +9,7 @@ from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 from typing import *
 
+
 class OpenAIChatCompletionRequest(BaseModel):
     messages: List[Union[str, Dict[str, str]]]
     model: str
@@ -142,6 +143,7 @@ class LLMW:
         output = self.model.generate(
             inputs=input_ids,
             max_length=max_length,
+            max_new_tokens=max_length,
             stopping_criteria=StoppingCriteriaList([StopOnTokens()]),
         )
         out_text = self.tokenizer.decode(

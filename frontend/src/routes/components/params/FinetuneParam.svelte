@@ -33,6 +33,8 @@
     | "IA3"
     | "lokr"
     | "loha"
+    | "lomo"
+    | "galore"
   > = [
     "lora",
     "qlora",
@@ -43,6 +45,8 @@
     "IA3",
     "lokr",
     "loha",
+    "lomo",
+    "galore"
   ];
   import { lora_specific_params } from "./Params";
   import type OpenllmEntry from "../../../class/OpenllmEntry";
