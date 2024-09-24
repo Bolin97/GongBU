@@ -75,7 +75,7 @@ services:
     expose:
       - 80
     ports:
-      - "80:80"
+      - "8888:80"
     links:
       - backend
     depends_on:

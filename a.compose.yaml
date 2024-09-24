@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      PGDATA: /data/postgres
+      POSTGRES_DB: GONGBU
+    volumes:
+      - gongbu_postgres:/from
+      - tgong_postgres:/to
+  
+volumes:
+  gongbu_postgres:
+    external: true
+  tgong_postgres:
+    external: true
