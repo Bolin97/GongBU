@@ -51,6 +51,8 @@ RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0 -i h
 RUN /micromamba/bin/micromamba run -n backend pip install trl==0.9.6 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install wordcloud==1.8.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install galore_torch==1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install wordcloud==1.8.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+RUN /micromamba/bin/micromamba run -n backend pip install galore_torch==1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 WORKDIR /backend
 
 # Copy the files
