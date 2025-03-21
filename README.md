@@ -16,6 +16,20 @@
 ## 为何代码不见了?
 因项目维护需要, 现将源代码清空, 待新功能开发完成后会择机重新开源本项目。
 
+## Citation
+
+If this work is helpful, please kindly cite as:
+
+```bibtex
+@inproceedings{zhang2024gongbu,
+  title={GongBu: Easily Fine-tuning LLMs for Domain-specific Adaptation},
+  author={Zhang, Bolin and Tian, Yimin and Wang, Shengwei and Tu, Zhiying and Chu, Dianhui and Shen, Zhiqi},
+  booktitle={Proceedings of the 33rd ACM International Conference on Information and Knowledge Management},
+  pages={5309--5313},
+  year={2024}
+}
+```
+
 # TGong [Formerly: GongBU]: An All-in-One Visualization Platform for Fine-tuning and Deploying Open-sourced LLMs
 
 ## Features
