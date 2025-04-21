@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monaco 代码生成器</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+        :root {
+            --left-width: 280px;
+            --right-width: 280px;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .module-panel {
+            width: var(--right-width);
+            background: #f5f5f5;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* 可拖拽分割条 */
+        .resizer {
+            width: 5px;
+            background: #333;
+            cursor: col-resize;
+            transition: background 0.2s;
+        }
+
+        .resizer:hover {
+            background: #666;
+        }
+
+        /* 中间编辑器 */
+        #editor {
+            flex: 1;
+        }
+
+        /* 左侧文件树 */
+        .file-tree {
+            width: var(--left-width);
+            background: #f5f5f5;
+            color:  #252526;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+        }
+
+        /* 文件树样式 */
+        .tree-node {
+            padding: 5px 0;
+            user-select: none;
+        }
+
+        .tree-item {
+            padding: 4px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .tree-item:hover {
+            background: #e0e0e0;
+        }
+
+        .tree-icon {
+            margin-right: 6px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* ================== 参数对话框样式 ================== */
+        .param-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            /* 表示置于最上一层: 控制 元素在 z 轴上的堆叠顺序 的属性 */ 
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.95);
+            animation: dialogEnter 0.3s ease forwards;
+            overflow: hidden;
+        }
+
+        @keyframes dialogEnter {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .dialog-content h3 {
+            margin: 0;
+            padding: 20px 24px;
+            font-size: 1.4rem;
+            color: #2d3748;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #paramForm {
+            padding: 20px 24px;
+            padding-right: 76px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .form-row label {
+            flex: 0 0 100px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            text-align: right;
+            padding-right: 16px;
+        }
+
+        .form-row input,
+        .form-row select {
+            flex: 1;
+            padding: 8px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-row input:focus,
+        .form-row select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .dialog-buttons {
+            padding: 16px 24px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .dialog-buttons button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dialog-buttons .confirm {
+            background: #4299e1;
+            color: white;
+        }
+
+        .dialog-buttons .confirm:hover {
+            background: #3182ce;
+        }
+
+        .dialog-buttons .cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .dialog-buttons .cancel:hover {
+            background: #cbd5e0;
+        }
+
+        /* 模块面板样式 */
+        .group-header {
+            align-items: center; 
+            padding: 6px 8px 8px 8px;
+            cursor: pointer;
+            background: #e0e0e0;
+            border-radius: 6px;
+            margin: 5px 0px;
+        }
+
+        .arrow {
+            transition: transform 0.1s ease;
+            transform-origin: 12px 13px;
+        }
+
+        .arrow1 {
+            transition: transform 0.1s ease;
+            transform-origin: 12px 12px;
+        }
+
+        .sub-modules {
+            margin-left: 15px;
+        }
+
+        .sub-module {
+            padding: 6px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 4px;
+            cursor: move;
+        }
+
+        /* 右键菜单样式 */
+        .vscode-menu {
+            border: 1px solid #3c3c3c;
+        }
+        .menu-item .item-content {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .shortcut {
+            color: #858585;
+            margin-left: 20px;
+        }
+        .icon-placeholder {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            /* 应替换为图标 */
+        }
+
+        /* 右键菜单中功能输入框 */
+        .vscode-prompt {
+            position: fixed;
+            display: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+        }
+
+        .prompt-box {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            animation: dialogEnter 0.3s ease forwards;
+        }
+
+        .prompt-box h3 {
+            margin: 0;
+            padding: 20px 24px;
+            font-size: 1.4rem;
+            color: #2d3748;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #prompt-input {
+            width: calc(100% - 48px);
+            margin: 20px 24px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #prompt-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .button-group {
+            padding: 16px 24px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .button-group button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .button-group .confirm {
+            background: #4299e1;
+            color: white;
+        }
+
+        .button-group .confirm:hover {
+            background: #3182ce;
+        }
+
+        .button-group .cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .button-group .cancel:hover {
+            background: #cbd5e0;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧文件树 -->
+        <div class="file-tree" id="fileTree"></div>
+        <!-- 左侧分割条 -->
+        <div class="resizer" id="leftResizer"></div>
+        <!-- 代码编辑器 -->
+        <div id="editor"></div>
+        <!-- 右侧分割条 -->
+        <div class="resizer" id="rightResizer"></div>
+        <!-- 模块面板 -->
+        <div class="module-panel" id="modulePanel"></div>
+
+        <!-- 菜单功能输入框  -->
+        <div id="custom-prompt" class="vscode-prompt">
+            <div class="dialog-content">
+                <h3 id="prompt-label"></h3>
+                <input type="text" id="prompt-input">
+                <div class="dialog-buttons">
+                    <button class="cancel" onclick="onPromptCancel()">取消</button>
+                    <button class="confirm" onclick="onPromptConfirm()">确定</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script>
+
+        let draggedModuleId = null;
+        let currentFilePath = null; // 保存当前打开的文件路径
+        let currnetSelectItem = null;
+        // 添加文件夹展开状态管理队列——批处理
+        let expandStateQueue = [];
+        let stateTimer = null;
+
+        // 加载的时候启动状态定时器
+        if (!stateTimer) {
+            stateTimer = setInterval(flushExpandStates, 5000);
+        }
+
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        let editor;
+        require(['vs/editor/editor.main'], () => {
+            // 初始化编辑器
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '',
+                language: 'python',
+                minimap: { enabled: false },
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                theme: 'vs-dark'
+            });
+            // 初始化文件树
+            initFileTree();
+            // 加载模块数据
+            loadModuleGroups();
+            // 注册拖拽事件
+            initDragAndDrop();
+            // 面板大小调整
+            initResizers();
+
+            // 添加快捷键命令 (必须在回调内部注册)(因为是异步加载后回调的，在外面注册可能导致没有加载editor，即editor==null时注册而报错)
+            // ctrl + s 保存文件
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() {
+                const content = editor.getValue();
+                saveFile(content);
+            });
+        });
+
+
+        // 面板大小调整
+        function initResizers() {
+            let isDragging = false;
+            let startX, leftWidth, rightWidth;
+
+            function startDrag(e) {
+                isDragging = true;
+                startX = e.clientX;
+                leftWidth = parseFloat(getComputedStyle(document.body).getPropertyValue('--left-width')) || 280;
+                rightWidth = parseFloat(getComputedStyle(document.body).getPropertyValue('--right-width')) || 300;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            }
+
+            function doDrag(e) {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startX;
+                const target = e.target.id === 'leftResizer' ? 'left' : 'right';
+                
+                if (target === 'left') {
+                    const newWidth = leftWidth + dx;
+                    if (newWidth > 200 && newWidth < 600) {
+                        document.documentElement.style.setProperty('--left-width', `${newWidth}px`);
+                    }
+                } else {
+                    const newWidth = rightWidth - dx;
+                    if (newWidth > 200 && newWidth < 600) {
+                        document.documentElement.style.setProperty('--right-width', `${newWidth}px`);
+                    }
+                }
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+
+            document.querySelectorAll('.resizer').forEach(resizer => {
+                resizer.addEventListener('mousedown', startDrag);
+            });
+
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+
+        // 文件树数据结构 mock数据
+        // const fileTreeData = [
+        //     {
+        //         name: "src",
+        //         type: "folder",
+        //         expanded: true,
+        //         children: [
+        //             { name: "main.py", type: "file" },
+        //             { name: "utils.py", type: "file" }
+        //         ]
+        //     },
+        //     {
+        //         name: "config",
+        //         type: "folder",
+        //         children: [
+        //             { name: "settings.json", type: "file" }
+        //         ]
+        //     }
+        // ];
+
+        // 初始化文件树
+        async function initFileTree() {
+            await updateFileTree();
+        }
+
+        // 更新文件树文件树
+        async function updateFileTree() {
+            // 从后台获取目录树
+            const response = await fetch(`/ide/file_tree`);
+            const data = await response.json();
+            fileTreeData = data[0].children;
+            const container = document.getElementById('fileTree');
+            // 清空子元素
+            container.innerHTML = '';
+            renderTreeNodes(fileTreeData, container, 0, '');
+        }
+
+        // 递归渲染文件树
+        function renderTreeNodes(nodes, parent, level = 0, currentPath='') {
+            nodes.forEach(node => {
+                const itemPath = currentPath ? `${currentPath}/${node.name}` : `/${node.name}`;
+                const div = document.createElement('div');
+                div.className = 'tree-node';
+                
+                const item = document.createElement('div');
+                item.className = 'tree-item';
+                item.style.paddingLeft = `${15 + level * 15}px`;
+                
+                // Arrow
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow-wrapper';
+                arrow.innerHTML = `
+                    <svg class="arrow1" viewBox="0 0 21 21" width="20" height="20">
+                        ${node.type === 'folder' ? `
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                        ` : `
+                        <path d="" fill="none"/>
+                        `}
+                    </svg>
+                `;
+
+                // 图标
+                const icon = document.createElement('span');
+                icon.className = 'tree-icon';
+                icon.innerHTML = node.type === 'folder' ? 
+                    '<i class="fa-regular fa-folder"></i>' : 
+                    '<i class="fa-regular fa-file-code"></i>';
+                
+                // 名称
+                const name = document.createElement('span');
+                name.textContent = node.name;
+
+                item.append(arrow, icon, name);
+                div.appendChild(item);
+
+                // 文件夹交互
+                if (node.type === 'folder') {
+                    item.addEventListener('click', () => toggleFolder(node, div, arrow, level, itemPath));
+                    if (node.expanded && node.children) {
+                        const childrenDiv = document.createElement('div');
+                        renderTreeNodes(node.children, childrenDiv, level + 1, itemPath);
+                        div.appendChild(childrenDiv);
+                    }
+                }
+                if (node.type === 'file') {
+                     // 对于文件的点击，从后台接口中获取文件内容，传入文件的路径，然后把获取到的内容显示到编辑器里面
+                    item.addEventListener('click', () => openFile(itemPath));
+                }
+
+                // 选中的目录或者文件item背景变色
+                item.addEventListener('click', () => {
+                    if(currnetSelectItem){
+                        // 将背景色变成透明
+                        currnetSelectItem.style.background = 'transparent';
+                    }
+                    item.style.background = '#094771';
+                    currnetSelectItem = item;
+                });
+
+                // contextmenu事件在鼠标右键时触发
+                item.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    console.log(itemPath);
+                    showContextMenu(e.clientX, e.clientY, itemPath);
+                });
+
+                parent.appendChild(div);
+            });
+        }
+
+        // 文件的打开
+        function openFile(filePath) {
+            currentFilePath = filePath;
+            fetch(`/ide/file_content?path=${filePath}`)
+                .then(res => res.json())
+                .then(res => {
+                    editor.setValue(res.content);
+                });
+        }
+
+        // 保存文件
+        function saveFile(content) {
+            if (!currentFilePath) {
+                alert("⚠️ 当前未打开任何文件，无法保存！");
+                return;
+            }
+
+            fetch(`/ide/write_file`,{
+                method :"POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: currentFilePath,
+                    content: content
+                })
+            });
+        }
+
+        // 文件夹展开/收起
+        function toggleFolder(node, container, arrow, level, itemPath) {
+            node.expanded = !node.expanded;
+            // 记录状态变化，写入事件
+            pushQueueExpandState(itemPath, node.expanded);
+
+            // 旋转arrow
+            arrow.querySelector('.arrow1').style.transform = 
+                node.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+
+            // 在 container 元素下，找到其最后一个直接子 <div> 元素(只能是下一层级div，不能下下级)，并赋值给 childrenDiv
+            const childrenDiv = container.querySelector(':scope > div:last-child');
+            if (node.expanded) {
+                if (!childrenDiv || childrenDiv.className == 'tree-item'){
+                    const newDiv = document.createElement('div');
+                    renderTreeNodes(node.children, newDiv, level+1, itemPath);
+                    container.appendChild(newDiv);
+                }
+            } else {
+                childrenDiv?.remove();
+            }
+        }
+
+        function handleDragStart(e) {
+            draggedModuleId = e.target.dataset.moduleId;
+        }
+
+        async function loadModuleGroups() {
+            // 从后端获取模块数据
+            const groups = await fetch('/api/module-groups')
+                .then(res => res.json());
+            // 生成模块面板
+            const panel = document.getElementById('modulePanel');
+            groups.forEach(group => createGroupElement(group, panel));
+        }
+
+        function createGroupElement(group, container) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'module-group';
+            
+            // 分组标题
+            const header = document.createElement('div');
+            header.className = 'group-header';
+            header.innerHTML = `
+                <svg class="arrow" viewBox="-2 -2 20 20" width="20" height="20" >
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                </svg>
+                ${group.name}
+            `;
+            
+            // 子模块容器
+            const subContainer = document.createElement('div');
+            subContainer.className = 'sub-modules';
+            subContainer.style.display = 'none';
+
+            // 点击事件
+            header.addEventListener('click', () => {
+                const isExpanded = subContainer.style.display === 'block';
+                subContainer.style.display = isExpanded ? 'none' : 'block';
+                
+                header.querySelector('.arrow').style.transform = 
+                    isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+            });
+
+            // 生成子模块
+            group.modules.forEach(module => {
+                const sub = document.createElement('div');
+                sub.className = 'sub-module';
+                sub.draggable = true;
+                sub.textContent = module.name;
+                sub.dataset.moduleId = module.id;
+                sub.addEventListener('dragstart', handleDragStart);
+                subContainer.appendChild(sub);
+            });
+
+            groupDiv.append(header, subContainer);
+            container.appendChild(groupDiv);
+        }
+        function initDragAndDrop() {
+
+            const editorDom = document.getElementById('editor');
+
+            editorDom.addEventListener('dragover', (e) => {
+                e.preventDefault(); // 允许 drop
+            });
+
+            editorDom.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                if (!draggedModuleId) return;
+                // 获取模块模板
+                const module = await fetchModule(draggedModuleId);
+
+                // 获取当前鼠标位置对应的代码位置
+                const editorCoords = editor.getScrolledVisiblePosition(editor.getPosition());
+                const rect = editorDom.getBoundingClientRect();
+
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const position = editor.getModel().getPositionAt(editor.getModel().getOffsetAt(editor.getPosition()));
+
+                // 获取参数
+                const params = await showParamDialog(module.parameters);
+                if (!params) return;
+
+                const code = generateCode(module.template, params);
+
+                // 插入代码
+                editor.executeEdits('', [{
+                    range: new monaco.Range(
+                        position.lineNumber,
+                        position.column,
+                        position.lineNumber,
+                        position.column
+                    ),
+                    text: code,
+                    forceMoveMarkers: true
+                }]);
+
+                // 移动光标
+                // 这里好像存在一些问题
+                editor.setPosition({
+                    lineNumber: position.lineNumber,
+                    column: position.column + code.length
+                });
+
+                draggedModuleId = null;
+            });
+        }
+
+        async function fetchModule(moduleId) {
+            return fetch(`/api/modules/${moduleId}`)
+                .then(res => res.json());
+        }
+
+        function generateCode(template, params) {
+            return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+                return params[key] || '';
+            });
+        }
+
+        // 右键菜单功能框中弹窗
+        let promptResolve;
+        // 修改后的showPrompt
+        async function showPrompt(title, defaultValue = '') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-prompt');
+                document.getElementById('prompt-label').textContent = title;
+                const input = document.getElementById('prompt-input');
+                input.value = defaultValue;
+                modal.style.display = 'flex';
+                input.focus();
+                
+                promptResolve = (value) => {
+                    modal.style.display = 'none';
+                    resolve(value?.trim());
+                };
+            });
+        }
+
+        function onPromptConfirm() {
+            const value = document.getElementById('prompt-input').value;
+            promptResolve(value);
+        }
+
+        function onPromptCancel() {
+            promptResolve(null);
+        }
+
+        // 添加ESC支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('custom-prompt').style.display === 'flex') {
+                promptResolve(null);
+            }
+        });
+
+
+        // 文件夹展开状态管理
+        function pushQueueExpandState(path, isExpanded) {
+            expandStateQueue.push({
+                path: path,
+                is_expanded: isExpanded
+            });
+            
+            // 达到3个立即发送
+            if (expandStateQueue.length >= 5) {
+                flushExpandStates();
+                return;
+            }
+            
+        }
+
+        // 发送状态更新
+        async function flushExpandStates() {
+            if (expandStateQueue.length === 0) return;
+            
+            // 复制 expandStateQueue 数组的所有元素，生成一个新的数组 statesToSend
+            // ... 表示把每一项拆开
+            const statesToSend = [...expandStateQueue];
+            expandStateQueue = [];
+            
+            if (stateTimer) {
+                // 时间重置
+                clearTimeout(stateTimer);
+                stateTimer = setInterval(flushExpandStates, 5000);
+            }
+            
+            try {
+                await callApi('/ide/update_expand_states', 'POST', {
+                    states: statesToSend
+                });
+            } catch (error) {
+                console.error('保存展开状态失败:', error);
+            }
+        }
+
+
+        // 工具函数
+        async function callApi(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            const response = await fetch(`${endpoint}`, {
+                method,
+                headers,
+                body: body ? JSON.stringify(body) : null
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || '请求失败');
+            }
+            
+            return response.json();
+        }
+
+        // 实现菜单栏四个核心功能
+        async function createNewFile(path) {
+            try {
+                await flushExpandStates();
+                const fileName = await showPrompt('输入新文件名');
+                if (!fileName) return;
+
+                await callApi('/ide/create_item', 'POST', {
+                    name: fileName,
+                    type: "file",
+                    path: path
+                });
+
+                await  updateFileTree();
+                // alert('文件创建成功');
+            } catch (error) {
+                alert(`文件创建失败: ${error.message}`);
+            }
+        }
+
+        async function createNewFolder(path) {
+            try {
+                await flushExpandStates();
+                const folderName = await showPrompt('输入新文件夹名');
+                if (!folderName) return;
+
+                await callApi('/ide/create_item', 'POST', {
+                    name: folderName,
+                    type: "folder",
+                    path: path
+                });
+
+                await  updateFileTree();
+                // alert('文件夹创建成功');
+            } catch (error) {
+                alert(`文件夹创建失败: ${error.message}`);
+            }
+        }
+
+        async function renameItem(path) {
+            try {
+                await flushExpandStates();
+                const newName = await showPrompt('输入新名称', path.split('/').pop());
+                if (!newName) return;
+
+                await callApi('/ide/rename_item', 'POST', {
+                    path: path,
+                    new_name: newName
+                });
+
+                await updateFileTree();
+                // alert('重命名成功');
+            } catch (error) {
+                alert(`重命名失败: ${error.message}`);
+            }
+        }
+
+        async function deleteItem(path) {
+            try {
+                await flushExpandStates();
+                if (!confirm('确定要删除吗？')) return;
+                
+                await callApi('/ide/delete_item', 'POST', {
+                    path: path
+                });
+
+                await  updateFileTree();
+                // alert('删除成功');
+            } catch (error) {
+                alert(`删除失败: ${error.message}`);
+            }
+        }
+
+        function showContextMenu(x, y, path) {
+            // 移除已存在的菜单
+            const existingMenu = document.querySelector('.vscode-menu');
+            if (existingMenu) existingMenu.remove();
+
+            // 创建菜单容器
+            const menu = document.createElement('div');
+            menu.className = 'vscode-menu';
+            menu.style = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                background: #252526;
+                border-radius: 4px;
+                padding: 5px 0;
+                min-width: 180px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 13px;
+                color: #cccccc;
+                z-index: 1000;
+            `;
+
+            // 菜单项配置（包含图标占位符）
+            const items = [
+                { name: '新建文件', action: createNewFile },
+                { name: '新建文件夹', action: createNewFolder },
+                { type: 'separator' }, // 分隔线
+                { name: '重命名', action: renameItem },
+                { name: '删除', action: deleteItem },
+                // { type: 'separator' },
+                // // 后续可以支持集成终端
+                // { 
+                //     name: '在集成终端中打开', 
+                //     action: openInTerminal,
+                //     shortcut: 'Ctrl+`' // 添加快捷键显示
+                // }
+            ];
+
+            // 构建菜单项
+            items.forEach(item => {
+                if (item.type === 'separator') {
+                    const separator = document.createElement('div');
+                    separator.style = `
+                        height: 1px;
+                        background: #3c3c3c;
+                        margin: 4px 0;
+                    `;
+                    menu.appendChild(separator);
+                } else {
+                    const menuItem = document.createElement('div');
+                    menuItem.className = 'menu-item';
+                    menuItem.innerHTML = `
+                        <span class="icon-placeholder"></span>
+                        <div class="item-content">
+                            <span>${item.name}</span>
+                            ${item.shortcut ? `<span class="shortcut">${item.shortcut}</span>` : ''}
+                        </div>
+                    `;
+                    menuItem.style = `
+                        padding: 6px 20px;
+                        display: flex;
+                        align-items: center;
+                        cursor: default;
+                        transition: background 0.2s;
+                    `;
+                    menuItem.onclick = () => {
+                        item.action(path);
+                        menu.remove();
+                    };
+                    // 悬停效果
+                    menuItem.addEventListener('mouseenter', () => {
+                        menuItem.style.background = '#007ACC';
+                    });
+                    menuItem.addEventListener('mouseleave', () => {
+                        menuItem.style.background = 'transparent';
+                    });
+                    menu.appendChild(menuItem);
+                }
+            });
+
+            document.body.appendChild(menu);
+
+            // 点击外部关闭菜单
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target)) menu.remove();
+            }, { once: true });
+        }
+
+
+        function showParamDialog(params) {
+            return new Promise(resolve => {
+                const dialog = document.createElement('div');
+                dialog.className = 'param-dialog';
+
+                dialog.innerHTML = `
+                <div class="dialog-content">
+                    <h3>🔧 模块参数配置</h3>
+                    <form id="paramForm"></form>
+                    <div class="dialog-buttons">
+                        <button type="button" class="cancel">取消</button>
+                        <button type="submit" class="confirm">生成代码</button>
+                    </div>
+                </div>
+                `;
+
+                const form = dialog.querySelector('#paramForm');
+                Object.entries(params).forEach(([name, config]) => {
+                    const row = document.createElement('div');
+                    row.className = 'form-row';
+
+                    const label = document.createElement('label');
+                    label.textContent = name;
+                    label.title = config.description || '';
+
+                    let input;
+
+                    if (config.options) {
+                        input = document.createElement('select');
+                        input.name = name;
+                        config.options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt;
+                            option.textContent = opt;
+                            if (opt === config.default) option.selected = true;
+                            input.appendChild(option);
+                        });
+                    } else {
+                        input = document.createElement('input');
+                        input.name = name;
+
+                        // 设置类型
+                        if (config.type === 'int' || config.type === 'float') {
+                            input.type = 'number';
+
+                            // 限制 min/max（如果有）
+                            if ('min' in config) input.min = config.min;
+                            if ('max' in config) input.max = config.max;
+
+                            // 小数位控制
+                            if (config.type === 'float') input.step = 'any'; // 允许浮点数
+                            else input.step = '1'; // int
+                        } else {
+                            input.type = 'text';
+                        }
+
+                        input.placeholder = config.placeholder || '';
+                        if (config.default !== undefined) input.value = config.default;
+                    }
+
+                    row.append(label, input);
+                    form.appendChild(row);
+                });
+
+                const confirmBtn = dialog.querySelector('.confirm');
+                const cancelBtn = dialog.querySelector('.cancel');
+
+                confirmBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const entries = Object.fromEntries(formData);
+                    let valid = true;
+
+                    // 手动校验所有字段（比如是否为空，是否超出范围）
+                    for (const [name, config] of Object.entries(params)) {
+                        const value = entries[name];
+                        if (value === '' || value === undefined) {
+                            alert(`参数 ${name} 为必填项`);
+                            valid = false;
+                            continue;
+                        }
+
+                        if (config.type === 'int') {
+                            // 如果字符串完全无法解析（如 "abc"），会返回 NaN
+                            // intRegex来测试是否为整数，而不是浮点数等等
+                            const intRegex = /^-?\d+$/;
+                            isIntValid = intRegex.test(value);
+                            const intVal = parseInt(value);
+                            if (isNaN(intVal)|| !isIntValid) {
+                                alert(`${name} 必须是整数`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                            if ('min' in config && intVal < config.min) {
+                                alert(`${name} 必须大于等于 ${config.min}`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                            if ('max' in config && intVal > config.max) {
+                                alert(`${name} 必须小于等于 ${config.max}`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                        }
+
+                        if (config.type === 'float') {
+                            const floatRegex = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+                            isFloatValid = floatRegex.test(value);
+                            const floatVal = parseFloat(value);
+                            if (isNaN(floatVal)|| !isFloatValid ) {
+                                alert(`${name} 必须是浮点数`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                            if ('min' in config && floatVal < config.min) {
+                                alert(`${name} 必须大于等于 ${config.min}`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                            if ('max' in config && floatVal > config.max) {
+                                alert(`${name} 必须小于等于 ${config.max}`);
+                                form.querySelector(`[name="${name}"]`).value = '';
+                                valid = false;
+                            }
+                        }
+                    }
+
+                    if (!valid) return; // 阻止提交
+
+                    dialog.remove();
+                    resolve(entries);
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    dialog.remove();
+                    resolve(null);
+                });
+
+                dialog.addEventListener('click', (e) => {
+                    if (e.target === dialog) {
+                        dialog.remove();
+                        resolve(null);
+                    }
+                });
+
+                document.body.appendChild(dialog);
+            });
+        }
+
+        // 在全局添加页面关闭监听
+        window.addEventListener('beforeunload', (event) => {
+            // 同步发送剩余状态
+            if (expandStateQueue.length > 0) {
+                // 异步发送post请求，不接受返回数据/
+                navigator.sendBeacon(
+                    '/ide/update_expand_states', 
+                    JSON.stringify({ states: expandStateQueue })
+                );
+            }
+        });
+
+    </script>
+</body>
+</html>

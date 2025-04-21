@@ -145,6 +145,14 @@ async def create_openllm_download(
     th.start()
     return {"status": "success"}
 
+@openllm_router.post("/sync_download")
+async def create_openllm_sync_download(
+    info: ModelListItem, identifier: str = Depends(get_current_identifier)
+):
+    entry_id = write_info(info, identifier)
+    # 同步下载
+    download_model(info, entry_id, identifier)
+    return {"status": "sync_download_success"}
 
 @openllm_router.post("/no_download")
 async def create_openllm(

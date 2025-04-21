@@ -1,3 +1,4 @@
+from fastapi.staticfiles import StaticFiles
 from backend.db import gen_db
 from backend.models import User
 import bcrypt
@@ -48,6 +49,9 @@ async def login(
     return {"access_token": generate_jwt_token(identifier), "token_type": "bearer"}
 
 
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 from .routers import *
 
 app.include_router(openllm_router, prefix="/openllm", tags=["openllm"])
@@ -83,6 +87,8 @@ app.include_router(eval_router, prefix="/eval", tags=["eval"])
 app.include_router(visibility_router, prefix="/visibility", tags=["visibility"])
 
 app.include_router(dataset_filter_router, prefix="/filter", tags=["dataset_filter"])
+
+app.include_router(static_router, prefix="/static", tags=["static"])
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")

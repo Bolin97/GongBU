@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI模型开发平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f8fafc;
+        }
+
+        /* 主容器 */
+        .volcano-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航 */
+        .nav-sidebar {
+            width: 240px;
+            background: #ffffff;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            height: 100vh;
+        }
+
+        .logo {
+            height: 72px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2563eb;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 12px 24px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .menu-item:hover:not(.active) {
+            background: #f8fafc;
+        }
+
+        /* 右侧内容区 */
+        .content-main {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px;
+            background: #f8fafc;
+        }
+
+        /* 模型仓库样式 */
+        .repo-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        }
+
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .repo-header h2 {
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+
+        .repo-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .repo-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .repo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .repo-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .repo-card:hover::before {
+            opacity: 1;
+        }
+
+        .repo-meta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .repo-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .repo-info {
+            margin-left: 16px;
+        }
+
+        .repo-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .repo-author {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .repo-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* 按钮样式 */
+        .primary-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            background: #2563eb;
+        }
+
+        /* 内容切换 */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="volcano-container">
+        <!-- 左侧导航 -->
+        <nav class="nav-sidebar">
+            <div class="logo">
+                <span>微调大模型开发社区</span>
+            </div>
+            <div class="nav-menu">
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>ai对话</span>
+                </div>
+                <div class="menu-item" data-target="modelRepo">
+                    <span>模型广场</span>
+                </div>
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>个人模型</span>
+                </div>
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>文章分享平台</span>
+                </div>
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>在线推理</span>
+                </div>
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>在线IDE</span>
+                </div>
+                <div class="menu-item active" data-target="modelRepo">
+                    <span>API Key管理</span>
+                </div>
+                
+            </div>
+        </nav>
+
+        <!-- 批量推理任务内容 -->
+        <main class="content-main content-section active" id="batchContent">
+            <!-- 原有批量推理任务内容 -->
+            <div class="task-operations">
+                <button class="primary-btn" id="createTaskBtn">+ 创建任务</button>
+                <div class="filter-area">
+                    <input type="text" class="search-input" placeholder="搜索任务...">
+                    <select class="status-select">
+                        <option>全部状态</option>
+                        <option>运行中</option>
+                        <option>已停止</option>
+                    </select>
+                </div>
+            </div>
+            <table class="task-table">
+                <!-- 任务表格内容 -->
+            </table>
+        </main>
+
+        <!-- 模型仓库内容 -->
+        <main class="content-main content-section" id="modelRepoContent">
+            <div class="repo-container">
+                <div class="repo-header">
+                    <h2>模型广场</h2>
+                    <button class="primary-btn" id="createRepoBtn">
+                        <span>+ 新建仓库</span>
+                    </button>
+                </div>
+                <div class="repo-list" id="repoList">
+                    <!-- 动态生成仓库卡片 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 模拟数据
+        let repositories = [
+            {
+                id: 1,
+                name: "deepseek-ai/DeepSeek-R1",
+                author: "deepseek-ai",
+                pageView: 1555,
+                stars: 128,
+                lastUpdated: "2小时前",
+                created: "2024-03-15"
+            },
+            {
+                id: 2,
+                name: "deepseek-ai/DeepSeek-V3",
+                author: "deepseek-ai",
+                pageView: 909,
+                stars: 89,
+                lastUpdated: "1天前",
+                created: "2024-03-10"
+            }
+        ];
+
+        // 状态管理
+        const state = {
+            currentSection: 'batch',
+            newRepoId: 3
+        };
+
+        // 初始化
+        function init() {
+            // 导航切换
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    // 移除所有激活状态
+                    document.querySelectorAll('.menu-item').forEach(i => 
+                        i.classList.remove('active'));
+                    document.querySelectorAll('.content-section').forEach(section => 
+                        section.classList.remove('active'));
+                    
+                    // 设置新状态
+                    item.classList.add('active');
+                    const target = item.dataset.target;
+                    document.getElementById(`${target}Content`).classList.add('active');
+                    state.currentSection = target;
+                });
+            });
+
+            // 创建仓库
+            document.getElementById('createRepoBtn').addEventListener('click', () => {
+                const repoName = prompt('请输入新仓库名称：');
+                if (repoName && repoName.trim()) {
+                    const newRepo = {
+                        id: state.newRepoId++,
+                        name: repoName.trim(),
+                        author: "当前用户",
+                        pageView: 0,
+                        stars: 0,
+                        lastUpdated: "刚刚",
+                        created: new Date().toLocaleDateString()
+                    };
+                    repositories.unshift(newRepo);
+                    renderRepoList();
+                }
+            });
+
+            // 初始渲染
+            renderRepoList();
+        }
+
+        // 渲染仓库列表
+        function renderRepoList() {
+            const container = document.getElementById('repoList');
+            container.innerHTML = repositories.map(repo => `
+                <div class="repo-card">
+                    <div class="repo-meta">
+                        <div class="repo-avatar">${getInitials(repo.author)}</div>
+                        <div class="repo-info">
+                            <div class="repo-name">${repo.name}</div>
+                            <div class="repo-author">创建者：${repo.author}</div>
+                        </div>
+                    </div>
+                    <div class="repo-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${repo.pageView}</div>
+                            <div class="stat-label">浏览量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${repo.stars}</div>
+                            <div class="stat-label">收藏数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${repo.lastUpdated}</div>
+                            <div class="stat-label">最后更新</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取用户首字母
+        function getInitials(name) {
+            return name.split('').filter(c => c === c.toUpperCase()).join('') || name[0];
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>

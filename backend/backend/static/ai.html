@@ -1,0 +1,42 @@
+<!-- 使用sse来实现流式输出，其实底层就类似于http chunk机制 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流式输出示例</title>
+  <style>
+    #chat {
+      font-family: Arial, sans-serif;
+      white-space: pre-wrap; /* 保留换行和空格 */
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 600px;
+      margin: 20px auto;
+      height: 400px;
+      overflow-y: scroll; /* 使内容可滚动 */
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+
+  <script>
+    // 使用 EventSource 接收流式数据
+    const eventSource = new EventSource('/stream'); // 假设服务器端有 /stream 路由
+
+    eventSource.onmessage = function(event) {
+      // 每次接收到新数据，逐字显示
+      const newContent = event.data;
+      const chatDiv = document.getElementById('chat');
+      chatDiv.textContent += newContent;
+      chatDiv.scrollTop = chatDiv.scrollHeight; // 滚动到最新位置
+    };
+    
+    eventSource.onerror = function() {
+      console.error('连接失败');
+      eventSource.close();
+    };
+  </script>
+</body>
+</html>

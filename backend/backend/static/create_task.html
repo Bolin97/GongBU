@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>微调大模型开发者社区</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        /* 主容器 */
+        .volcano-container {
+            display: flex;
+            height: 100vh;
+            background: #f5f7fa;
+        }
+
+        /* 左侧导航 */
+        .nav-sidebar {
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            height: 64px;
+            line-height: 64px;
+            padding: 0 24px;
+            font-size: 20px;
+            color: #1890ff;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .nav-menu {
+            padding: 16px 0;
+        }
+
+        .menu-item {
+            padding: 12px 24px;
+            color: rgba(0, 0, 0, 0.65);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item.active {
+            background: #e6f7ff;
+            border-right: 3px solid #1890ff;
+            color: #1890ff;
+        }
+
+        /* 右侧内容区 */
+        .content-main {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* 任务操作区 */
+        .task-operations {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .primary-btn {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-area {
+            display: flex;
+            gap: 16px;
+        }
+
+        .search-input {
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+
+        .status-select {
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+
+        /* 任务表格 */
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .task-table th,
+        .task-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .task-table th {
+            background: #fafafa;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-tag.running {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1890ff;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        /* 对话框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .creation-dialog {
+            width: 800px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dialog-steps {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 24px;
+        }
+
+        /* 模型选择区域 */
+        .model-selector {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .model-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .model-tab.active {
+            border-bottom: 2px solid #1890ff;
+            color: #1890ff;
+        }
+
+        .model-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .model-card {
+            padding: 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .model-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .model-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .model-version {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* TOS区域 */
+        .tos-container {
+            margin-top: 24px;
+        }
+
+        .tos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .tos-bucket-list {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .bucket-card {
+            width: 200px;
+            padding: 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bucket-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .bucket-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .bucket-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .delete-btn.active {
+            opacity: 1;
+        }
+
+        /* 文件选择 */
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        /* TOS选择弹窗 */
+        .tos-select-modal {
+            width: 400px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+        }
+
+        .tos-select-modal .bucket-card {
+            width: 100%;
+        }
+
+        .tos-select-modal .bucket-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .tos-select-modal .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="volcano-container">
+        <!-- 左侧导航 -->
+        <div class="nav-sidebar">
+            <div class="logo">微调大模型开发社区</div>
+            <div class="nav-menu">
+                <div class="menu-item active" data-key="batch">批量推理任务</div>
+            </div>
+        </div>
+
+        <!-- 右侧内容区 -->
+        <div class="content-main">
+            <!-- 任务操作区 -->
+            <div class="task-operations">
+                <button class="primary-btn" id="createTaskBtn">+ 创建批量推理任务</button>
+                <div class="filter-area">
+                    <input type="text" class="search-input" placeholder="任务名称/ID">
+                    <select class="status-select">
+                        <option>全部状态</option>
+                        <option>运行中</option>
+                        <option>已停止</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 任务表格 -->
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>任务名称</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>进度</th>
+                        <th>模型</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="taskList">
+                    <!-- 数据通过JS动态生成 -->
+                </tbody>
+            </table>
+
+            <!-- TOS区域 -->
+            <div class="tos-container">
+                <div class="tos-header">
+                    <h3>TOS区域</h3>
+                    <button class="primary-btn" id="createBucketBtn">创建桶</button>
+                </div>
+                <div class="tos-bucket-list" id="bucketList">
+                    <!-- 桶数据通过JS动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 创建任务对话框 -->
+        <div class="modal-overlay" id="createDialog">
+            <div class="creation-dialog">
+                <div class="dialog-header">
+                    <h3>创建批量推理任务</h3>
+                    <button class="close-btn" id="closeDialogBtn">×</button>
+                </div>
+                
+                <!-- 分步骤内容 -->
+                <div class="dialog-steps">
+                    <!-- 步骤1：基础配置 -->
+                    <div class="step-content" data-step="1">
+                        <div class="form-group">
+                            <label>任务名称</label>
+                            <input type="text" id="taskName" placeholder="请输入任务名称">
+                        </div>
+                        <div class="form-group">
+                            <label>推理方式</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="inferenceType" value="batch" checked>
+                                    批量推理任务
+                                </label>
+                                <label>
+                                    <input type="radio" name="inferenceType" value="endpoint">
+                                    批量推理接入点
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2：模型选择 -->
+                    <div class="step-content" data-step="2">
+                        <div class="model-selector">
+                            <div class="model-tab active" data-tab="modelSquare">模型广场</div>
+                            <div class="model-tab" data-tab="personalRepo">个人仓库</div>
+                        </div>
+                        <div class="model-list" id="modelList">
+                            <!-- 模型数据通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 步骤3：输入输出配置 -->
+                    <div class="step-content" data-step="3">
+                        <div class="form-group">
+                            <label>输入数据源</label>
+                            <div class="input-group">
+                                <input type="text" id="inputPath" placeholder="请选择文件" readonly>
+                                <button class="primary-btn" onclick="handleFileSelect()">选择文件</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>输出路径</label>
+                            <div class="input-group">
+                                <input type="text" id="outputPath" placeholder="请选择TOS桶" readonly>
+                                <button class="primary-btn" onclick="handleTosSelect()">选择TOS桶</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 创建按钮 -->
+                    <div class="form-group">
+                        <button class="primary-btn" id="createTaskSubmitBtn">创建任务</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOS选择弹窗 -->
+        <div class="modal-overlay" id="tosSelectDialog">
+            <div class="tos-select-modal">
+                <h3>选择TOS桶</h3>
+                <div class="tos-bucket-list" id="tosSelectBucketList">
+                    <!-- 桶数据通过JS动态生成 -->
+                </div>
+                <div class="actions">
+                    <button class="primary-btn" onclick="confirmTosSelect()">确认</button>
+                    <button class="primary-btn" onclick="cancelTosSelect()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const tasks = [
+            {
+                id: 1,
+                name: "图像识别任务",
+                description: "每日图片处理任务",
+                status: "running",
+                progress: 60,
+                model: "ResNet-50"
+            },
+            {
+                id: 2,
+                name: "文本分析任务",
+                description: "用户评论分析",
+                status: "stopped",
+                progress: 100,
+                model: "BERT-Large"
+            }
+        ];
+
+        const models = {
+            modelSquare: [
+                { name: "ResNet-50", version: "v1.0" },
+                { name: "BERT-Large", version: "v2.0" },
+                { name: "GPT-3", version: "v3.0" }
+            ],
+            personalRepo: [
+                { name: "MyModel-1", version: "v1.0" },
+                { name: "MyModel-2", version: "v2.0" }
+            ]
+        };
+
+        let buckets = [
+            { id: 1, name: "Bucket-1" },
+            { id: 2, name: "Bucket-2" }
+        ];
+
+        // 状态管理
+        const state = {
+            activeMenu: 'batch',
+            showCreateDialog: false,
+            taskForm: {
+                name: '',
+                inferenceType: 'batch',
+                selectedModel: null,
+                inputPath: '',
+                outputPath: ''
+            },
+            activeModelTab: 'modelSquare',
+            selectedBucket: null,
+            selectedTosBucket: null
+        };
+
+        // 初始化
+        function init() {
+            // 菜单点击事件
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.menu-item').forEach(i => 
+                        i.classList.remove('active'));
+                    item.classList.add('active');
+                    state.activeMenu = item.dataset.key;
+                });
+            });
+
+            // 创建任务按钮
+            document.getElementById('createTaskBtn').addEventListener('click', () => {
+                document.getElementById('createDialog').style.display = 'flex';
+            });
+
+            // 关闭对话框
+            document.getElementById('closeDialogBtn').addEventListener('click', () => {
+                document.getElementById('createDialog').style.display = 'none';
+            });
+
+            // 创建桶按钮
+            document.getElementById('createBucketBtn').addEventListener('click', () => {
+                const bucketName = prompt('请输入新的桶名称：');
+                if (bucketName) {
+                    const newBucket = { id: buckets.length + 1, name: bucketName };
+                    buckets.push(newBucket);
+                    renderBucketList();
+                } else {
+                    alert('桶名称不能为空！');
+                }
+            });
+
+            // 模型选项卡切换
+            document.querySelectorAll('.model-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.model-tab').forEach(t => 
+                        t.classList.remove('active'));
+                    tab.classList.add('active');
+                    state.activeModelTab = tab.dataset.tab;
+                    renderModelList();
+                });
+            });
+
+            // 创建任务提交按钮
+            document.getElementById('createTaskSubmitBtn').addEventListener('click', () => {
+                const taskName = document.getElementById('taskName').value;
+                const inputPath = document.getElementById('inputPath').value;
+                const outputPath = document.getElementById('outputPath').value;
+                if (!taskName || !inputPath || !outputPath) {
+                    alert('请填写完整信息！');
+                    return;
+                }
+                const newTask = {
+                    id: tasks.length + 1,
+                    name: taskName,
+                    description: "新任务",
+                    status: "running",
+                    progress: 0,
+                    model: state.taskForm.selectedModel
+                };
+                tasks.push(newTask);
+                renderTaskList();
+                document.getElementById('createDialog').style.display = 'none';
+            });
+
+            // 初始化任务列表
+            renderTaskList();
+            renderBucketList();
+            renderModelList();
+        }
+
+        // 渲染任务列表
+        function renderTaskList() {
+            const tbody = document.getElementById('taskList');
+            tbody.innerHTML = tasks.map(task => `
+                <tr>
+                    <td>${task.name}</td>
+                    <td>${task.description}</td>
+                    <td>
+                        <span class="status-tag ${task.status}">
+                            ${task.status === 'running' ? '运行中' : '已停止'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" 
+                                 style="width: ${task.progress}%"></div>
+                        </div>
+                    </td>
+                    <td>${task.model}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn">
+                                ${task.status === 'running' ? '停止' : '启动'}
+                            </button>
+                            <button class="action-btn">设置限速</button>
+                            <button class="more-btn">⋮</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 渲染桶列表
+        function renderBucketList() {
+            const bucketList = document.getElementById('bucketList');
+            bucketList.innerHTML = buckets.map(bucket => `
+                <div class="bucket-card ${state.selectedBucket === bucket.id ? 'selected' : ''}" 
+                     data-bucket-id="${bucket.id}">
+                    <div class="bucket-name">${bucket.name}</div>
+                    <div class="bucket-actions">
+                        <button class="delete-btn ${state.selectedBucket === bucket.id ? 'active' : ''}" 
+                                onclick="deleteBucket(${bucket.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 桶选择事件
+            document.querySelectorAll('.bucket-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.selectedBucket = parseInt(card.dataset.bucketId);
+                    renderBucketList();
+                });
+            });
+        }
+
+        // 渲染模型列表
+        function renderModelList() {
+            const modelList = document.getElementById('modelList');
+            const modelsToShow = models[state.activeModelTab];
+            modelList.innerHTML = modelsToShow.map(model => `
+                <div class="model-card ${state.taskForm.selectedModel === model.name ? 'selected' : ''}" 
+                     data-model="${model.name}">
+                    <div class="model-name">${model.name}</div>
+                    <div class="model-version">${model.version}</div>
+                </div>
+            `).join('');
+
+            // 模型选择事件
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.model-card').forEach(c => 
+                        c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    state.taskForm.selectedModel = card.dataset.model;
+                });
+            });
+        }
+
+        // 删除桶
+        function deleteBucket(bucketId) {
+            buckets = buckets.filter(bucket => bucket.id !== bucketId);
+            state.selectedBucket = null;
+            renderBucketList();
+        }
+
+        // 选择文件
+        function handleFileSelect() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('inputPath').value = file.name;
+                    state.taskForm.inputPath = file.name;
+                }
+            };
+            input.click();
+        }
+
+        // 选择TOS桶
+        function handleTosSelect() {
+            document.getElementById('tosSelectDialog').style.display = 'flex';
+            renderTosSelectBucketList();
+        }
+
+        // 渲染TOS选择桶列表
+        function renderTosSelectBucketList() {
+            const tosSelectBucketList = document.getElementById('tosSelectBucketList');
+            tosSelectBucketList.innerHTML = buckets.map(bucket => `
+                <div class="bucket-card ${state.selectedTosBucket === bucket.id ? 'selected' : ''}" 
+                     data-bucket-id="${bucket.id}">
+                    <div class="bucket-name">${bucket.name}</div>
+                </div>
+            `).join('');
+
+            // 桶选择事件
+            document.querySelectorAll('.bucket-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.selectedTosBucket = parseInt(card.dataset.bucketId);
+                    renderTosSelectBucketList();
+                });
+            });
+        }
+
+        // 确认TOS选择
+        function confirmTosSelect() {
+            if (state.selectedTosBucket) {
+                const selectedBucket = buckets.find(bucket => bucket.id === state.selectedTosBucket);
+                document.getElementById('outputPath').value = selectedBucket.name;
+                state.taskForm.outputPath = selectedBucket.name;
+                document.getElementById('tosSelectDialog').style.display = 'none';
+            } else {
+                alert('请选择一个TOS桶！');
+            }
+        }
+
+        // 取消TOS选择
+        function cancelTosSelect() {
+            document.getElementById('tosSelectDialog').style.display = 'none';
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>

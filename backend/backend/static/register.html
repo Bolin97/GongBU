@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户认证系统</title>
+    <style>
+        /* 基础样式 */
+        :root {
+            --primary-color: #03a9f4;
+            --secondary-color: #16b4a6;
+            --background-dark: rgba(16, 17, 19, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-size: cover;
+            padding: 20px;
+        }
+
+        /* 认证框样式 */
+        .auth-container {
+            background: var(--background-dark);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .auth-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 表单样式 */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(3, 169, 244, 0.2);
+        }
+
+        /* 头像上传样式 */
+        .avatar-uploader {
+            margin: 0 auto 2rem;
+            width: 120px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .avatar-preview:hover {
+            transform: scale(1.05);
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .avatar-preview:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .upload-text {
+            color: white;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 4px;
+        }
+
+        /* 按钮样式 */
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #0388d1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(3, 169, 244, 0.3);
+        }
+
+        /* 链接样式 */
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .auth-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .auth-link:hover {
+            color: #13a393;
+        }
+
+        /* 加载动画 */
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录容器 -->
+    <div class="auth-container" id="loginContainer">
+        <div class="auth-header">
+            <h2>欢迎回来</h2>
+            <p>请登录您的账户</p>
+        </div>
+        <form class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="loginUsername" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="loginPassword" required>
+            </div>
+            <button type="submit" class="submit-btn" id="loginBtn">立即登录</button>
+        </form>
+        <div class="auth-switch">
+            没有账号？<a href="#" class="auth-link" onclick="showRegister()">立即注册</a>
+        </div>
+    </div>
+
+    <!-- 注册容器 -->
+    <div class="auth-container" id="registerContainer" style="display: none;">
+        <div class="auth-header">
+            <h2>创建账户</h2>
+            <p>加入我们的社区</p>
+        </div>
+        <div class="avatar-uploader">
+            <div class="avatar-preview" id="avatarPreview">
+                <img src="https://s1.vika.cn/space/2025/03/02/0391f34fa91d4804a821d5f2cfe6bfb0"
+                     class="avatar-image"
+                     id="avatarImage">
+                <div class="upload-overlay">
+                    <span class="upload-text" id="uploadText">点击上传</span>
+                </div>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" hidden>
+        </div>
+        <form class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-input" id="regUsername" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="regPassword" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">确认密码</label>
+                <input type="password" class="form-input" id="regConfirmPassword" required>
+            </div>
+            <button type="submit" class="submit-btn" id="registerBtn">立即注册</button>
+        </form>
+        <div class="auth-switch">
+            已有账号？<a href="#" class="auth-link" onclick="showLogin()">立即登录</a>
+        </div>
+    </div>
+
+    <script>
+        // 配置信息
+        const CONFIG = {
+            DEFAULT_AVATAR: 'https://s1.vika.cn/space/2025/03/02/0391f34fa91d4804a821d5f2cfe6bfb0',
+            UPLOAD_ENDPOINT: 'http://localhost:36677/upload',
+            API_ENDPOINTS: {
+                LOGIN: '/api/login',
+                REGISTER: '/api/register'
+            },
+            MAX_FILE_SIZE: 5 * 1024 * 1024 // 5MB
+        };
+
+        // 应用状态
+        let state = {
+            currentAvatar: CONFIG.DEFAULT_AVATAR,
+            isUploading: false
+        };
+
+        // DOM元素缓存
+        const elements = {
+            loginContainer: document.getElementById('loginContainer'),
+            registerContainer: document.getElementById('registerContainer'),
+            avatarPreview: document.getElementById('avatarPreview'),
+            avatarImage: document.getElementById('avatarImage'),
+            avatarInput: document.getElementById('avatarInput'),
+            uploadText: document.getElementById('uploadText'),
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm'),
+            loginBtn: document.getElementById('loginBtn'),
+            registerBtn: document.getElementById('registerBtn')
+        };
+
+        // 页面切换
+        function showRegister() {
+            elements.loginContainer.style.display = 'none';
+            elements.registerContainer.style.display = 'block';
+            resetAvatar();
+        }
+
+        function showLogin() {
+            elements.registerContainer.style.display = 'none';
+            elements.loginContainer.style.display = 'block';
+        }
+
+        // 头像上传处理
+        elements.avatarPreview.addEventListener('click', () => elements.avatarInput.click());
+        
+        elements.avatarInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('请选择有效的图片文件');
+                return;
+            }
+
+            if (file.size > CONFIG.MAX_FILE_SIZE) {
+                alert(`文件大小不能超过 ${CONFIG.MAX_FILE_SIZE/1024/1024}MB`);
+                return;
+            }
+
+            try {
+                state.isUploading = true;
+                updateUploadState('uploading');
+                
+                // 显示预览
+                const previewURL = URL.createObjectURL(file);
+                elements.avatarImage.src = previewURL;
+
+                // 上传到图床
+                const cloudURL = await uploadToVika(file);
+                state.currentAvatar = cloudURL;
+                updateUploadState('success');
+            } catch (error) {
+                console.error('上传失败:', error);
+                resetAvatar();
+                alert(`上传失败: ${error.message}`);
+            } finally {
+                state.isUploading = false;
+                updateUploadState('idle');
+            }
+        });
+
+        // 上传状态管理
+        function updateUploadState(status) {
+            const states = {
+                idle: () => {
+                    elements.uploadText.textContent = '点击上传';
+                    elements.avatarPreview.classList.remove('loading');
+                },
+                uploading: () => {
+                    elements.uploadText.textContent = '上传中...';
+                    elements.avatarPreview.classList.add('loading');
+                },
+                success: () => {
+                    elements.uploadText.textContent = '更换头像';
+                    elements.avatarPreview.classList.remove('loading');
+                }
+            };
+            states[status]();
+        }
+
+        async function uploadToVika(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('timestamp', Date.now());
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+
+            try {
+                const response = await fetch(CONFIG.UPLOAD_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeout);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || '上传失败');
+                }
+
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message);
+                if (!isValidURL(data.data.url)) throw new Error('无效的图片地址');
+
+                return data.data.url;
+            } catch (error) {
+                throw new Error(`上传失败: ${error.message}`);
+            }
+        }
+
+        function isValidURL(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function resetAvatar() {
+            elements.avatarImage.src = CONFIG.DEFAULT_AVATAR;
+            state.currentAvatar = CONFIG.DEFAULT_AVATAR;
+            updateUploadState('idle');
+        }
+
+        // 表单提交处理
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                toggleButtonState(elements.loginBtn, true);
+                
+                const response = await fetch(CONFIG.API_ENDPOINTS.LOGIN, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message);
+                }
+
+                const { token, userId } = await response.json();
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('userId', userId);
+                
+                window.location.href = '/dashboard';
+            } catch (error) {
+                alert(`登录失败: ${error.message}`);
+                document.getElementById('loginForm').reset();
+            } finally {
+                toggleButtonState(elements.loginBtn, false);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+
+            try {
+                toggleButtonState(elements.registerBtn, true);
+                
+                const response = await fetch(CONFIG.API_ENDPOINTS.REGISTER, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        avatar: state.currentAvatar
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message);
+                }
+
+                alert('注册成功！');
+                showLogin();
+                document.getElementById('registerForm').reset();
+                resetAvatar();
+            } catch (error) {
+                alert(`注册失败: ${error.message}`);
+            } finally {
+                toggleButtonState(elements.registerBtn, false);
+            }
+        }
+
+        function toggleButtonState(button, isLoading) {
+            button.disabled = isLoading;
+            button.innerHTML = isLoading 
+                ? `${button.textContent} <div class="loading"></div>`
+                : button.textContent;
+        }
+
+        // 事件监听
+        elements.loginForm.addEventListener('submit', handleLogin);
+        elements.registerForm.addEventListener('submit', handleRegister);
+    </script>
+</body>
+</html>

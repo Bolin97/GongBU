@@ -15,3 +15,4 @@ from .deployment import deployment_router
 from .eval import eval_router
 from .visibility import visibility_router
 from .dataset_filter import dataset_filter_router
+from .static import static_router

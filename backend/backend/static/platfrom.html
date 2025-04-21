@@ -1,0 +1,934 @@
+<template>
+    <div class="container">
+      <!-- 右上角用户信息 -->
+      <div class="user-info" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false" @click.stop="toggleMenu">
+        <img :src="user.avatar" class="user-avatar" alt="用户头像">
+        <div v-show="showTooltip" class="user-tooltip">{{ user.username }}</div>
+      </div>
+
+      <!-- 侧边导航栏 -->+
+      <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-cube"></i>
+            微调大模型开发者社区
+        </div>
+
+        <!-- 模型体验 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-cogs"></i>ai模型对话</div>
+            <div class="nav-item has-submenu">
+                <i class="fas fa-wrench"></i>模型体验
+            </div>
+        </div>
+
+        <!-- 学习论坛 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-cogs"></i>论坛平台</div>
+            <div class="nav-item">
+                <i class="fas fa-bolt"></i>文章分享
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-copy"></i>文章创建
+            </div>
+        </div>
+
+
+        <!-- 模型推理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-brain"></i>模型推理</div>
+            <div class="nav-item active">
+                <i class="fas fa-bolt"></i>在线推理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-copy"></i>批量推理
+            </div>
+        </div>
+
+        <!-- 模型定制 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-cogs"></i>模型定制</div>
+            <div class="nav-item has-submenu">
+                <i class="fas fa-wrench"></i>模型微调
+            </div>
+        </div>
+
+        <!-- 独立功能项 -->
+        <div class="nav-group">
+            <div class="nav-item">
+                <i class="fas fa-cube"></i>模型仓库
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-clipboard-check"></i>模型评测
+            </div>
+        </div>
+
+        <!-- 数据管理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-database"></i>数据管理</div>
+            <div class="nav-item">
+                <i class="fas fa-table"></i>数据集
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-book"></i>知识库
+            </div>
+        </div>
+
+        <!-- 用量观测 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-chart-line"></i>用量观测</div>
+            <div class="nav-item">
+                <i class="fas fa-chart-bar"></i>用量统计
+            </div>
+        </div>
+
+        <!-- 系统管理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-sliders-h"></i>系统管理</div>
+            <div class="nav-item">
+                <i class="fas fa-door-open"></i>开通管理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-key"></i>API Key管理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-network-wired"></i>网络配置
+            </div>
+        </div>
+    </nav>
+  
+      <!-- 右侧内容区域 -->
+      <main class="main-content">
+        <h2>模型微调</h2>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                数据准备
+            </div>
+            <div class="step active">
+                <div class="step-number">2</div>
+                创建微调任务
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                自动导出模型
+            </div>
+        </div>
+
+
+        <!-- 新增创建按钮 -->
+        <div class="action-bar">
+            <button class="create-btn" @click="openCreateDialog">
+                <i class="fas fa-plus"></i> 新建微调任务
+            </button>
+        </div>
+
+        <!-- 任务创建表格 -->
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">状态/任务</th>
+                    <th>描述</th>
+                    <th style="width: 150px;">模型产物</th>
+                    <th style="width: 150px;">基础模型</th>
+                    <th style="width: 120px;">训练方法</th>
+                    <th style="width: 100px;">标签</th>
+                    <th style="width: 180px;">创建</th>
+                    <th style="width: 100px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="8" class="no-data">暂无数据</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <!-- 右侧滑出菜单 -->
+    <transition name="slide">
+        <div v-show="showMenu" class="menu-container" ref="menu">
+          <!-- 用户信息头部 -->
+          <div class="menu-header">
+            <img :src="user.avatar" class="header-avatar">
+            <div class="user-info">
+              <h3 class="username">{{ user.username }}</h3>
+            </div>
+          </div>
+  
+          <!-- 主菜单项 -->
+          <div class="menu-section">
+            <div v-for="(group, index) in menuGroups" :key="index">
+              <div class="menu-item" v-for="item in group" :key="item.text">
+                <span class="menu-icon" :class="item.iconClass"></span>
+                <span>{{ item.text }}</span>
+                <span v-if="item.badge" class="badge">{{ item.badge }}</span>
+              </div>
+              <div class="menu-divider" v-if="index < menuGroups.length - 1"></div>
+            </div>
+          </div>
+  
+          <!-- 底部链接和退出 -->
+          <div class="menu-footer">
+            <div class="footer-links">
+              <a v-for="link in footerLinks" :key="link.text" href=" ">{{ link.text }}</a >
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item signout" @click="handleSignOut">
+              <span class="menu-icon icon-logout"></span>
+              Sign out
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </template>
+  
+  <script>
+  import axios from 'axios';
+  
+  export default {
+    data() {
+      return {
+        showMenu: false,
+        showTooltip: false,
+        user: {
+          avatar: '',
+          username: '加载中...'
+        },
+        menuGroups: [
+            [
+                { text: 'Your profile', iconClass: 'icon-profile' },
+                { text: 'Your repositories', iconClass: 'icon-repo', badge: '1.2k' },
+                { text: 'Your projects', iconClass: 'icon-project' },
+                { text: 'Your stars', iconClass: 'icon-star' },
+                { text: 'Your gists', iconClass: 'icon-gist' }
+            ],
+            [
+                { text: 'Your organizations', iconClass: 'icon-org' },
+                { text: 'Your enterprises', iconClass: 'icon-enterprise' },
+                { text: 'Your sponsors', iconClass: 'icon-sponsor' },
+                { text: 'Try Enterprise', iconClass: 'icon-try' }
+            ],
+            [
+                { text: 'Feature preview', iconClass: 'icon-feature' },
+                { text: 'Settings', iconClass: 'icon-settings' }
+            ]
+        ],
+        footerLinks: [
+            { text: 'GitHub Website' },
+            { text: 'GitHub Docs' },
+            { text: 'GitHub Support' },
+            { text: 'GitHub Community' }
+        ]
+      }
+    },
+
+
+    mounted() {
+      this.fetchUserInfo();
+      document.addEventListener('click', this.handleClickOutside);
+    },
+    beforeDestroy() {
+        document.removeEventListener('click', this.handleClickOutside)
+    },
+    
+    methods: {
+        toggleMenu() {
+            this.showMenu = !this.showMenu
+        },
+        handleClickOutside(event) {
+            if (!this.$refs.menu?.contains(event.target) && 
+                !event.target.closest('.user-avatar-wrapper')) {
+                this.showMenu = false
+            }
+        },
+        handleSignOut() {
+            // 处理退出登录逻辑
+            localStorage.removeItem('jwt')
+            this.$router.push('/login')
+        },
+        async fetchUserInfo() {
+            try {
+            const response = await axios.get('/user/info');
+            this.user = {
+                avatar: response.data.avatar,
+                username: response.data.username
+            };
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+                this.user.username = '获取信息失败';
+            }
+        }   
+    }
+  }
+  </script>
+  
+  <style>
+        
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+        display: flex;
+        min-height: 100vh;
+        background: #f5f6f7;
+    }
+    /* 新增导航栏细节样式 */
+    .sidebar {
+        width: 240px;
+        background: #fff;
+        padding: 0;
+        border-right: 1px solid #e4e7ed;
+        user-select: none;
+    }
+    .sidebar-header {
+        padding: 18px 24px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #303133;
+        border-bottom: 1px solid #e4e7ed;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        background: #f8f9fa;
+    }
+
+    .sidebar-header i {
+        margin-right: 12px;
+        color: #409eff;
+        font-size: 20px;
+    }
+
+    .nav-group {
+        margin: 8px 0;
+    }
+
+    .nav-title {
+        padding: 10px 24px;
+        color: #909399;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    /* 创建按钮样式 */
+    .action-bar {
+        margin: 20px 0;
+        text-align: right;
+    }
+
+    .create-btn {
+        background: #409EFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .create-btn:hover {
+        background: #66b1ff;
+    }
+
+    .create-btn i {
+        margin-right: 8px;
+    }
+
+    .nav-item {
+        padding: 10px 24px 10px 48px;
+        color: #606266;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .nav-item.has-submenu::after {
+        content: "\f105";
+        font-family: "Font Awesome 5 Free";
+        position: absolute;
+        right: 16px;
+        color: #c0c4cc;
+    }
+
+    .nav-item:hover {
+        background: #f5f7fa;
+        color: #409eff;
+    }
+
+    .nav-item i {
+        margin-right: 12px;
+        width: 18px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .submenu {
+        display: none;
+        background: #fafafa;
+    }
+
+    .submenu .nav-item {
+        padding-left: 64px;
+    }
+
+    /* 激活状态 */
+    .nav-item.active {
+        color: #409eff;
+        background: #ecf5ff;
+        border-right: 3px solid #409eff;
+    }
+
+    /* 右侧内容区域 */
+    .main-content {
+        flex: 1;
+        padding: 24px;
+        background: #fff;
+    }
+
+    /* 步骤指示器 */
+    .steps {
+        display: flex;
+        margin: 20px 0 40px;
+        position: relative;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        border-radius: 50%;
+        background: #ebeef5;
+        color: #c0c4cc;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+
+    .step.active .step-number {
+        background: #409eff;
+        color: #fff;
+    }
+
+    /* 任务创建表格 */
+    .task-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .task-table th {
+        background: #fafafa;
+        color: #909399;
+        font-weight: 500;
+        padding: 15px;
+        border-bottom: 1px solid #e8e8e8;
+        text-align: left;
+    }
+
+    .task-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e8e8e8;
+        color: #606266;
+    }
+
+    .no-data {
+        text-align: center;
+        color: #909399;
+        padding: 50px 0;
+    }
+
+    /* 状态标签 */
+    .status-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #f0f2f5;
+        color: #909399;
+        font-size: 12px;
+    }
+
+    /* 图标颜色调整 */
+    .fa-brain { color: #67C23A; }
+    .fa-cogs { color: #E6A23C; }
+    .fa-cube { color: #F56C6C; }
+    .fa-clipboard-check { color: #909399; }
+    .fa-database { color: #409EFF; }
+    .fa-chart-line { color: #36CBCB; }
+    .fa-sliders-h { color: #B37FEB; }
+
+  
+    .user-info {
+        position: fixed;
+        top: 20px;
+        right: 30px;
+        z-index: 1000;
+        cursor: pointer;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    
+    .user-avatar:hover {
+        transform: scale(1.1);
+    }
+    
+    .user-tooltip {
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: #fff;
+        padding: 8px 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        font-size: 14px;
+        white-space: nowrap;
+        animation: fadeIn 0.3s;
+    }
+  
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid rgba(240, 246, 252, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .user-avatar:hover {
+        transform: scale(1.1);
+    }
+
+    /* 滑动动画 */
+    .slide-enter-active, .slide-leave-active {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .slide-enter-from, .slide-leave-to {
+        transform: translateX(100%);
+    }
+
+    /* 菜单容器 */
+    .menu-container {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 100vh;
+        background: #ffffff;
+        box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    /* 菜单头部 */
+    .menu-header {
+        padding: 24px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+    }
+
+    .header-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin-bottom: 12px;
+    }
+
+    .username {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .user-id {
+        color: #586069;
+        font-size: 14px;
+        margin: 4px 0 0;
+    }
+
+    /* 菜单项样式 */
+    .menu-item {
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        color: #24292e;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .menu-item:hover {
+        background: #f6f8fa;
+    }
+
+    .menu-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 16px;
+        background-size: contain;
+    }
+
+    .badge {
+        margin-left: auto;
+        background: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+
+    /* 分割线 */
+    .menu-divider {
+        height: 1px;
+        background: #e1e4e8;
+        margin: 8px 0;
+    }
+
+    /* 底部链接 */
+    .footer-links {
+        padding: 16px 24px;
+    }
+
+    .footer-links a {
+        display: block;
+        color: #586069;
+        font-size: 12px;
+        text-decoration: none;
+        margin: 8px 0;
+    }
+
+    .signout {
+        color: #d73a49;
+    }
+  </style>
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火山方舟 - 功能导航</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #f5f6f7;
+        }
+        /* 新增导航栏细节样式 */
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            padding: 0;
+            border-right: 1px solid #e4e7ed;
+            user-select: none;
+        }
+        .sidebar-header {
+            padding: 18px 24px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #303133;
+            border-bottom: 1px solid #e4e7ed;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+        }
+
+        .sidebar-header i {
+            margin-right: 12px;
+            color: #409eff;
+            font-size: 20px;
+        }
+
+        .nav-group {
+            margin: 8px 0;
+        }
+
+        .nav-title {
+            padding: 10px 24px;
+            color: #909399;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            padding: 10px 24px 10px 48px;
+            color: #606266;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-item.has-submenu::after {
+            content: "\f105";
+            font-family: "Font Awesome 5 Free";
+            position: absolute;
+            right: 16px;
+            color: #c0c4cc;
+        }
+
+        .nav-item:hover {
+            background: #f5f7fa;
+            color: #409eff;
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .submenu {
+            display: none;
+            background: #fafafa;
+        }
+
+        .submenu .nav-item {
+            padding-left: 64px;
+        }
+
+        /* 激活状态 */
+        .nav-item.active {
+            color: #409eff;
+            background: #ecf5ff;
+            border-right: 3px solid #409eff;
+        }
+
+        /* 右侧内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            background: #fff;
+        }
+
+        /* 步骤指示器 */
+        .steps {
+            display: flex;
+            margin: 20px 0 40px;
+            position: relative;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 50%;
+            background: #ebeef5;
+            color: #c0c4cc;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .step.active .step-number {
+            background: #409eff;
+            color: #fff;
+        }
+
+        /* 任务创建表格 */
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .task-table th {
+            background: #fafafa;
+            color: #909399;
+            font-weight: 500;
+            padding: 15px;
+            border-bottom: 1px solid #e8e8e8;
+            text-align: left;
+        }
+
+        .task-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e8e8e8;
+            color: #606266;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #909399;
+            padding: 50px 0;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f0f2f5;
+            color: #909399;
+            font-size: 12px;
+        }
+
+        /* 图标颜色调整 */
+        .fa-brain { color: #67C23A; }
+        .fa-cogs { color: #E6A23C; }
+        .fa-cube { color: #F56C6C; }
+        .fa-clipboard-check { color: #909399; }
+        .fa-database { color: #409EFF; }
+        .fa-chart-line { color: #36CBCB; }
+        .fa-sliders-h { color: #B37FEB; }
+    </style>
+</head>
+<body>
+    <!-- 优化后的左侧导航栏 -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-cube"></i>
+            能力开放平台
+        </div>
+        <!-- 模型推理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-brain"></i>模型推理</div>
+            <div class="nav-item active">
+                <i class="fas fa-bolt"></i>在线推理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-copy"></i>批量推理
+            </div>
+        </div>
+
+        <!-- 模型定制 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-cogs"></i>模型定制</div>
+            <div class="nav-item has-submenu">
+                <i class="fas fa-wrench"></i>模型精调
+            </div>
+        </div>
+
+        <!-- 独立功能项 -->
+        <div class="nav-group">
+            <div class="nav-item">
+                <i class="fas fa-cube"></i>模型仓库
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-clipboard-check"></i>模型评测
+            </div>
+        </div>
+
+        <!-- 数据管理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-database"></i>数据管理</div>
+            <div class="nav-item">
+                <i class="fas fa-table"></i>数据集
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-book"></i>知识库
+            </div>
+        </div>
+
+        <!-- 用量观测 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-chart-line"></i>用量观测</div>
+            <div class="nav-item">
+                <i class="fas fa-chart-bar"></i>用量统计
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calculator"></i>Token计算器
+            </div>
+        </div>
+
+        <!-- 系统管理 -->
+        <div class="nav-group">
+            <div class="nav-title"><i class="fas fa-sliders-h"></i>系统管理</div>
+            <div class="nav-item">
+                <i class="fas fa-door-open"></i>开通管理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-key"></i>API Key管理
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-network-wired"></i>网络配置
+            </div>
+        </div>
+    </nav>
+     <!-- 右侧主要内容 -->
+     <main class="main-content">
+        <h2>模型精调</h2>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                数据准备
+            </div>
+            <div class="step active">
+                <div class="step-number">2</div>
+                创建精调任务
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                自动导出模型
+            </div>
+        </div>
+
+        <!-- 任务创建表格 -->
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">状态/任务</th>
+                    <th>描述</th>
+                    <th style="width: 150px;">模型产物</th>
+                    <th style="width: 150px;">基础模型</th>
+                    <th style="width: 120px;">训练方法</th>
+                    <th style="width: 100px;">标签</th>
+                    <th style="width: 180px;">创建</th>
+                    <th style="width: 100px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="8" class="no-data">暂无数据</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

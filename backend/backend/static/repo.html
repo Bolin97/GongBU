@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Style Repository</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 仓库头部样式 */
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .repo-title {
+            font-size: 24px;
+            color: #0969da;
+        }
+
+        .repo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #2da44e;
+            color: white;
+            border: none;
+        }
+
+        /* 导航栏样式 */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid #e1e4e8;
+            margin: 16px 0;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #57606a;
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+            border-bottom: 2px solid #fd8c73;
+        }
+
+        /* 文件列表样式 */
+        .file-table {
+            width: 100%;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            border-spacing: 0;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .file-row:hover {
+            background-color: #f6f8fa;
+        }
+
+        .file-icon {
+            width: 24px;
+            color: #6a737d;
+            margin-right: 8px;
+        }
+
+        .file-name {
+            flex: 1;
+            color: #0969da;
+            cursor: pointer;
+        }
+
+        .file-info {
+            display: flex;
+            gap: 24px;
+            color: #6a737d;
+        }
+
+        /* 分支选择器 */
+        .branch-selector {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .branch-btn {
+            background: none;
+            border: 1px solid #e1e4e8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .branch-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 8px;
+            display: none;
+        }
+
+        /* 文件内容查看器 */
+        .file-viewer {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .code-block {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .breadcrumb-item:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 6px;
+            color: #6a737d;
+            user-select: none;
+        }
+        .breadcrumb-current {
+            color: #24292f;
+            font-weight: 600;
+        }
+
+       /* 点赞按钮样式 */
+        #like-btn {
+            color: #6a737d;  /* 默认灰色 */
+            transition: all 0.3s ease;
+        }
+
+        #like-btn:hover {
+            color: #e0245e;  /* 悬停时红色 */
+        }
+
+        #like-btn.liked {
+            color: #e0245e;  /* 点赞后红色 */
+            animation: pulse 0.5s ease; /* 添加点击动画 */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 仓库头部 -->
+        <div class="repo-header">
+            <div>
+                <h1 class="repo-title">deepseek-ai/DeepSeek-R1</h1>
+                <div class="repo-stats">
+                    <span id="repo-view">👁️ 0</span>  <!-- 浏览量 -->
+                    <span id="repo-likes" style="margin-left: 15px;">❤️ 0</span>  <!-- 点赞数 -->
+                </div>
+            </div>
+            <div class="repo-actions">
+                <button class="btn" id="like-btn">
+                    <i class="far fa-heart"></i> <!-- 初始未点赞状态 -->
+                </button>
+                <button class="btn">Clone</button>
+                <button class="btn btn-primary">Train</button>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="nav-tabs">
+            <div class="nav-item active">Files and versions</div>
+            <div class="nav-item">Model card</div>
+            <div class="nav-item">Merge</div>
+        </div>
+
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb" id="breadcrumb"></div>
+
+        <!-- 分支选择 -->
+        <div class="branch-selector">
+            <!-- <button class="branch-btn">main ▼</button>
+            <div class="branch-list">
+                <div>dev</div>
+                <div>test</div>
+                <div>release</div>
+            </div> -->
+        </div>
+
+        <!-- 文件列表 -->
+        <div id="file-list">
+            <div class="file-table">
+                <!-- 目录项示例 -->
+                <!-- <div class="file-row">
+                    <i class="fa-regular fa-folder file-icon"></i>
+                    <div class="file-name">figures</div>
+                    <div class="file-info">
+                        <span>11 days ago</span>
+                    </div>
+                </div> -->
+                
+                <!-- 文件项示例 -->
+                <!-- <div class="file-row">
+                    <i class="fa-regular fa-file file-icon"></i>
+                    <div class="file-name">README.md</div>
+                    <div class="file-info">
+                        <span>16 kB</span>
+                        <span>11 days ago</span>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+
+        <!-- 文件内容查看器 -->
+        <div id="file-viewer" class="file-viewer">
+            <div class="code-block" id="file-content"></div>
+        </div>
+    </div>
+
+    <script>
+
+        const appState = {
+            owner: 'deepseek-ai',
+            repo: 'DeepSeek-R1',
+            branch: 'main',
+            path: '',
+            viewType: 'dir', // dir|file
+            isLiked: false,  // 新增点赞状态
+            likes: 0,        // 当前点赞数
+            views: 0         // 当前浏览量
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 获取仓库分支
+            fetchRepoBranch();
+            fetchRepoData();
+            // 获取仓库浏览量
+            fetchRepoViews();
+            // 自动增加浏览量
+            incrementView();
+            // 初始化点赞状态
+            fetchRepoStats();
+
+        });
+
+        // 增加浏览量的方法
+        async function incrementView() {
+            try {
+                const response = await fetch(`/repo/${appState.owner}/${appState.repo}/view`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                appState.views = result.new_views;
+                document.getElementById('repo-view').textContent = `👁️ ${result.new_views.toLocaleString()}`;
+            } catch (error) {
+                console.error('Error incrementing views:', error);
+            }
+        }
+
+        // 获取仓库统计数据
+        async function fetchRepoStats() {
+            try {
+                // 假设有一个获取仓库详情的接口
+                const response = await fetch(`/repo/${appState.owner}/${appState.repo}`);
+                const data = await response.json();
+                appState.likes = data.likes;
+                appState.isLiked = data.isLiked;  // 需要后端返回是否已点赞
+                updateLikeUI();
+            } catch (error) {
+                console.error('Error fetching repo stats:', error);
+            }
+        }
+
+        // 处理点赞/取消点赞
+        document.getElementById('like-btn').addEventListener('click', async () => {
+            appState.isLiked = !appState.isLiked;
+            try {
+                const response = await fetch(`/repo/${appState.owner}/${appState.repo}/like`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        is_liked:appState.isLiked
+                    })
+                });
+                const result = await response.json();
+                
+                appState.likes = result.new_likes;
+                updateLikeUI();
+            } catch (error) {
+                console.error('Error updating likes:', error);
+            }
+        });
+
+        // 更新点赞UI
+        function updateLikeUI() {
+            const btn = document.getElementById('like-btn');
+            const likesElement = document.getElementById('repo-likes');
+            
+            btn.classList.toggle('liked', appState.isLiked);
+            btn.innerHTML = appState.isLiked 
+                ? '<i class="fas fa-heart"></i>'  // 实心爱心
+                : '<i class="far fa-heart"></i>'; // 空心爱心
+            
+            likesElement.innerHTML = `❤️ ${appState.likes.toLocaleString()}`; // 使用爱心符号
+        }
+
+        function updateBrowserURL() {
+            const pathSegments = [
+                repoOwner,
+                repoName,
+                currentBranch,
+                ...currentPath.split('/')
+            ].filter(p => p);
+            
+            window.history.pushState(
+                { path: 'repo/${pathSegments.join('/')}', viewType:appState.viewType },
+                '',
+                `repo/${pathSegments.join('/')}`
+            );
+        }
+
+        window.addEventListener('popstate', (e) => {
+            if (e.state?.path) {
+                appState.viewType = e.state.viewType;
+                pathSegments = state.path.split('/');
+                appState.owner = pathSegments[1];
+                appState.repo = pathSegments[2];
+                appState.branch = pathSegments[3];
+                appState.path = pathSegments[4];
+                fetchRepoData();
+            }
+        });
+
+        function updateUI() {
+            // 更新URL
+            updateBrowserURL()
+            renderBreadcrumb();
+            
+            if (appState.viewType === 'dir') {
+                document.getElementById('file-list').style.display = 'block';
+                document.getElementById('file-viewer').style.display = 'none';
+                fetchRepoData();
+            } else {
+                document.getElementById('file-list').style.display = 'none';
+                document.getElementById('file-viewer').style.display = 'block';
+                fetchFileContent();
+            }
+        }
+        
+    
+        async function fetchRepoData() {
+            try {
+                const response = await fetch(`/api/repo?model=${appState.repo}&branch=${appState.branch}&path=${encodeURIComponent(path)}`);
+                const data = await response.json();
+                renderFileList(data.contents);
+                appState.path = path; // 更新当前路径
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function fetchRepoBranch() {
+            try {
+                const response = await fetch(`/api/repo?model=${appState.repo}&branch=${appState.branch}&path=${encodeURIComponent(path)}`);
+                const data = await response.json();
+                renderBranchList(data);
+                if (data.indexOf('main')!=-1){
+                    appState.branch = 'main';
+                }else if(data.indexOf('master')!=-1){
+                    appState.branch = 'master';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function fetchRepoViews() {
+            try {
+                const response = await fetch(`/api/repo?model=${appState.repo}&branch=${appState.branch}&path=${encodeURIComponent(path)}`);
+                const data = await response.json();
+                renderRepoViews(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // 
+        //     <!-- 分支选择 -->
+        //     <div class="branch-selector">
+        //         <button class="branch-btn">main ▼</button>
+        //         <div class="branch-list">
+        //             <div>dev</div>
+        //             <div>test</div>
+        //             <div>release</div>
+        //         </div>
+        //     </div>
+        // 
+        
+        function renderRepoViews(data) {
+            const breadcrumb = document.getElementById('repo-view');
+            breadcrumb.textContent = `👁️ ${data.views}`;
+        }
+
+        // 渲染面包屑导航   
+        function renderBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const segments = currentPath.split('/').filter(p => p);
+            
+            const items = segments.map((seg, index) => {
+                const path = segments.slice(0, index + 1).join('/');
+                breadcrumb_item = index === segments.length - 1? `<span class="breadcrumb-item" path="${path}" type="dir">
+                        ${seg}
+                    </span>` :`<span class="breadcrumb-item" path="${path}" type = ${appState.viewType}>
+                        ${seg}
+                    </span>`;
+                return `
+                    ${breadcrumb_item}
+                    ${index < segments.length - 1 ? 
+                        '<span class="breadcrumb-separator">/</span>' : ''}
+                `;
+            }).join('');
+
+            breadcrumb.innerHTML = `
+                <span class="breadcrumb-item" path="" type='dir'>${repoName}</span>
+                ${segments.length > 0 ? '<span class="breadcrumb-separator">/</span>' : ''}
+                ${items}
+            `;
+        }
+
+
+        // 获取仓库所有分支，默认为main或者master
+        function renderBranchList(branchs) {
+            const branchSelector = document.querySelector('.branch-selector');
+            branchSelector.innerHTML = ''; // 清空当前列表
+            const button = document.createElement('button');
+            button.className = 'branch-btn';
+            if (branchs.indexOf('main')!=-1){
+                button.textContent  = 'main ▼';
+            }else if(branchs.indexOf('master')!=-1){
+                button.textContent  = 'master ▼';
+            }
+            const branchList = document.createElement('div');
+            branchList.className = "branch-list"
+
+            branchs.forEach(item => {
+                const div = document.createElement('div');
+                div.textContent  = item;
+                // 组装元素
+                branchList.appendChild(div);
+            });
+            branchSelector.appendChild(button);
+            branchSelector.appendChild(branchList);
+        }
+    
+        function renderFileList(files) {
+            const fileTable = document.querySelector('.file-table');
+            fileTable.innerHTML = ''; // 清空当前列表
+    
+            files.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'file-row';
+                row.dataset.type = item.type; // dir 或 file
+                row.dataset.path = item.path;
+    
+                // 图标部分
+                const icon = document.createElement('i');
+                icon.className = item.type === 'dir' 
+                    ? 'fa-regular fa-folder file-icon'
+                    : 'fa-regular fa-file file-icon';
+    
+                // 文件名部分
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name';
+                fileName.textContent = item.name;
+    
+                // 文件信息部分
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                
+                // if (item.type === 'file') {
+                //     fileInfo.innerHTML = `
+                //         <span>${formatSize(item.size)}</span>
+                //         <span>${formatDate(item.lastModified)}</span>
+                //     `;
+                // } else {
+                //     fileInfo.innerHTML = `<span>${formatDate(item.lastModified)}</span>`;
+                // }
+                
+                if (item.type === 'file') {
+                    fileInfo.innerHTML = `
+                        <span>${formatSize(item.size)}</span>
+                    `;
+                }
+    
+                // 组装元素
+                row.appendChild(icon);
+                row.appendChild(fileName);
+                row.appendChild(fileInfo);
+                fileTable.appendChild(row);
+            });
+    
+            // 添加事件委托
+            fileTable.addEventListener('click', event => {
+                const row = event.target.closest('.file-row');
+                if (!row) return;
+    
+                const type = row.dataset.type;
+                const path = row.dataset.path;
+                appState.viewType = type;
+                appState.path = appState.path + '/' + path;
+                updateUI();
+            });
+        }
+
+        
+    
+        async function fetchFileContent() {
+            try {
+                const response = await fetch(`/api/file?model=${appState.repo}&branch=${appState.branch}&path=${encodeURIComponent(path)}`);
+                const content = await response.text();
+                
+                document.getElementById('file-content').textContent = content;
+            } catch (error) {
+                console.error('Error fetching file:', error);
+            }
+        }
+    
+        // 工具函数
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+    
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    
+        // 分支切换处理
+        document.querySelector('.branch-btn').addEventListener('click', event => {
+            // 实现这个列表
+            document.querySelector('.branch-list').style.display = 'block';
+        });
+
+        document.querySelector('.branch-list').addEventListener('click', event => {
+            const branch = event.target.textContent;
+            if (branch) {
+                appState.branch = branch;
+                document.querySelector('.branch-btn').textContent = `${branch} ▼`;
+                fetchRepoData(); // 重新加载根目录
+            }
+            document.querySelector('.branch-list').style.display = 
+                document.querySelector('.branch-list').style.display === 'block' ? 'none' : 'block';
+        });
+
+
+
+        breadcrumb.addEventListener('click', (e) => {
+            if (e.target.closest('.breadcrumb-item')) {
+                const path = e.target.closest('.breadcrumb-item').path || '';
+                const type = e.target.closest('.breadcrumb-item').type || 'dir';
+                appState.viewType = type;
+                appState.path = appState.path;
+                updateUI();
+            }
+        });
+
+    </script>
+</body>
+</html>
