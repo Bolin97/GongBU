@@ -19,6 +19,8 @@
     t("sidebar.model_eval"),
     t("sidebar.deployment_manager"),
     t("sidebar.model_download"),
+    // 开发者社区
+    t("sidebar.dev_community"),
     t("sidebar.error_log"),
     t("sidebar.settings"),
   ];
@@ -29,6 +31,7 @@
     "/eval",
     "/deployment",
     "/download",
+    "/community",
     "/fault",
     "/config",
   ];

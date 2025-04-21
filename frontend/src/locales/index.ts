@@ -5,7 +5,7 @@ import en from "./en";
 import zhCN from "./zh-CN";
 
 i18next.init({
-  lng: "en",
+  lng: "zh-CN",
   resources: {
     en: { translation: en },
     "zh-CN": { translation: zhCN },
