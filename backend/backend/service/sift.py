@@ -16,7 +16,7 @@ def kmeans_sift(
     source_entry_id: int,
     reduce_to_percent: float,
 ):
-    original, _ = fetch_dataset(source_entry_id)
+    original, _ = fetch_dataset(source_entry_id, 1)
     prompts = list(map(lambda x: generate_prompt(x, kind), original))
     from sentence_transformers import SentenceTransformer
     embd = SentenceTransformer(

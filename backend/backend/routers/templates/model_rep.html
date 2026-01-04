@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Style Repository</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 仓库头部样式 */
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .repo-title {
+            font-size: 24px;
+            color: #0969da;
+        }
+
+        .repo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #2da44e;
+            color: white;
+            border: none;
+        }
+
+        /* 导航栏样式 */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid #e1e4e8;
+            margin: 16px 0;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #57606a;
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+            border-bottom: 2px solid #fd8c73;
+        }
+
+        /* 文件列表样式 */
+        .file-table {
+            width: 100%;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            border-spacing: 0;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .file-row:hover {
+            background-color: #f6f8fa;
+        }
+
+        .file-icon {
+            width: 24px;
+            color: #6a737d;
+            margin-right: 8px;
+        }
+
+        .file-name {
+            flex: 1;
+            color: #0969da;
+            cursor: pointer;
+        }
+
+        .file-info {
+            display: flex;
+            gap: 24px;
+            color: #6a737d;
+        }
+
+        /* 分支选择器 */
+        .branch-selector {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .branch-btn {
+            background: none;
+            border: 1px solid #e1e4e8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .branch-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 8px;
+            display: none;
+        }
+
+        /* 文件内容查看器 */
+        .file-viewer {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .code-block {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .breadcrumb-item:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 6px;
+            color: #6a737d;
+            user-select: none;
+        }
+        .breadcrumb-current {
+            color: #24292f;
+            font-weight: 600;
+        }
+
+       /* 点赞按钮样式 */
+        #like-btn {
+            color: #6a737d;  /* 默认灰色 */
+            transition: all 0.3s ease;
+        }
+
+        #like-btn:hover {
+            color: #e0245e;  /* 悬停时红色 */
+        }
+
+        #like-btn.liked {
+            color: #e0245e;  /* 点赞后红色 */
+            animation: pulse 0.5s ease; /* 添加点击动画 */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 代码按钮核心样式 */
+        .code-btn-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #code-btn {
+            background-color: #2da44e;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+        }
+
+        #code-btn svg {
+            margin-right: 8px;
+            fill: #6a737d;
+        }
+
+        /* URL内容区域 */
+        .http-url-box {
+            padding: 16px;
+        }
+
+        .http-url-content {
+            display: flex;
+            align-items: center;
+            background: #f6f8fa;
+            border-radius: 6px;
+            padding: 8px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+            font-size: 12px;
+        }
+
+        .http-url-text {
+            flex: 1;
+            color: #0969da;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 复制按钮 */
+        .copy-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            margin-left: 8px;
+            cursor: pointer;
+            color: #6a737d;
+            transition: color 0.2s;
+        }
+
+        .copy-btn:hover {
+            color: #0366d6;
+        }
+
+        /* 复制成功提示 */
+        .copy-feedback {
+            position: absolute;
+            bottom: -188px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        /* 弹出框样式 */
+        .clone-dialog {
+            position: absolute;
+            width: 420px;
+            top: calc(100% + 4px);
+            right: 0;
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            z-index: 100;
+            display: none;
+        }
+
+            /* 头部样式 */
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .clone-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1F2328;
+        }
+
+        .help-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #F3F4F6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            color: #656D76;
+        }
+
+        /* 选项卡样式 */
+        .tab-group {
+            position: relative;
+            display: flex;
+            border-bottom: 1px solid #D0D7DE;
+            margin-bottom: 16px;
+        }
+
+        .tab-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #656D76;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            color: #1F2328;
+            font-weight: 600;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            bottom: -1px;
+            height: 3px;
+            background: #F87036;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* URL输入框 */
+        .url-box {
+            display: flex;
+            border: 1px solid #D0D7DE;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #F6F8FA;
+        }
+
+        .url-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: monospace;
+            font-size: 13px;
+            color: #1F2328;
+            padding: 4px;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #E9ECEF;
+        }
+
+        /* 底部提示 */
+        .clone-tip {
+            font-size: 12px;
+            color: #656D76;
+            line-height: 1.5;
+        }
+
+        /* 评估模态框样式 */
+        .primary-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            background: #2563eb;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 16px;
+            width: 440px;
+            padding: 24px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px;
+        }
+
+        .avatar-upload {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .avatar-preview {
+            width: 100%;
+            height: 100%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-hover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .avatar-upload:hover .upload-hover {
+            display: flex;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .styled-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .styled-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center;
+            background-size: 16px;
+            appearance: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .secondary-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 仓库头部 -->
+        <div class="repo-header">
+            <div>
+                <h1 class="repo-title" id="repo-title-id"></h1>
+                <div class="repo-stats">
+                    <span id="repo-view">👁️ 0</span>  <!-- 浏览量 -->
+                    <span id="repo-likes" style="margin-left: 15px;">❤️ 0</span>  <!-- 点赞数 -->
+                </div>
+            </div>
+            <div class="repo-actions">
+                <button class="btn" id="like-btn">
+                    <i class="far fa-heart"></i> <!-- 初始未点赞状态 -->
+                </button>
+                <div class="code-btn-container">
+                    <button id="code-btn">
+                        <svg width="16" height="16" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"></path>
+                        </svg>
+                        Code
+                    </button>
+                        <!-- 选项卡 -->
+                        <div class="clone-dialog">
+                            <!-- 头部 -->
+                            <div class="dialog-header">
+                                <div class="clone-title">
+                                <svg class="clone-icon" width="24" height="24" viewBox="0 0 24 24">
+                                    <path fill="#1F2328" d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/>
+                                </svg>
+                                <span>Clone</span>
+                                </div>
+                                <div class="help-icon">?</div>
+                            </div>
+                            <div class="tab-group">
+                                <div class="tab-item active" onclick="switchTab('https')">HTTPS</div>
+                                <div class="tab-item" onclick="switchTab('gh-cli')">GitHub CLI</div>
+                                <div class="tab-indicator" style="width: 64px; left: 16px;"></div>
+                            </div>
+
+                            <!-- URL内容 -->
+                            <div class="url-box">
+                                <input 
+                                    id="http-url-text"
+                                    type="text" 
+                                    class="url-input" 
+                                    value="https://github.com/vllm-project/vllm.git" 
+                                    readonly
+                                >
+                                <button class="copy-btn" onclick="copyUrl()">
+                                <svg width="18" height="18" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 15h9v2H7zm0-4h9v2H7zm0-4h9v2H7z"/>
+                                </svg>
+                                </button>
+                            </div>
+
+                            <!-- 底部提示 -->
+                            <p class="clone-tip">Clone using the web URL.</p>
+                        </div>
+                    <div class="copy-feedback">Copied!</div>
+                </div>
+                <button class="btn btn-primary" id="eval-btn-1">Eval</button>
+                <button class="btn btn-primary" onclick="goToFinetuneTasks()">Train</button> 
+            </div>
+        </div>
+
+        <!-- 评估模态框 -->
+        <div class="modal-overlay" id="evalModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>🛠️ 模型评估配置</h3>
+                    <button class="modal-close" id="modalClose" onclick="closeEvalModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>选择模型</label>
+                        <select id="modelSelect" class="styled-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>评估类型</label>
+                        <select id="evalCategory" class="styled-select">
+                            <option value="all">全部类型</option>
+                            <option value="translation">文本翻译</option>
+                            <option value="qa">智能问答</option>
+                            <option value="text_generation">文本生成</option>
+                            <option value="classification">分类理解</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数据集</label>
+                        <input type="text" id="datasetInput" 
+                                class="styled-input" 
+                                placeholder="namespace/datasetName">
+                    </div>
+            
+                </div>
+                <div class="modal-footer">
+                    <button class="primary-btn" onclick="submitEvaluation()">开始评估</button>
+                    <button class="secondary-btn cancel" onclick="closeEvalModal()">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="nav-tabs">
+            <div class="nav-item active">Files and versions</div>
+            <div class="nav-item">Model card</div>
+            <div class="nav-item">Merge</div>
+        </div>
+
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb" id="breadcrumb"></div>
+
+        <!-- 分支选择 -->
+        <div class="branch-selector">
+            <!-- <button class="branch-btn">main ▼</button>
+            <div class="branch-list">
+                <div>dev</div>
+                <div>test</div>
+                <div>release</div>
+            </div> -->
+        </div>
+
+        <!-- 文件列表 -->
+        <div id="file-list">
+            <div class="file-table">
+                <!-- 目录项示例 -->
+                <!-- <div class="file-row">
+                    <i class="fa-regular fa-folder file-icon"></i>
+                    <div class="file-name">figures</div>
+                    <div class="file-info">
+                        <span>11 days ago</span>
+                    </div>
+                </div> -->
+                
+                <!-- 文件项示例 -->
+                <!-- <div class="file-row">
+                    <i class="fa-regular fa-file file-icon"></i>
+                    <div class="file-name">README.md</div>
+                    <div class="file-info">
+                        <span>16 kB</span>
+                        <span>11 days ago</span>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+
+        <!-- 文件内容查看器 -->
+        <div id="file-viewer" class="file-viewer">
+            <div class="code-block" id="file-content"></div>
+        </div>
+    </div>
+    <!-- <script id="app-data" type="application/json">
+        {{ app_data | tojson }}
+    </script> -->
+    <script>
+        // window.appData = JSON.parse(document.getElementById('app-data').textContent);
+        function authFetch(url, options = {}) {
+            const token = window.appData.jwt;
+            
+            // 合并 headers，优先使用传入的 headers
+            const headers = {
+                ...options.headers,
+                ...(token && { Authorization: `Bearer ${token}` })
+            };
+
+            return fetch(url, { ...options, headers });
+        }
+
+        const appState = {
+            openllm_id: window.appData.openllm_id || 43,
+            owner: window.appData.owner,
+            repo: window.appData.repo_name,
+            branch: window.branch || 'main',
+            path: window.appData.path || '',
+            viewType: window.appData.view_type || 'dir', // dir|file
+            isLiked: false,  // 新增点赞状态
+            likes: 0,        // 当前点赞数
+            views: 0         // 当前浏览量
+        };
+
+        function goToFinetuneTasks() {
+            const targetUrl = `/finetune/tasks?model_id=${appState.openllm_id}`;
+            window.location.href = targetUrl;
+        }
+
+        
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化仓库名称
+            document.getElementById("repo-title-id").innerText = `${appState.owner}/${appState.repo}`
+            // 获取完分支之后才可以获取获取仓库内容，因为存在master的情况
+            await fetchRepoBranch();
+            fetchFileList();
+            // 自动增加浏览量并返回浏览量
+            incrementView();
+            // 初始化点赞状态
+            fetchRepoStats();
+            renderBreadcrumb();
+
+        });
+
+        // 增加浏览量的方法
+        async function incrementView() {
+            try {
+                const response = await authFetch(`/api/repo/meta/${appState.owner}/${appState.repo}/view`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                appState.views = result.new_views;
+                document.getElementById('repo-view').textContent = `👁️ ${result.new_views.toLocaleString()}`;
+            } catch (error) {
+                console.error('Error incrementing views:', error);
+            }
+        }
+
+        // 获取仓库统计数据
+        async function fetchRepoStats() {
+            try {
+                // 假设有一个获取仓库详情的接口
+                const response = await authFetch(`/api/repo/meta/${appState.owner}/${appState.repo}`);
+                const data = await response.json();
+                appState.likes = data.likes;
+                appState.isLiked = data.isLiked;  // 需要后端返回是否已点赞
+                updateLikeUI();
+            } catch (error) {
+                console.error('Error fetching repo stats:', error);
+            }
+        }
+
+        // 处理点赞/取消点赞
+        document.getElementById('like-btn').addEventListener('click', async () => {
+            appState.isLiked = !appState.isLiked;
+            try {
+                const response = await authFetch(`/api/repo/meta/${appState.owner}/${appState.repo}/like`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        is_liked:appState.isLiked
+                    })
+                });
+                const result = await response.json();
+                
+                appState.likes = result.new_likes;
+                updateLikeUI();
+            } catch (error) {
+                console.error('Error updating likes:', error);
+            }
+        });
+
+        // 更新点赞UI
+        function updateLikeUI() {
+            const btn = document.getElementById('like-btn');
+            const likesElement = document.getElementById('repo-likes');
+            
+            btn.classList.toggle('liked', appState.isLiked);
+            btn.innerHTML = appState.isLiked 
+                ? '<i class="fas fa-heart"></i>'  // 实心爱心
+                : '<i class="far fa-heart"></i>'; // 空心爱心
+            
+            likesElement.innerHTML = `❤️ ${appState.likes.toLocaleString()}`; // 使用爱心符号
+        }
+
+        if (!history.state) {
+            const initPath = window.location.pathname.replace(/^\/+/, '');
+            window.history.replaceState({ path: initPath, viewType: appState.viewType }, '', window.location.pathname);
+        }
+
+
+        function updateBrowserURL() {
+            const pathSegments = [
+                appState.owner,
+                appState.repo,
+                'tree',
+                appState.branch,
+                ...appState.path.split('/')
+            ].filter(p => p);
+
+        
+            
+            window.history.pushState(
+                { path: `repo/content/${pathSegments.join('/')}`, viewType:appState.viewType },
+                '',
+                `/repo/content/${pathSegments.join('/')}`
+            );
+        }
+
+        window.addEventListener('popstate', (e) => {
+            if (e.state?.path) {
+                appState.viewType = e.state.viewType;
+                const pathSegments = e.state.path.split('/');
+                appState.owner = pathSegments[2];
+                appState.repo = pathSegments[3];
+                appState.branch = pathSegments[5];
+                appState.path = pathSegments.slice(6).join('/');
+                renderBreadcrumb();
+                fetchContent();
+            }
+        });
+
+        function updateUI() {
+            // 更新URL
+            updateBrowserURL();
+            renderBreadcrumb();
+            fetchContent();
+            
+        }
+        
+        function fetchContent(){
+            if (appState.viewType === 'dir') {
+                document.getElementById('file-list').style.display = 'block';
+                document.getElementById('file-viewer').style.display = 'none';
+                fetchFileList();
+            } else {
+                document.getElementById('file-list').style.display = 'none';
+                document.getElementById('file-viewer').style.display = 'block';
+                fetchFileContent();
+            }
+        }
+        
+    
+        async function fetchFileList() {
+            try {
+                const response = await authFetch(`/api/repo/api/dir?owner=${appState.owner}&repo=${appState.repo}&branch=${appState.branch}&path=${appState.path}`);
+                const data = await response.json();
+                renderFileList(data.contents);
+    
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function fetchRepoBranch() {
+            try {
+                const response = await authFetch(`/api/repo/api/branch?owner=${appState.owner}&repo=${appState.repo}`);
+                let data = await response.json();
+                data = data.branches;
+                renderBranchList(data);
+                if (!appState.branch || appState.branch == 'main'){
+                    if (data.indexOf('main')!=-1){
+                        appState.branch = 'main';
+                    }else if(data.indexOf('master')!=-1){
+                        appState.branch = 'master';
+                }
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function fetchFileContent() {
+            try {
+                const response = await authFetch(`/repo/api/file?owner=${appState.owner}&repo=${appState.repo}&branch=${appState.branch}&path=${appState.path}`);
+                let content = await response.json();
+                content = content.content;
+                console.log(content);
+                
+                document.getElementById('file-content').textContent = content;
+            } catch (error) {
+                console.error('Error fetching file:', error);
+            }
+        }
+
+
+        // 
+        //     <!-- 分支选择 -->
+        //     <div class="branch-selector">
+        //         <button class="branch-btn">main ▼</button>
+        //         <div class="branch-list">
+        //             <div>dev</div>
+        //             <div>test</div>
+        //             <div>release</div>
+        //         </div>
+        //     </div>
+        // 
+        
+
+        // 渲染面包屑导航   
+        function renderBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const segments = appState.path.split('/').filter(p => p);
+            
+            const items = segments.map((seg, index) => {
+                const path = segments.slice(0, index + 1).join('/');
+                breadcrumb_item = index !== segments.length - 1? `<span class="breadcrumb-item" path="${path}" type="dir">
+                        ${seg}
+                    </span>` :`<span class="breadcrumb-item" path="${path}" type = ${appState.viewType}>
+                        ${seg}
+                    </span>`;
+                return `
+                    ${breadcrumb_item}
+                    ${index < segments.length - 1 ? 
+                        '<span class="breadcrumb-separator">/</span>' : ''}
+                `;
+            }).join('');
+
+            breadcrumb.innerHTML = `
+                <span class="breadcrumb-item" path="" type='dir'>${appState.repo}</span>
+                ${segments.length > 0 ? '<span class="breadcrumb-separator">/</span>' : ''}
+                ${items}
+            `;
+            document.querySelectorAll('.breadcrumb-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    const path = target.getAttribute('path') || '';
+                    const type = target.getAttribute('type') || 'dir';
+                    appState.viewType = type;
+                    appState.path = path;
+                    updateUI();
+                });
+            });
+        }
+
+
+        // 获取仓库所有分支，默认为main或者master
+        function renderBranchList(branchs) {
+            console.log(branchs);
+            const branchSelector = document.querySelector('.branch-selector');
+            branchSelector.innerHTML = ''; // 清空当前列表
+            const button = document.createElement('button');
+            button.className = 'branch-btn';
+            if (branchs.indexOf('main')!=-1){
+                button.textContent  = 'main ▼';
+            }else if(branchs.indexOf('master')!=-1){
+                button.textContent  = 'master ▼';
+            }
+            const branchList = document.createElement('div');
+            branchList.className = "branch-list"
+
+            branchs.forEach(item => {
+                const div = document.createElement('div');
+                div.textContent  = item;
+                // 组装元素
+                branchList.appendChild(div);
+            });
+            branchSelector.appendChild(button);
+            branchSelector.appendChild(branchList);
+            
+            // 分支切换处理
+            document.querySelector('.branch-btn').addEventListener('click', event => {
+                // 实现这个列表
+                document.querySelector('.branch-list').style.display = 'block';
+            });
+
+            document.querySelector('.branch-list').addEventListener('click', event => {
+                const branch = event.target.textContent;
+                if (branch) {
+                    appState.branch = branch;
+                    appState.viewType = 'dir';
+                    appState.path = '';
+                    document.querySelector('.branch-btn').textContent = `${branch} ▼`;
+                    updateUI(); // 重新加载根目录
+                }
+                document.querySelector('.branch-list').style.display = 
+                    document.querySelector('.branch-list').style.display === 'block' ? 'none' : 'block';
+            });
+        }
+    
+        function renderFileList(files) {
+            const fileTable = document.querySelector('.file-table');
+            fileTable.innerHTML = ''; // 清空当前列表
+    
+            files.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'file-row';
+                row.dataset.type = item.type; // dir 或 file
+                row.dataset.path = item.path;
+    
+                // 图标部分
+                const icon = document.createElement('i');
+                icon.className = item.type === 'dir' 
+                    ? 'fa-regular fa-folder file-icon'
+                    : 'fa-regular fa-file file-icon';
+    
+                // 文件名部分
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name';
+                fileName.textContent = item.name;
+    
+                // 文件信息部分
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                
+                if (item.type === 'file') {
+                    fileInfo.innerHTML = `
+                        <span>${formatSize(item.size)}</span>
+                        <span>${formatDate(item.lastModified)}</span>
+                    `;
+                } else {
+                    fileInfo.innerHTML = `<span>${formatDate(item.lastModified)}</span>`;
+                }
+    
+                // 组装元素
+                row.appendChild(icon);
+                row.appendChild(fileName);
+                row.appendChild(fileInfo);
+                fileTable.appendChild(row);
+            });
+    
+            // 添加事件委托
+            fileTable.addEventListener('click', event => {
+                const row = event.target.closest('.file-row');
+                if (!row) return;
+    
+                const type = row.dataset.type;
+                const path = row.dataset.path;
+                appState.viewType = type;
+                appState.path = path;
+                updateUI();
+            });
+        }
+
+    
+        // 工具函数
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+    
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+
+
+        // Code复制按钮
+        let isPopupOpen = false;
+        const codeBtn = document.getElementById('code-btn');
+        const popup = document.querySelector('.clone-dialog');
+        const copyBtn = document.querySelector('.copy-btn');
+        const feedback = document.querySelector('.copy-feedback');
+
+        function switchTab(tabType) {
+            const tabs = document.querySelectorAll('.tab-item');
+            const indicator = document.querySelector('.tab-indicator');
+            
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase() === tabType) {
+                tab.classList.add('active');
+                const tabRect = tab.getBoundingClientRect();
+                const parentRect = tab.parentElement.getBoundingClientRect();
+                indicator.style.width = `${tabRect.width}px`;
+                indicator.style.left = `${tabRect.left - parentRect.left}px`;
+                }
+            });
+        }
+
+        // 复制功能
+        async function copyUrl() {
+            try {
+                await navigator.clipboard.writeText(generateRepoURL());
+                feedback.classList.add('show');
+                setTimeout(() => feedback.classList.remove('show'), 1400);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        };
+        // 生成动态URL
+        function generateRepoURL() {
+            return `http://127.0.0.1:8000/${appState.owner}/${appState.repo}.git`;
+        }
+
+        // 切换弹出框状态
+        function togglePopup() {
+            isPopupOpen = !isPopupOpen;
+            popup.style.display = isPopupOpen ? 'block' : 'none';
+        }
+
+        // 点击按钮事件
+        codeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('http-url-text').value = generateRepoURL();
+            togglePopup();
+        });
+
+        // 点击外部关闭
+        document.addEventListener('click', (e) => {
+            if (!popup.contains(e.target) && e.target !== codeBtn) {
+                popup.style.display = 'none';
+                isPopupOpen = false;
+            }
+        });
+
+        // 键盘交互
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isPopupOpen) {
+                popup.style.display = 'none';
+                isPopupOpen = false;
+            }
+        });
+
+
+        // 模型评估模块
+        let currentModelList = [];
+        const EVAL_CONFIGS = {
+            all: { dataset: ''},
+            qa: {
+                dataset: "rajpurkar/squad",
+            },
+            translation: {
+                dataset: 'wmt19',
+            },
+            text_generation: {
+                dataset: 'bh2821/LightNovel5000',
+            },
+            classification: {
+                dataset: 'databricks/databricks-dolly-15k',
+            }
+        };
+
+
+        document.getElementById("eval-btn-1").addEventListener('click', async () => {
+            try {
+                document.getElementById('evalModal').style.display = 'flex';
+                // 获取模型列表
+                const response = await authFetch('/api/evalute/models');
+                const models = await response.json();
+                currentModelList = models;
+                // 填充模型选择
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = models.map(m => 
+                    `<option value="${m.id}" data-owner="${m.owner}">${m.model_name}</option>`
+                ).join('');
+                
+                updateEvalFields(); // 初始化字段
+            } catch (error) {
+                console.error('获取模型失败:', error);
+            }
+        });
+
+        // 类别变化监听
+        document.getElementById('evalCategory').addEventListener('change', function() {
+            updateEvalFields();
+        });
+
+            // 更新输入字段
+        function updateEvalFields() {
+            const category = document.getElementById('evalCategory').value;
+            const { dataset, config } = EVAL_CONFIGS[category] || {};
+            
+            document.getElementById('datasetInput').value = dataset;
+        }
+
+            // 提交评估
+        async function submitEvaluation() {
+
+            const select = document.getElementById('modelSelect');
+            // 获取当前选中的 <option> 元素
+            const selectedOption = select.options[select.selectedIndex];
+
+            // 获取 id 和 name
+            const modelId = selectedOption.value;
+            const modelName = selectedOption.text;
+            const owner = selectedOption.dataset.owner;
+            console.log(modelId);
+            console.log(modelName);
+            console.log(modelId);
+            const category = document.getElementById('evalCategory').value;
+            // 目前只能使用指定的数据集
+            const dataset = document.getElementById('datasetInput').value.trim();
+
+            try {
+                let requests = [];
+                
+                if (category === 'all') {
+                // 为每个类别创建请求（排除all）
+                requests = Object.keys(EVAL_CONFIGS)
+                    .filter(k => k !== 'all')
+                    .map(type => {
+                        // const { dataset: defDataset} = EVAL_CONFIGS[type];
+                        return sendEvaluationRequest({
+                            modelId,
+                            modelName,
+                            owner,
+                            type,
+                            // dataset: defDataset,
+                        });
+                    });
+                } else {
+                    requests = [sendEvaluationRequest({
+                        modelId,
+                        modelName,
+                        owner,
+                        type: category,
+                        // dataset,
+                    })];
+                }
+
+                // 并行发送请求
+                const results = await Promise.all(requests);
+                alert(`评估任务提交成功`);
+                closeEvalModal();
+            } catch (error) {
+                console.error('评估请求失败:', error);
+                alert(`错误: ${error.message}`);
+            }
+        }
+
+        // 发送单个评估请求
+        async function sendEvaluationRequest(params) {
+            const payload = {
+                model_id: params.modelId,
+                model_name: params.modelName,
+                owner: params.owner,
+                task_type: params.type,
+                // dataset: params.dataset
+            };
+
+            const response = await authFetch('/api/evalute/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) throw new Error('请求失败');
+            return response.json();
+        }
+
+            // 关闭弹窗
+        function closeEvalModal() {
+            document.getElementById('evalModal').style.display = 'none';
+        }
+    
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "train_micro_batch_size_per_gpu": 8,
+  "gradient_accumulation_steps": 4,
+    "zero_optimization": {
+      "stage": 2,
+      "offload_optimizer": {
+        "device": "cpu",
+        "pin_memory": true
+      },
+      "contiguous_gradients": true
+    },
+    "optimizer": {
+      "type": "AdamW",
+      "params": {
+        "weight_decay": "auto"
+      }
+    },
+    "scheduler": {
+      "type": "WarmupLR", 
+      "params": {
+        "warmup_max_lr": "auto", 
+        "warmup_num_steps": "auto"
+      }
+    },
+    "fp16": {
+      "enabled": "auto"
+    }
+  
+  }

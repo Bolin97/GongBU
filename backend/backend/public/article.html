@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情页</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* 封面图片样式 */
+        .cover-container {
+            position: relative;
+            margin-bottom: 40px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        /* 文章内容样式 */
+        .article-title {
+            font-size: 2.8rem;
+            color: #1a1a1a;
+            margin: 40px 0 30px;
+            line-height: 1.3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .article-title .view-count {
+            font-size: 1.1rem;
+            color: #999;
+        }
+
+        .article-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #444;
+            white-space: pre-wrap;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        /* 评论系统样式 */
+        .comments-container {
+            margin-top: 60px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+        }
+
+        .comment {
+            position: relative;
+            /* padding: px; */
+            margin: 3px 0;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .comment:hover {
+            transform: translateX(5px);
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .comment-body {
+            color: #34495e;
+            line-height: 1.6;
+        }
+
+        .reply-list {
+            margin-left: 40px;
+            border-left: 2px solid #eee;
+            padding-left: 20px;
+        }
+
+        .show-more-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            padding: 5px 0;
+            font-size: 0.95em;
+            margin-top: 10px;
+        }
+
+
+        .reply-btn-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .reply-btn {
+            display: inline-block;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 6px 16px;
+            border-radius: 25px;
+            background: rgba(52,152,219,0.1);
+            border: 1px solid #3498db;
+            transition: all 0.2s ease;
+        }
+
+        .reply-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+
+
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: -100%;
+            background: #fff;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            transition: bottom 0.3s ease-in-out;
+            padding: 20px;
+            z-index: 999;
+        }
+
+        .modal.show {
+            bottom: 0;
+        }
+
+        .modal-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .modal-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .modal-btn:hover {
+            background: #2980b9;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            z-index: 998;
+        }
+
+        .modal-overlay.show {
+            display: block;
+        }
+
+        /* 评论输入框 */
+        .comment-input-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1rem;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin-right: 10px;
+            background-color: #f7f7f7;
+        }
+
+        .submit-btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            white-space: nowrap; /* 确保文本不换行 */
+            writing-mode: horizontal-tb; /* 强制文本横向显示 */
+        }
+
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .reply-box {
+            margin-top: 12px;
+            display: flex; /* 横向排列 */
+            align-items: flex-start; /* 顶部对齐 */
+            gap: 8px; /* 元素间距 */
+        }
+
+        .reply-textarea {
+            flex: 1; /* 占据剩余空间 */
+            max-height: 20px;
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            resize: none;
+        }
+
+        .reply-send-btn {
+            padding: 10px 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            height: 37px; /* 与textarea高度一致 */
+            white-space: nowrap;
+        }
+
+    .reply-send-btn:hover {
+        background: #2980b9;
+    }
+
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 封面容器 -->
+        <div class="cover-container">
+            <img id="article-cover" class="cover-image" alt="文章封面">
+        </div>
+
+        <!-- 文章内容 -->
+        <div class="article-title">
+            <span id="article-title"></span>
+            <span id="view-count" class="view-count"></span>
+        </div>
+        <pre class="article-content" id="article-content"></pre>
+
+        <!-- 评论容器 -->
+        <div class="comments-container" id="comments-container">
+            <h3>读者评论 (<span id="comment-count">0</span>)</h3>
+            <!-- 发表评论 -->
+            <div class="comment-input-container">
+                <input type="text" id="comment-input" class="comment-input" placeholder="输入你的评论...">
+                <button class="submit-btn" onclick="submitTopComment()">发表</button>
+            </div>
+            <div id="comments-list"></div>
+        </div>
+    </div>
+      
+
+    <script>
+        const articleId = 1; // 当前文章ID
+        // const articleId = new URLSearchParams(window.location.search).get('id');
+        // const articleId = window.articleId;
+        let comments = [];
+        // 前端模拟
+        let commentIdCounter = 1;
+
+
+        // async function fetchArticle() {
+        //     const response = await fetch(`/api/article/${articleId}`);
+        //     const data = await response.json();
+        //     if (data.error) {
+        //         alert(data.error);
+        //         return;
+        //     }
+        //     // 更新文章内容
+        //     document.getElementById('article-title').textContent = data.title;
+        //     document.getElementById('article-content').textContent = data.content;
+        //     document.getElementById('article-cover').src = data.cover;
+        //     document.getElementById('view-count').textContent = `浏览量: ${data.views}`;
+        // }
+
+        // // 从后端获取评论数据
+        // async function fetchComments() {
+        //     const response = await fetch(`/api/article/${articleId}/comments`);
+        //     const data = await response.json();
+        //     renderComments(data);
+        // }
+
+        async function submitTopComment() {
+            const content = document.getElementById('comment-input').value.trim();
+            comment(articleId, '', content)
+            document.getElementById('comment-input').value = '';
+        }
+
+        // async function  submitReply(parentCommentId) {
+        //     const content = document.getElementById('reply-comment').value.trim();
+        //     comment(articleId, parentCommentId, content)
+        //     document.getElementById('reply-comment').value = '';
+        //     await fetchComments();
+        // }
+
+        async function  submitReply(parentCommentId) {
+            const content = document.getElementById('reply-comment').value.trim();
+            if (content) {
+                const reply = {
+                    id: commentIdCounter++,
+                    author: '当前用户',
+                    content: content,
+                    replies: []
+                };
+
+                // 使用递归函数查找评论并添加回复
+                const parentComment = findCommentById(parentCommentId, comments);
+                if (parentComment) {
+                    parentComment.replies.push(reply);
+                    renderComments(comments);
+                }
+            }
+        }
+
+        // // 向后台数据库写入评论数据
+        async function comment(articleId, parentCommentId, content) {
+            const body = parentCommentId === ''
+                ? JSON.stringify({
+                    article_id: articleId,
+                    content: content
+                })
+                : JSON.stringify({
+                    article_id: articleId,
+                    parent_id: parentCommentId,
+                    content: content
+                });
+        
+            fetch('/api/comments/reply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('回复提交失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('回复成功:', data);
+                fetchComments(); // 重新拉取评论，更新视图
+            })
+            .catch(error => {
+                console.error('请求错误:', error);
+                alert('回复失败，请重试');
+            });
+        }
+
+        // 模拟API请求，获取文章数据
+        async function fetchArticle() {
+            // 模拟API返回数据
+            const data = {
+                title: "这是一篇文章标题",
+                content: "这是文章的内容，文章内容可以很长，支持换行。",
+                cover: "/public/cover/default.jpg",
+                views: 1024
+            };
+
+            // 更新文章内容
+            document.getElementById('article-title').textContent = data.title;
+            document.getElementById('article-content').textContent = data.content;
+            document.getElementById('article-cover').src = data.cover;
+            document.getElementById('view-count').textContent = `浏览量: ${data.views}`;
+        }
+
+        // 模拟API请求，获取评论数据
+        async function fetchComments() {
+            // 模拟API返回评论数据
+            comments = [
+                {
+                    id: 1,
+                    author: "用户1",
+                    content: "这篇文章写得很好！",
+                    replies: [
+                        {
+                            id: 2,
+                            author: "用户2",
+                            content: "我也觉得不错，尤其是内容部分！",
+                            replies: [
+                                {
+                                    id: 3,
+                                    author: "用户3",
+                                    content: "同感！",
+                                    replies: [],
+                                }
+                            ]
+                        },
+                        {
+                            id: 2,
+                            author: "用户2",
+                            content: "我也觉得不错，尤其是内容部分！",
+                            replies: [
+                                {
+                                    id: 3,
+                                    author: "用户3",
+                                    content: "同感！",
+                                    replies: [],
+                                }
+                            ]
+                        },
+                        {
+                            id: 5,
+                            author: "用户2",
+                            content: "我也觉得不错，尤其是内容部分！",
+                            replies: [
+                                {
+                                    id: 3,
+                                    author: "用户3",
+                                    content: "同感！",
+                                    replies: [],
+                                },
+                                {
+                                    id: 3,
+                                    author: "用户3",
+                                    content: "同感！",
+                                    replies: [],
+                                },
+                                {
+                                    id: 3,
+                                    author: "用户3",
+                                    content: "同感！",
+                                    replies: [],
+                                }
+                            ]
+                        }
+                    ],
+                    showAll: false
+                },
+                {
+                    id: 4,
+                    author: "用户4",
+                    content: "这篇文章有点长，不知道怎么总结。",
+                    replies: [],
+                    showAll: false
+                }
+            ];
+
+            renderComments(comments);
+        }
+
+        // 计算评论数量
+        function countComments(comments) {
+            let totalCount = comments.length;
+
+            // 遍历每个评论，递归计算子评论
+            comments.forEach(comment => {
+                if (comment.replies && comment.replies.length > 0) {
+                    totalCount += countComments(comment.replies); // 递归调用，统计子评论
+                }
+            });
+
+            return totalCount;
+        }
+
+        // 渲染评论
+        function renderComments(comments) {
+            const container = document.getElementById('comments-list');
+            container.innerHTML = comments.map(comment => `
+                <div class="comment">
+                    <div class="comment-author">${comment.author}</div>
+                    <div class="comment-body">${comment.content}</div>
+                    <div class="reply-btn-wrapper">
+                        <div class="reply-btn" onclick="showReplyForm(${comment.id},this)">回复</div>
+                    </div>
+                    ${renderReplies(comment)}
+                    ${comment.replies.length > 2 ? `
+                        <button class="show-more-btn" onclick="toggleReplies(${comment.id})">
+                            ${comment.showAll ? '收起' : `展开全部（${comment.replies.length}条）`}
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+            document.getElementById('comment-count').textContent = countComments(comments);
+        }
+
+        // 渲染评论回复（递归渲染子回复）
+        function renderReplies(comment) {
+
+            const visibleReplies = comment.showAll || comment.replies.length < 2 ? 
+                comment.replies : 
+                comment.replies.slice(0, 2);
+
+            return visibleReplies.length ===0 ?'':`
+                <div class="reply-list">
+                    ${visibleReplies.map(reply => `
+                        <div class="comment">
+                            <div class="comment-author">${reply.author}</div>
+                            <div class="comment-body">${reply.content}</div>
+                            <div class="reply-btn-wrapper">
+                                <div class="reply-btn" onclick="showReplyForm(${reply.id}, this)">回复</div>
+                            </div>
+                            ${renderReplies(reply)} <!-- 递归渲染回复 -->
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 展开/收起回复
+        function toggleReplies(commentId) {
+            const comment = comments.find(c => c.id === commentId);
+            comment.showAll = !comment.showAll;
+            renderComments(comments);
+        }
+
+        // 前端模拟
+        // 查找并返回目标评论（支持嵌套回复）
+        function findCommentById(commentId, commentList) {
+            for (let comment of commentList) {
+                if (comment.id === commentId) {
+                    return comment;
+                }
+                // 如果找不到，递归查找回复中的评论
+                if (comment.replies.length) {
+                    const foundReply = findCommentById(commentId, comment.replies);
+                    if (foundReply) {
+                        return foundReply;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // 显示回复表单
+        function showReplyForm(parentCommentId, btnElement) {
+            // 实现知乎这样的回复样式——弹框式
+            // 移除现有的回复框（如果有）
+            const existingForm = document.querySelector('.reply-box');
+            if (existingForm) existingForm.remove();
+            // 创建回复框元素
+            // <div class="reply-box">
+            //     <textarea class="reply-textarea" id="reply-comment" placeholder="写下你的回复..."></textarea>
+            //     <button class="reply-send-btn">发送</button>
+            //   </div>
+            const replyForm = document.createElement('div');
+            replyForm.className = 'reply-box';
+            replyForm.innerHTML = `
+                <textarea class="reply-textarea" id="reply-comment" placeholder="写下你的回复..."></textarea>
+                <button class="reply-send-btn" onclick="submitReply(${parentCommentId})">发送</button>
+            `;
+
+            // 找到当前评论元素
+            const commentElement = btnElement.closest('.comment');
+
+             // 查找该评论下是否有 reply-list
+            const replyList = commentElement.querySelector('.reply-list');
+
+            if (replyList) {
+                // 如果有 reply-list，插入到它前面
+                commentElement.insertBefore(replyForm, replyList);
+            } else {
+                // 否则直接加入 comment 的子元素
+                commentElement.appendChild(replyForm);
+            }
+
+        }
+
+
+        window.onload = async () => {
+            await fetchArticle();
+            await fetchComments();
+        };
+    </script>
+</body>
+</html>

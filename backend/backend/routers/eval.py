@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from backend.auth import get_current_identifier, accessible
 from backend.db import gen_db
 from backend.models import *
@@ -24,6 +25,7 @@ class EvalParams(BaseModel):
     indexes: list[str]
     dataset_id: int
     val_set_size: float
+    eval_result_id: int = -1
 
 
 @eval_router.post("")
@@ -38,7 +40,7 @@ async def create(
         name=name,
         description=description,
         state=EvalState.loading_model.value,
-        start_time=datetime.datetime.utcnow(),
+        start_time=datetime.utcnow(),
         model_or_adapter_id=params.model_or_adapter_id,
         deploy_base_model=params.deploy_base_model,
         bits_and_bytes=params.bits_and_bytes,
@@ -57,7 +59,7 @@ async def create(
     db.commit()
     db.add(EvaluationProgress(entry_id=entry.id, total=1, current=0))
     db.commit()
-    eval_mgr.start(entry.id)
+    eval_mgr.start(entry.id, params.eval_result_id)
     return entry.id
 
 

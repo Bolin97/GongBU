@@ -14,6 +14,7 @@ package
 bert
 bert-base-chinese
 backend/dep/*
+backend/demo/*
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 __pycache__

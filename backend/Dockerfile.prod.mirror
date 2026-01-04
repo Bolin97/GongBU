@@ -46,7 +46,7 @@ RUN /micromamba/bin/micromamba run -n backend pip install gradio==3.50.2 -i http
 
 RUN apt-get install cmake -y
 RUN /micromamba/bin/micromamba run -n backend pip3 install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple/
-RUN /micromamba/bin/micromamba run -n backend pip3 install vllm==0.2.5 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
+RUN /micromamba/bin/micromamba run -n backend pip3 install vllm==0.5.5 -i https://pypi.tuna.tsinghua.edu.cn/simple/ --use-pep517
 RUN /micromamba/bin/micromamba run -n backend pip install lomo-optim==0.1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install trl==0.9.6 -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN /micromamba/bin/micromamba run -n backend pip install wordcloud==1.8.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/

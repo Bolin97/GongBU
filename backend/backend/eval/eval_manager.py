@@ -19,7 +19,7 @@ class EvalManager:
             cls.instance.evaluations = SafeDict()
         return cls.instance
 
-    def start(self, evaluation_id: int):
+    def start(self, evaluation_id: int, eval_result_id: int):
         if evaluation_id in self.evaluations:
             return
         self.evaluations[evaluation_id] = f"evaluation_task_{evaluation_id}"
@@ -39,7 +39,7 @@ class EvalManager:
 
         script_file = os.path.join(os.path.dirname(__file__), "eval_script.py")
         command = f"""
-CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --evaluation_id {evaluation_id}
+CUDA_VISIBLE_DEVICES={cuda_visible_devices} /micromamba/bin/micromamba run -n backend python {script_file} --evaluation_id {evaluation_id} --eval_result_id {eval_result_id}
             """
         seesion_name = f"{TaskType.evaluation.value}_task_{evaluation_id}"
         # start a new tmux session named evaluation_task_{self.id}

@@ -6,7 +6,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 SERCET_KEY = os.getenv("SERCET_KEY")
-TOKEN_EXPIRATION_DELTA = 1  # days
+TOKEN_EXPIRATION_DELTA = 90  # days
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -73,6 +73,10 @@ from sqlalchemy import or_
 def accessible(query: Query, identifier: str) -> Query:
     model = query.column_descriptions[0]["entity"]
     return query.filter(or_(model.owner == identifier, model.public == True))
+
+def accessible1(query: Query, identifier: str) -> Query:
+    model = query.column_descriptions[0]["entity"]
+    return query.filter(or_(model.owner == identifier, model.public== True))
 
 
 def owned(query: Query, identifier: str) -> Query:

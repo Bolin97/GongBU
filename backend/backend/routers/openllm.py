@@ -62,6 +62,18 @@ class ModelListItem(BaseModel):
     model_description: str
     download_url: str
     avatar_url: Optional[str] = None
+    model_config = {
+        "protected_namespaces": ()  # 关键修复
+    }
+
+class ModelItem(BaseModel):
+    identifier: str
+    model_name: str
+    model_display_name: str
+    source: str
+    model_description: str
+    download_url: str
+    avatar_url: Optional[str] = None
 
 
 def download_model(
@@ -89,7 +101,7 @@ def download_model(
     db.close()
 
 
-def write_info(info: ModelListItem, identifier: str=Depends(get_current_identifier)):
+def write_info(info: ModelItem, identifier: str=Depends(get_current_identifier)):
     # create model_avatars folder if not exists
     if not os.path.exists(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars")):
         os.makedirs(os.path.join(os.environ.get("MODEL_PATH"), "model_avatars"))
@@ -143,7 +155,14 @@ async def create_openllm_download(
     # Download Model in a new thread
     th = Thread(target=download_model, args=(info, entry_id, identifier))
     th.start()
-    return {"status": "success"}
+    return {"status": "success","openllm_id":entry_id}
+
+# @openllm_router.post("")
+# async def create_openllm(
+#     info: ModelItem
+# ):
+#     entry_id = write_info(info, info.identifier)
+#     return {"status": "success"}
 
 @openllm_router.post("/sync_download")
 async def create_openllm_sync_download(
@@ -158,6 +177,7 @@ async def create_openllm_sync_download(
 async def create_openllm(
     info: ModelListItem, identifier: str = Depends(get_current_identifier)
 ):
+    
     write_info(info, identifier)
     return {"status": "success"}
 

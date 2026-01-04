@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识分享社区</title>
+    <style>
+        /* 头部样式 */
+        .main-header {
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            color: #0084ff;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-item {
+            color: #444;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-item:hover {
+            color: #0084ff;
+        }
+
+        /* 文章列表样式 */
+        .user-articles {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .user-articles h2 {
+            color: #333;
+            margin-bottom: 2rem;
+        }
+
+        .article-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .article-content {
+            display: flex;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            cursor: pointer;
+        }
+
+        .article-cover {
+            width: 240px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .article-info {
+            flex: 1;
+        }
+
+        .article-title {
+            color: #333;
+            margin: 0 0 0.5rem;
+            font-size: 1.4rem;
+        }
+
+        .article-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-excerpt {
+            color: #666;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .article-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #eee;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .action-btn:hover {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .edit-btn {
+            color: #0084ff;
+            border-color: #0084ff30;
+        }
+
+        .delete-btn {
+            color: #ff4444;
+            border-color: #ff444430;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <nav class="header-nav">
+            <h1 class="logo">个人主页</h1>
+            <div class="nav-links">
+                <span>文章数：<span id="article-count">0</span></span>
+                <span>总浏览：<span id="total-views">0</span></span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="user-articles">
+        <h2>我的文章</h2>
+        <div id="articles-container"></div>
+    </div>
+
+
+    <script>
+            function createArticleCard(article) {
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            
+            const content = `
+                <div class="article-content">
+                    <img src="${article.cover || '/public/cover/default.jpg'}" 
+                        alt="封面图" 
+                        class="article-cover">
+                    <div class="article-info">
+                        <h2 class="article-title">${article.title}</h2>
+                        <div class="article-meta">
+                            <span>作者：${article.author}</span>
+                            <span style="margin-left: 1.5rem">浏览量：${article.views}</span>
+                        </div>
+                        <p class="article-excerpt">${article.content.substring(0, 150)}...</p>
+                    </div>
+                </div>
+                <div class="article-actions">
+                    <button class="action-btn edit-btn" data-id="${article.id}">编辑</button>
+                    <button class="action-btn delete-btn" data-id="${article.id}">删除</button>
+                </div>
+            `;
+            
+            card.innerHTML = content;
+            
+            // 整体点击跳转
+            card.querySelector('.article-content').addEventListener('click', () => {
+                window.location.href = `/public/article.html?id=${article.id}`;
+            });
+
+            return card;
+        }
+        
+
+        // 删除文章
+        async function deleteArticle(articleId) {
+            if (!confirm('确定要删除这篇文章吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/articles/${articleId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('删除失败');
+                await loadUserArticles(); // 重新加载列表
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        async function fetchArticles() {
+            try {
+                const response = await fetch(`/api/articles`, {
+                    method: 'GET'
+                });
+                
+                if (!response.ok) throw new Error('获取文章失败');
+                const articles = await response.json();
+                return articles
+            } catch (error) {
+                console.error('获取文章失败:', error);
+                alert('获取文章失败，请稍后重试');
+            }
+        }
+
+        // 修改后的加载函数
+        async function loadUserArticles() {
+            try {
+                const articles = await fetchArticles();
+                
+                const container = document.getElementById('articles-container');
+                container.innerHTML = '';
+                
+                articles.forEach(article => {
+                    const card = createArticleCard(article);
+                    container.appendChild(card);
+                });
+        
+                // 更新统计信息
+                document.getElementById('article-count').textContent = articles.length;
+                document.getElementById('total-views').textContent = 
+                    articles.reduce((sum, a) => sum + a.views, 0);
+        
+                // 绑定操作按钮
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteArticle(parseInt(btn.dataset.id));
+                    });
+                });
+        
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.location.href = `/public/edit_article.html?id=${btn.dataset.id}`;
+                    });
+                });
+        
+            } catch (error) {
+                console.error('加载失败:', error);
+                alert('数据加载失败');
+            }
+        }
+        
+        // // 修改后的删除函数
+        // async function deleteArticle(articleId) {
+        //     if (!confirm('确定要删除这篇文章吗？')) return;
+            
+        //     try {
+        //         await mockAPI.deleteArticle(articleId);
+        //         await loadUserArticles(); // 重新加载
+        //         alert('删除成功');
+        //     } catch (error) {
+        //         console.error('删除失败:', error);
+        //         alert('删除操作失败');
+        //     }
+        // }
+        
+        // 初始化加载
+        loadUserArticles();
+    </script>
+</body>
+</html>

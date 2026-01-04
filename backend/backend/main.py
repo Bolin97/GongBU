@@ -90,6 +90,10 @@ app.include_router(dataset_filter_router, prefix="/filter", tags=["dataset_filte
 
 app.include_router(static_router, prefix="/static", tags=["static"])
 
+# app.include_router(repo_router, prefix="/repo", tags=["repo"])
+
+app.include_router(evalute_router, prefix="/evalute", tags=["evalute"])
+
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")
     nvmlShutdown()

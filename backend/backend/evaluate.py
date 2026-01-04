@@ -6,8 +6,10 @@ from collections import Counter
 import numpy as np
 from backend.const import NAN_MAGIC
 
-
+max_length = 500
 def PRF(refs, cands) -> dict[str, float]:
+    cands = [item[:max_length] for item in cands]
+    refs = [item[:max_length] for item in refs]
     P, R, F = score(
         cands, refs, model_type="bert-base-chinese", lang="zh", verbose=True
     )
@@ -68,6 +70,20 @@ def evaluate(indexes: list[str], refs: list[str], cands: list[str]) -> dict[str,
     if len(refs) != len(cands):
         raise ValueError("The number of references and candidates should be the same.")
 
+    # Handle empty lists case
+    if len(refs) == 0 or len(cands) == 0:
+        # Return NAN_MAGIC for all requested metrics
+        ret = {}
+        if any(i in indexes for i in ["P", "R", "F"]):
+            ret.update({"P": NAN_MAGIC, "R": NAN_MAGIC, "F": NAN_MAGIC})
+        if "D" in indexes:
+            ret.update({"D": NAN_MAGIC})
+        if "A" in indexes:
+            ret.update({"A": NAN_MAGIC})
+        if "B" in indexes:
+            ret.update({"B": NAN_MAGIC})
+        return ret
+
     ret = {}
 
     if any(i in indexes for i in ["P", "R", "F"]):
@@ -81,7 +97,7 @@ def evaluate(indexes: list[str], refs: list[str], cands: list[str]) -> dict[str,
 
     if "B" in indexes:
         ret.update(B(refs, cands))
-        
+
     ret = {k: v if not np.isnan(v) else NAN_MAGIC for k, v in ret.items()}
 
     return ret

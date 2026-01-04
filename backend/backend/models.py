@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+import uuid
 from sqlalchemy import (
     Column,
     DateTime,
@@ -9,13 +11,14 @@ from sqlalchemy import (
     ForeignKey,
     JSON,
     TIMESTAMP,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
-
+DEFAULT_USER = "default_user"
 
 class Pool(Base):
     __tablename__ = "pools"
@@ -43,6 +46,8 @@ class DatasetEntry(Base):
     size = Column(Integer, nullable=False)
     owner = Column(String, nullable=False)
     public = Column(Boolean, nullable=False)
+    # ✅ 新增字段
+    features = Column(ARRAY(String), nullable=False, default=list)  # default=[] 不推荐，default=list 更安全
 
 
 class FinetuneEntry(Base):
@@ -303,3 +308,132 @@ class EvaluationProgress(Base):
     )
     current = Column(Integer, nullable=False)
     total = Column(Integer, nullable=False)
+
+
+class ExpandState(Base):
+    __tablename__ = "expand_states"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(255), nullable=False)
+    path = Column(String(1024), nullable=False)
+    is_expanded = Column(Boolean, nullable=False)
+
+# 仓库表
+class RepoPermission(Base):
+    __tablename__ = 'repo'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    repo_name = Column(String(100), nullable=False)
+    avatar_url = Column(String(200))
+    permission = Column(String(50), default='public')
+    owner = Column(String(100), nullable=False)  # 原owner字段更名
+    likes = Column(Integer, default=0)
+    views = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    # 添加联合唯一约束
+    __table_args__ = (
+        UniqueConstraint('repo_name', 'owner', name='_repo_owner_uc'),  # 注意末尾的逗号
+    )
+
+# apiKey表
+class APIKey(Base):
+    __tablename__ = 'api_keys'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(64), unique=True, nullable=False)
+    purpose = Column(String(100))
+    key = Column(String(64), unique=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    username = Column(String(100), nullable=False)
+    permission = Column(String(50), default='all')
+
+# 记录点赞事件
+class UserLike(Base):
+    __tablename__ = 'user_likes'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(100), nullable=False)
+    repo_name = Column(String(100), nullable=False)
+    repo_owner = Column(String(100), nullable=False)
+    is_liked = Column(Boolean, default=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # 添加联合唯一索引
+    __table_args__ = (
+        UniqueConstraint('username', 'repo_name', 'repo_owner', name='_user_repo_like_uc'),
+    )
+
+class BranchRecord(Base):
+    __tablename__ = 'branch_records'
+    id = Column(Integer, primary_key=True)
+    repo_name = Column(String(100), nullable=False)
+    branch_name = Column(String(255), nullable=False)
+    # 仓库拥有者
+    owner = Column(String(100), nullable=False)
+    # 分支创建者
+    creator = Column(String(100), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # 新增更新时间戳
+    is_locked = Column(Boolean, default=False)
+
+
+class PRModel(Base):
+    __tablename__ = "pull_requests"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    title = Column(String(200))
+    description = Column(String(1000))
+    base_branch = Column(String(50))
+    head_branch = Column(String(50))
+    status = Column(String(20), default="open")  # open/merged/closed
+    creator = Column(String(50))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    merged_at = Column(DateTime)
+    merge_version = Column(String(50))
+    merge_comment = Column(String(500))
+    merged_by = Column(String(50))
+    repo_name = Column(String(100), nullable=False)
+    owner = Column(String(100), nullable=False)
+
+
+
+class InferpointDB(Base):
+    __tablename__ = 'inferpoints'
+
+    id = Column(Integer, primary_key=True)
+    inferpoint_id = Column(String(64), unique=True, nullable=False)
+    name = Column(String(128), nullable=False)
+    purpose = Column(String(128))
+    status = Column(String(32), default='health', nullable=False)
+    model_name = Column(String(128), nullable=False)
+    version = Column(String(128))
+    owner = Column(String(128), nullable=False)
+    tokens = Column(Integer, default=0)
+    creator = Column(String(50), nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+
+class EvaluationResult(Base):
+    __tablename__ = "evaluation_results"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    model_name = Column(String, nullable=False)
+    owner = Column(String, nullable=False)
+    task_type = Column(String, nullable=False)
+    eval_id = Column(Integer) # 对应底层评估任务
+    summary_score = Column(Float)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    username = Column(String, nullable=False)
+    content = Column(JSON)
+
+
+class ModelRegistry(Base):
+    __tablename__ = 'model_registry'
+
+    id = Column(Integer, primary_key=True)
+    model_path = Column(String(512), unique=True, nullable=False, index=True)
+    model_type = Column(String(32), nullable=False)  # 'vllm' 或 'transformers'
+    loading_status = Column(Integer, nullable=False)  # 0=未加载, 1=已加载
+    ref_count = Column(Integer, default=0, nullable=False)
+    process_id = Column(Integer, nullable=True)  # 加载模型的进程ID
+    service_port = Column(Integer, nullable=True)  # 服务进程监听的端口
+    last_used = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>编辑文章</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Arial", sans-serif;
+      background: #f7f7f7;
+    }
+
+    .header {
+      background-color: #fff;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+    }
+
+    .publish-btn {
+      background: linear-gradient(to right, #4CAF50, #66BB6A);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .publish-btn:hover {
+      background: linear-gradient(to right, #388E3C, #4CAF50);
+    }
+
+    .editor-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .form-textarea {
+      height: 300px;
+      resize: vertical;
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-top: 1rem;
+      border: 1px solid #ddd;
+    }
+
+    .submit-btn {
+      background: #27ae60;
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    .submit-btn:hover {
+      background: #219150;
+    }
+
+    .cover-image {
+        display: block;
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        margin-top: 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+
+    .publish-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .publish-btn:hover {
+        background: #2980b9;
+    }
+
+    .nav.container {
+        padding: 1rem 2rem;
+        background-color: #f7f7f7;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+
+    .editor-container {
+      position: relative;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+    
+    <header class="header">
+        <nav class="nav container">
+        <button class="publish-btn" onclick="history.back()">返回</button>
+        </nav>
+    </header>
+    
+    <div class="editor-container">
+        <h1>发布新文章</h1>
+        <div class="form-group">
+        <label class="form-label">文章标题</label>
+        <input type="text" id="title" class="form-input" placeholder="请输入文章标题" />
+        </div>
+    
+        <div class="form-group">
+        <label class="form-label">上传封面</label>
+        <input type="file" id="cover-upload" accept="image/*" onchange="previewCover(event)" />
+        <img id="cover-preview" src="/public/cover/default.jpg" class="cover-image" alt="封面预览" />
+        </div>
+    
+        <div class="form-group">
+        <label class="form-label">文章内容</label>
+        <textarea id="content" class="form-input form-textarea" placeholder="输入文章内容..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitArticle()">更新</button>
+    </div>
+
+  <script>
+
+    let coverBase64 = '';
+    let currentArticleId = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    currentArticleId = urlParams.get('id');
+
+    function previewCover(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          coverBase64 = reader.result;
+          document.getElementById('cover-preview').src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function loadArticle() {  
+      if (!currentArticleId) return;
+
+      try {
+        document.querySelector('.loading-overlay').style.display = 'flex';
+        const response = await fetch(`/api/articles/${currentArticleId}`);
+        const article = await response.json();
+        
+        document.getElementById('title').value = article.title;
+        document.getElementById('content').value = article.content;
+        document.getElementById('cover-preview').src = article.cover;
+        coverBase64 = article.cover;
+        
+      } catch (error) {
+        console.error('加载文章失败:', error);
+        alert('无法加载文章数据');
+      } finally {
+        document.querySelector('.loading-overlay').style.display = 'none';
+      }
+    }
+
+    async function submitArticle() {
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+
+      if (!title || !content) {
+        alert('请填写标题和内容');
+        return;
+      }
+
+      const articleData = {
+        title,
+        content,
+        image: coverBase64,
+        summary: content.slice(0, 100) + '...'
+      };
+
+      try {
+        const url = currentArticleId 
+          ? `/api/articles/${currentArticleId}`
+          : '/api/articles';
+        
+        const method = currentArticleId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(articleData)
+        });
+
+        if (!res.ok) throw new Error('操作失败');
+        alert(currentArticleId ? '修改成功！' : '发布成功！');
+        location.href = '/public/user_article.html';
+        
+      } catch (err) {
+        console.error(err);
+        alert('操作失败，请重试');
+      }
+    }
+
+    // 页面加载时
+    window.onload = async () => {
+      await loadArticle();
+    };
+  </script>
+</body>
+</html>

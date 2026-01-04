@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识分享社区</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f6f6;
+            color: #333;
+        }
+
+        /* 头部样式 */
+        .main-header {
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            color: #0084ff;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-item {
+            color: #444;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-item:hover {
+            color: #0084ff;
+        }
+
+        /* 排序控件 */
+        .sort-controls {
+            border-top: 1px solid #eee;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        /* 文章容器 */
+        .article-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* 文章卡片 */
+        .article-card {
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-content {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .article-cover {
+            flex: 0 0 240px;
+            height: 160px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .article-info {
+            flex: 1;
+        }
+
+        .article-title {
+            font-size: 1.4rem;
+            margin: 0 0 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .article-meta {
+            color: #8590a6;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .article-excerpt {
+            color: #444;
+            line-height: 1.6;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .article-content {
+                flex-direction: column;
+            }
+            
+            .article-cover {
+                width: 100%;
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <nav class="header-nav">
+            <h1 class="logo">知识社区</h1>
+            <div class="nav-links">
+                <a href="/public/user_article.html" class="nav-item">个人主页</a>
+                <a href="/public/create_article.html" class="nav-item">发表文章</a>
+            </div>
+        </nav>
+        <div class="sort-controls">
+            <select id="sort-select" class="sort-select">
+                <option value="newest">最新文章</option>
+                <option value="popular">最热文章</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="article-container" id="article-container">
+        <!-- 文章列表由JavaScript动态生成 -->
+    </main>
+
+    <script>
+        // 模拟数据
+        /*
+        const mockArticles = [
+            {
+                id: 1,
+                title: "如何高效学习编程",
+                author: "王小明",
+                views: 2543,
+                content: "在现代社会，编程已经成为一项重要的技能。本文将从学习方法、资源推荐和实践技巧三个方面，为你揭示高效学习编程的秘诀...",
+                cover: "https://source.unsplash.com/random/800x600?code",
+                created_at: "2023-09-20T08:00:00Z"
+            },
+            {
+                id: 2,
+                title: "人工智能的未来发展",
+                author: "李华",
+                views: 3987,
+                content: "随着技术的进步，人工智能正在深刻改变我们的生活方式。我们将探讨AI在医疗、教育和工业领域的应用前景...",
+                cover: "https://source.unsplash.com/random/800x600?ai",
+                created_at: "2023-09-19T10:30:00Z"
+            },
+            {
+                id: 3,
+                title: "前端开发最佳实践",
+                author: "张伟",
+                views: 1876,
+                content: "本文将介绍现代前端开发中的最佳实践，包括模块化开发、性能优化和团队协作技巧...",
+                cover: "https://source.unsplash.com/random/800x600?web",
+                created_at: "2023-09-21T14:15:00Z"
+            }
+        ];
+
+        // 文章渲染函数
+        function renderArticles(sortType = 'newest') {
+            const container = document.getElementById('article-container');
+            container.innerHTML = '';
+
+            // 排序处理
+            const sortedArticles = [...mockArticles].sort((a, b) => {
+                if (sortType === 'newest') {
+                    return new Date(b.created_at) - new Date(a.created_at);
+                }
+                return b.views - a.views;
+            });
+
+            // 生成文章卡片
+            sortedArticles.forEach(article => {
+                const card = document.createElement('div');
+                card.className = 'article-card';
+                card.innerHTML = `
+                    <div class="article-content">
+                        <img src="${article.cover}" 
+                             alt="封面图" 
+                             class="article-cover">
+                        <div class="article-info">
+                            <h2 class="article-title">${article.title}</h2>
+                            <div class="article-meta">
+                                <span>作者：${article.author}</span>
+                                <span style="margin-left: 1.5rem">浏览量：${article.views}</span>
+                            </div>
+                            <p class="article-excerpt">${article.content.substring(0, 100)}...</p>
+                        </div>
+                    </div>
+                `;
+
+                // 添加点击事件
+                card.addEventListener('click', () => {
+                    window.location.href = `/public/article.html?id=${article.id}`;
+                });
+
+                container.appendChild(card);
+            });
+        }
+        
+        */
+
+
+        // 文章加载函数
+        async function loadArticles(sortBy = 'newest') {
+            try {
+                const response = await fetch(`/api/articles?sort=${sortBy}`);
+                const articles = await response.json();
+                renderArticles(articles);
+            } catch (error) {
+                console.error('加载文章失败:', error);
+                alert('无法加载文章，请稍后再试');
+            }
+        }
+
+        // 文章渲染函数
+        function renderArticles(articles) {
+            const container = document.getElementById('article-container');
+            container.innerHTML = '';
+
+            articles.forEach(article => {
+                const articleCard = document.createElement('div');
+                articleCard.className = 'article-card';
+                articleCard.innerHTML = `
+                    <div class="article-content">
+                        <img src="${article.cover || '/public/cover/default.jpg'}" 
+                            alt="封面图" 
+                            class="article-cover">
+                        <div class="article-info">
+                            <h2 class="article-title">${article.title}</h2>
+                            <div class="article-meta">
+                                <span>作者：${article.author}</span>
+                                <span style="margin-left: 1.5rem">浏览量：${article.views}</span>
+                            </div>
+                            <p class="article-excerpt">${article.content.substring(0, 150)}...</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加点击事件
+                articleCard.addEventListener('click', () => {
+                    window.location.href = `/public/article.html?id=${article.id}`;
+                });
+
+                container.appendChild(articleCard);
+            });
+        }
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 首次渲染
+            loadArticles();
+
+            // 排序切换监听
+            document.getElementById('sort-select').addEventListener('change', (e) => {
+                loadArticles(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>

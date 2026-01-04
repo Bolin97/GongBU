@@ -71,9 +71,9 @@ services:
       context: ./proxy
       dockerfile: Dockerfile.prod
     expose:
-      - 80
+      - 81
     ports:
-      - "5173:80"
+      - "5173:81"
     links:
       - backend
     depends_on:

@@ -1,8 +1,10 @@
+import threading
+import requests
 from transformers import TrainerCallback
 from transformers.generation.stopping_criteria import StoppingCriteriaList
 from transformers.trainer_callback import TrainerControl, TrainerState
 from transformers.training_args import TrainingArguments
-import datetime
+from datetime import datetime
 from backend.db import get_db
 from backend.models import *
 from typing import *
@@ -13,7 +15,7 @@ from transformers import AutoTokenizer
 from bert_score import score
 import numpy as np
 from transformers.utils.dummy_pt_objects import StoppingCriteria
-from backend.tuner.generate_prompt import generate_prompt
+from backend.tuner.generate_prompt import generate_prompt, get_reference_output
 from nltk.translate.bleu_score import corpus_bleu
 from nltk.util import ngrams
 from collections import Counter
@@ -27,6 +29,12 @@ import json
 from backend.evaluate import evaluate
 from backend.const import NAN_MAGIC
 
+
+def openllm(openllmRequest):
+    headers = {
+        "Content-Type": "application/json"
+    }
+    requests.post('http://localhost:8000/openllm', json=openllmRequest, headers=headers)
 
 class ReportCallback(TrainerCallback):
     id: int
@@ -164,19 +172,29 @@ class ReportCallback(TrainerCallback):
         db = get_db()
         entry = db.query(FinetuneEntry).filter(FinetuneEntry.id == self.id).first()
         entry.state = FinetuneState.done.value
-        entry.end_time = datetime.datetime.now()
+        entry.end_time = datetime.now()
         adapter = Adapter(
             adapter_name=self.task_name,
             adapter_description=self.task_description,
             ft_entry=self.id,
             base_model_name=self.base_model_name,
             local_path=args.output_dir,
-            storage_date=datetime.datetime.now(),
+            storage_date=datetime.now(),
             owner=self.identifier,
             public=self.public,
         )
         db.add(adapter)
-
+        # openllmRequest = {
+        #     "model_name": self.task_name,
+        #     "model_display_name": self.task_name,
+        #     "source": "git",
+        #     "model_description": self.base_model_name + "-ft",
+        #     "download_url": "ft",
+        #     "identifier":self.identifier
+        # }
+        # threading.Thread(
+        #     target=openllm, args=(openllmRequest)
+        # ).start()
         db.commit()
         db.close()
 
@@ -226,7 +244,7 @@ class ReportCallback(TrainerCallback):
             cands = []
             for each in tqdm(self.eval_dataset):
                 cands.append(get_generated_output(each))
-            refs = list(map(lambda data_point: data_point["output"], self.eval_dataset))
+            refs = [get_reference_output(data_point, self.ds_type) for data_point in self.eval_dataset]
 
             eval_result = evaluate(self.indexes, refs, cands)
 

@@ -15,6 +15,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 512, // set warning limit to 512kb
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       "/api": {
         target: "http://backend:8000/",
@@ -22,9 +23,18 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
       "/net": {
-        target: "http://proxy:80/",
+        target: "http://proxy:81/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/net/, "/net"),
+      },
+      "/dify": {
+        target: "http://nginx:80/",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/dify/, ""), // 去掉 /dify 前缀
+      },
+      "/_next": {
+        target: "http://nginx:80/",
+        changeOrigin: true,
       },
     },
   },

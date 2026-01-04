@@ -311,6 +311,36 @@
             border-radius: 8px;
             cursor: pointer;
         }
+
+        /* 悬浮按钮样式 */
+        .floating-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 56px;
+            height: 56px;
+            background: #3b82f6;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 999;
+        }
+
+        .floating-btn:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .floating-btn i {
+            color: white;
+            font-size: 24px;
+        }
+
     </style>
 </head>
 
@@ -377,6 +407,10 @@
                     <input type="text" id="datasetName" class="styled-input" placeholder="namesapce/name" required>
                 </div>
                 <div class="form-group">
+                    <label>导入配置</label>
+                    <input type="text" id="config" class="styled-input">
+                </div>
+                <div class="form-group">
                     <label>导入方式</label>
                     <select id="datasetSource" class="styled-select">
                         <option value="Huggleface">Huggleface</option>
@@ -391,14 +425,24 @@
         </div>
     </div>
 
+    <button class="floating-btn" id="communityBtn">
+        <i class="material-icons">forum</i>
+      </button>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+
+        // 悬浮按钮点击事件
+        document.getElementById('communityBtn')?.addEventListener('click', () => {
+            window.location.href = '/community';
+        });
+
         // 模拟数据
         let repositories = [
             {
                 id: 1,
-                repo_name: "DeepSeek-R1",
-                owner: "deepseek-ai",
+                repo_name: "chatglm3-6b",
+                owner: "u1",
                 views: 1555,
                 likes: 128,
                 permission: "public",
@@ -458,6 +502,7 @@
                 document.getElementById('repoSource').value = 'Huggleface';
                 document.getElementById('datasetName').value = '';
                 document.getElementById('datasetSource').value = 'Huggleface';
+                document.getElementById('config').value = '';
                 state.base64Avatar = '';
             };
 
@@ -487,9 +532,11 @@
                     document.getElementById('modalConfirm').disabled = true;
 
                     // 异步调用
-                    fetch('/import_model', {
+                    const response = fetch('/import_model', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+                        },
                         body: JSON.stringify({
                             repo_name: repoName,
                             repo_source: repoSource,
@@ -514,8 +561,9 @@
             // 导入数据集确认
             document.getElementById('datasetConfirm').addEventListener('click', async () => {
                 const datasetName = document.getElementById('datasetName').value.trim();
+                // 目前只支持Huggleface数据集
                 const datasetSource = document.getElementById('datasetSource').value;
-
+                const config = document.getElementById('config').value;
                 if (!datasetName) {
                     alert('请输入数据集名称');
                     return;
@@ -526,17 +574,23 @@
                     state.isLoading = true;
                     document.getElementById('datasetConfirm').disabled = true;
 
-                    // 异步调用
-                    fetch('/import_dataset', {
+                    const response = await fetch('/api/dataset/load-dataset', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+                        },
                         body: JSON.stringify({
                             dataset_name: datasetName,
-                            dataset_source: datasetSource
+                            dataset_source: datasetSource,
+                            config:config
                         })
                     });
                     
-                    if (!response.ok) throw new Error('创建导入任务失败');
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.message || '创建导入任务失败');
+                    }
 
                     closeModal();
                     alert('数据集导入任务创建成功');
@@ -599,7 +653,7 @@
             document.querySelectorAll('.repo-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const repo = repositories.find(r => r.id == card.dataset.repoId);
-                    window.location.href = `/api/repo/content/${repo.owner}/${repo.repo_name}`;
+                    window.location.href = `http://localhost:8002/repo/content/${repo.owner}/${repo.repo_name}`;
                 });
             });
         }

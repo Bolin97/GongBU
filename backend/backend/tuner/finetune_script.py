@@ -19,7 +19,7 @@ from pandas import DataFrame
 from typing import List, Optional, Union, Any, Literal
 import datasets
 from backend.db import get_db
-from backend.tuner.generate_prompt import generate_prompt
+from backend.tuner.generate_prompt import generate_prompt, get_reference_output
 from accelerate import infer_auto_device_map
 from backend.service.fault import generate_log_path
 from peft import (  # noqa: E402
@@ -306,7 +306,7 @@ def get_dataset(
     def generate_and_tokenize_prompt(data_point):
         full_prompt = generate_prompt(data_point, dataset_type)
         tokenized_full_prompt = tokenize(full_prompt)
-        user_prompt = generate_prompt({**data_point, "output": ""}, dataset_type)
+        user_prompt = generate_prompt({**data_point, "output": ""}, dataset_type, for_infer=True)
         tokenized_user_prompt = tokenize(user_prompt, add_eos_token=True)
         user_prompt_len = len(tokenized_user_prompt["input_ids"])
         tokenized_full_prompt["labels"] = [
@@ -315,10 +315,21 @@ def get_dataset(
             user_prompt_len:
         ]
         return tokenized_full_prompt
-    df = DataFrame(dataset).astype(str)
-    data = datasets.DatasetDict(
-        {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
-    )
+    
+    if dataset_type > 1 and len(dataset) > 0:
+        data = datasets.DatasetDict(
+            {"train": dataset}
+        )
+    else:
+        df = DataFrame(dataset)
+        data = datasets.DatasetDict(
+            {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
+        )
+    
+    # df = DataFrame(dataset).astype(str)
+    # data = datasets.DatasetDict(
+    #     {"train": datasets.Dataset.from_dict(df.to_dict("list"))}
+    # )
 
     val_size = 0 if val_size == 0 else max(int(val_size * len(data["train"])), 2)
 
@@ -344,60 +355,55 @@ def get_dataset(
 
 def train(
     # model params 模型参数
-    base_model: str = "/data/yimin/model/bloom-800m-zh",  # 模型(绝对)路径 # the only required argument
+    base_model: str = "/data/yimin/model/bloom-800m-zh",
     dataset_type: int = 0,
     dataset: list = [],
     devices: list[int] | str = "auto",
     report_callback: ReportCallback = None,
-    output_dir: str = "./test",  # 输出文件夹
-    adapter_name: str = "lora",  # 微调方法
+    output_dir: str = "./test",
+    adapter_name: str = "lora",
     # training hyperparams  训练超参数
-    batch_size: int = 128,  # 单次训练数据样本个数
-    micro_batch_size: int = 4,  # 每次流水并行的训练样本个数
-    num_epochs: int = 3,  # 训练迭代次数
-    learning_rate: float = 3e-4,  # 学习率
-    cutoff_len: int = 256,  # 文本最大长度
-    val_set_size: float = 0,  # 评估数据集的大小
-    use_gradient_checkpointing: bool = False,  # 是否使用梯度检查点
-    eval_step: int = 200,  # 评估步数间隔
-    save_step: int = 200,  # 保存步数间隔
+    batch_size: int = 128,
+    micro_batch_size: int = 4,
+    num_epochs: int = 3,
+    learning_rate: float = 3e-4,
+    cutoff_len: int = 256,
+    val_set_size: float = 0,
+    use_gradient_checkpointing: bool = False,
+    eval_step: int = 200,
+    save_step: int = 200,
     logging_step: int = 10,
     # lora hyperparams  lora方法超参数
-    lora_r: int = 8,  # lora的秩
-    lora_alpha: int = 16,  # lora对模型效果的贡献度
-    lora_dropout: float = 0.05,  # lora剪枝率
-    # target_modules: List[str] = None,       # 目标模块(使用lora优化的矩阵乘法的linear模块，可以从model的named_modules中获取，)
+    lora_r: int = 8,
+    lora_alpha: int = 16,
+    lora_dropout: float = 0.05,
+    # target_modules: List[str] = None,       
     # prefix tuning hyperparams prefix tuning方法的超参数
-    num_virtual_tokens: int = 30,  # 虚拟tokens长度
+    num_virtual_tokens: int = 30,
     # llm hyperparams   大模型超参数
-    train_on_inputs: bool = True,  # 是否使用输入进行训练
-    group_by_length: bool = False,  # 是否使用adafactor优化算法
+    train_on_inputs: bool = True,
+    group_by_length: bool = False,
     # wandb params      项目可视化的参数
     wandb_project: str = "",
     wandb_run_name: str = "",
-    wandb_watch: str = "",  # options: false | gradients | all
-    wandb_log_model: str = "",  # options: false | true
-    resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
+    wandb_watch: str = "",
+    wandb_log_model: str = "",
+    resume_from_checkpoint: str = None,
     # bits and bytes params     量化的参数
-    bits_and_bytes: bool = False,  # 是否量化
-    load_8bit: bool = False,  # 8bit量化
-    load_4bit: bool = False,  # 4bit量化
-    llm_int8_threshold: float = 6.0,  # LLM.int8()方法的量化阈值：绝对值低于这个值正常量化，绝对值高于阈值的‘离群特征’保留其原来精度
-    # 这个参数的设置可能会影响模型的推断速度和精度
-    # 较低的阈值可能会导致更多的值被量化为整数，从而降低内存使用和加速推断，但可能会牺牲一些模型的精度
-    # 较高的阈值可能会保留更多的精度，但可能会增加内存使用和推断时间
-    # 具体的最佳阈值设置取决于模型的具体架构、任务、精度要求以及硬件环境等因素。
-    # llm_int8_skip_modules: Any | None = None,
-    llm_int8_skip_modules: Any = None,  # 不转换为8位的模块，以确保稳定性。例如“llm_head”
+    bits_and_bytes: bool = False,
+    load_8bit: bool = False,
+    load_4bit: bool = False,
+    llm_int8_threshold: float = 6.0,  
+    llm_int8_skip_modules: Any = None,
     llm_int8_enable_fp32_cpu_offload: bool = False,
-    llm_int8_has_fp16_weight: bool = False,  # 使用fp16旬行LLM.int8()
+    llm_int8_has_fp16_weight: bool = False,
     # bnb_4bit_compute_dtype: Any | None = None,
-    bnb_4bit_compute_dtype: Any = None,  # 设置计算类型
-    bnb_4bit_quant_type: str = "fp4",  # 设置量化类型：fp4或nf4，默认是fp4
-    bnb_4bit_use_double_quant: bool = False,  # 是否开启二次量化
-    zero_optimization: bool = True,  # 是否使用zero优化
-    zero_stage: int = 2,  # zero优化的阶段
-    zero_offload: bool = False,  # 是否使用zero卸载
+    bnb_4bit_compute_dtype: Any = None,
+    bnb_4bit_quant_type: str = "fp4",
+    bnb_4bit_use_double_quant: bool = False,
+    zero_optimization: bool = True,
+    zero_stage: int = 2,
+    zero_offload: bool = False,
     eval_indexes: list[str] | None = None
 ):
     torch.cuda.empty_cache()
@@ -536,6 +542,10 @@ def train(
 
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     model.save_pretrained(output_dir)
+    # session_name = f"{TaskType.finetune.value}_task_{entry.id}"
+    # base_dir = os.path.join(os.environ.get("FINETUNE_OUTPUT"), identifier, session_name)
+    # full_path = os.path.abspath(base_dir)
+    # entry.output_dir = full_path
 
 
 from backend.models import *
@@ -551,7 +561,7 @@ def wrapper(
         public = entry.public
         base_model = db.query(OpenLLM).filter(OpenLLM.id == entry.model_id).first()
         model_path = base_model.local_path
-        dataset_json_obj, dataset_type = fetch_dataset(entry.dataset_id)
+        dataset_json_obj, dataset_type = fetch_dataset(entry.dataset_id, 1)
         callback = ReportCallback(
             finetune_id,
             dataset_type,
