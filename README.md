@@ -1,4 +1,4 @@
-# 工部/GongBU <img src="https://github.com/Bolin97/GongBU/blob/main/frontend/static/logo_new.jpg" alt="logo" width="30"/>
+# 天功/GongBU <img src="https://github.com/Bolin97/GongBU/blob/main/frontend/static/logo_new.jpg" alt="logo" width="30"/>
 
 
 🚀 GongBU is a comprehensive, all-in-one, no-code, local finetuning platform for large language models. Once deployed, there is no need to write any code to finetune a model, and the platform can be used by anyone with a web browser. The platform is built on top of the Transformers, Peft, etc. and is designed to be easy to use for non-technical users.
