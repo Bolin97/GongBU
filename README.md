@@ -59,6 +59,13 @@ This project uses plain text to transfer data between the client and the server,
 
 If you need to use the platform in open networks, please secure the database and secure the connections with SSL manually, this is not what we can provide (by changing the nginx config under the proxy folder, all requests in production goes through nginx). However, so long as SSL is enabled and the database is secured, equipped with other measures that are implemented by us, the platform should be secure.
 
-### 📜 License Issues
-
-The platform itself is distributed under the MIT license, but the dataset and the models are distributed under their respective licenses, with which the user should comply, and this platform is not shipped.
+## Citation 
+```
+@inproceedings{zhang2024gongbu,
+  title={GongBu: Easily Fine-tuning LLMs for Domain-specific Adaptation},
+  author={Zhang, Bolin and Tian, Yimin and Wang, Shengwei and Tu, Zhiying and Chu, Dianhui and Shen, Zhiqi},
+  booktitle={Proceedings of the 33rd ACM International Conference on Information and Knowledge Management},
+  pages={5309--5313},
+  year={2024}
+}
+```
